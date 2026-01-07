@@ -251,6 +251,7 @@
 
             <!-- TAB: DIRECCIONES -->
             <div class={if @current_tab == "direcciones", do: "block", else: "hidden"}>
+              <.inputs_for :let={direccion_form} field={@form[:direcciones]}>
               <!-- Tabs para Datos de Dirección y Ubicación Geográfica -->
               <div class="border-b border-gray-200 mb-6">
                 <nav class="-mb-px flex space-x-4">
@@ -288,18 +289,18 @@
 
                     <div class="flex items-center gap-4">
                       <div class="flex-1">
-                        <.input field={@form[:ctedir_codigo_k]} type="text" label="Dirección" placeholder="Código" />
+                        <.input field={direccion_form[:ctedir_codigo_k]} type="text" label="Dirección" placeholder="Código" />
                       </div>
                       <div class="mt-6">
                         <label class="flex items-center gap-2 cursor-pointer">
-                          <.input field={@form[:ctedir_tipofis]} type="checkbox" label="" />
+                          <.input field={direccion_form[:ctedir_tipofis]} type="checkbox" label="" />
                           <span class="text-sm text-gray-700">Tipo Fiscal</span>
                         </label>
                       </div>
                     </div>
 
-                    <.input field={@form[:ctedir_tipoent]} type="select" label="Tipo Entrega" options={[{"Normal", "N"}, {"Especial", "E"}]} prompt="Seleccione..." />
-                    <.input field={@form[:ctedir_ivafrontera]} type="select" label="Tipo IVA" options={[{"General 16%", "G"}, {"Frontera 8%", "F"}]} prompt="Seleccione..." />
+                    <.input field={direccion_form[:ctedir_tipoent]} type="select" label="Tipo Entrega" options={[{"Normal", "N"}, {"Especial", "E"}]} prompt="Seleccione..." />
+                    <.input field={direccion_form[:ctedir_ivafrontera]} type="select" label="Tipo IVA" options={[{"General 16%", "G"}, {"Frontera 8%", "F"}]} prompt="Seleccione..." />
                   </div>
 
                   <!-- Columna 2 -->
@@ -315,25 +316,25 @@
                   <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalles de Ubicación</h3>
 
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <.input field={@form[:ctedir_calle]} type="text" label="Calle *" placeholder="Nombre de la calle" />
-                    <.input field={@form[:ctedir_callenumext]} type="text" label="Número Exterior *" placeholder="S/N" />
-                    <.input field={@form[:ctedir_callenumint]} type="text" label="Número Interior" placeholder="Opcional" />
+                    <.input field={direccion_form[:ctedir_calle]} type="text" label="Calle *" placeholder="Nombre de la calle" />
+                    <.input field={direccion_form[:ctedir_callenumext]} type="text" label="Número Exterior *" placeholder="S/N" />
+                    <.input field={direccion_form[:ctedir_callenumint]} type="text" label="Número Interior" placeholder="Opcional" />
 
-                    <.input field={@form[:ctedir_calleentre1]} type="text" label="Entre Calle 1" placeholder="Nombre" />
-                    <.input field={@form[:ctedir_calleentre2]} type="text" label="Entre Calle 2" placeholder="Nombre" />
-                    <.input field={@form[:ctedir_cp]} type="text" label="Código Postal *" placeholder="00000" maxlength="5" />
+                    <.input field={direccion_form[:ctedir_calleentre1]} type="text" label="Entre Calle 1" placeholder="Nombre" />
+                    <.input field={direccion_form[:ctedir_calleentre2]} type="text" label="Entre Calle 2" placeholder="Nombre" />
+                    <.input field={direccion_form[:ctedir_cp]} type="text" label="Código Postal *" placeholder="00000" maxlength="5" />
 
-                    <.input field={@form[:mapedo_codigo_k]} type="select" label="Estado *" options={@estados} prompt="Seleccione..." />
-                    <.input field={@form[:mapmun_codigo_k]} type="select" label="Municipio *" options={@municipios} prompt="Seleccione estado" />
-                    <.input field={@form[:maploc_codigo_k]} type="select" label="Localidad *" options={@localidades} prompt="Seleccione municipio" />
+                    <.input field={direccion_form[:mapedo_codigo_k]} type="select" label="Estado *" options={@estados} prompt="Seleccione..." />
+                    <.input field={direccion_form[:mapmun_codigo_k]} type="select" label="Municipio *" options={@municipios} prompt="Seleccione estado" />
+                    <.input field={direccion_form[:maploc_codigo_k]} type="select" label="Localidad *" options={@localidades} prompt="Seleccione municipio" />
 
-                    <.input field={@form[:satcol_codigo_k]} type="text" label="Clave Colonia SAT" placeholder="Código" />
-                    <.input field={@form[:ctedir_colonia]} type="text" label="Colonia" placeholder="Nombre de la colonia" />
-                    <.input field={@form[:ctedir_mail]} type="email" label="Email" placeholder="ejemplo@correo.com" />
+                    <.input field={direccion_form[:satcol_codigo_k]} type="text" label="Clave Colonia SAT" placeholder="Código" />
+                    <.input field={direccion_form[:ctedir_colonia]} type="text" label="Colonia" placeholder="Nombre de la colonia" />
+                    <.input field={direccion_form[:ctedir_mail]} type="email" label="Email" placeholder="ejemplo@correo.com" />
 
-                    <.input field={@form[:ctedir_responsable]} type="text" label="Responsable" placeholder="Nombre del responsable" />
-                    <.input field={@form[:ctedir_telefono]} type="text" label="Teléfono" placeholder="5551234567" />
-                    <.input field={@form[:ctedir_distancia]} type="number" label="Distancia (km)" placeholder="0.0" step="0.01" />
+                    <.input field={direccion_form[:ctedir_responsable]} type="text" label="Responsable" placeholder="Nombre del responsable" />
+                    <.input field={direccion_form[:ctedir_telefono]} type="text" label="Teléfono" placeholder="5551234567" />
+                    <.input field={direccion_form[:ctedir_distancia]} type="number" label="Distancia (km)" placeholder="0.0" step="0.01" />
                   </div>
                 </div>
               </div>
@@ -346,7 +347,7 @@
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <.input
-                        field={@form[:map_x]}
+                        field={direccion_form[:map_x]}
                         type="text"
                         label="Coordenada X (Longitud)"
                         placeholder="-99.1332"
@@ -355,7 +356,7 @@
                     </div>
                     <div>
                       <.input
-                        field={@form[:map_y]}
+                        field={direccion_form[:map_y]}
                         type="text"
                         label="Coordenada Y (Latitud)"
                         placeholder="19.4326"
@@ -369,8 +370,8 @@
                     id="location-map"
                     phx-hook="LocationMap"
                     phx-update="ignore"
-                    data-lat={@form[:map_y].value || "19.4326"}
-                    data-lng={@form[:map_x].value || "-99.1332"}
+                    data-lat={direccion_form[:map_y].value || "19.4326"}
+                    data-lng={direccion_form[:map_x].value || "-99.1332"}
                     class="w-full bg-gray-100 border-2 border-gray-300 rounded-lg"
                     style="height: 400px; min-height: 400px; z-index: 1; position: relative;"
                   >
@@ -381,6 +382,7 @@
                   </div>
                 </div>
               </div>
+              </.inputs_for>
             </div>
 
             <!-- TAB: OPCIONALES -->

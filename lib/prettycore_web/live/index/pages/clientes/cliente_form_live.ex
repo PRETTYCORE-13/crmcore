@@ -71,9 +71,9 @@ defmodule PrettycoreWeb.ClienteFormLive do
       field(:cfgest_codigo_k, :string)
 
       # Flags (valores por defecto según spec)
-      field(:ctedir_tipofis, :integer, default: 0)
-      field(:ctedir_tipoent, :integer, default: 0)
-      field(:ctedir_ivafrontera, :integer, default: 0)
+      field(:ctedir_tipofis, :string, default: "0")
+      field(:ctedir_tipoent, :string, default: "0")
+      field(:ctedir_ivafrontera, :string, default: "0")
       field(:ctedir_secuencia, :integer, default: 0)
       field(:ctedir_secuenciaent, :integer, default: 0)
       field(:ctedir_reqgeo, :integer, default: 0)
@@ -88,86 +88,104 @@ defmodule PrettycoreWeb.ClienteFormLive do
     end
 
     def changeset(direccion, attrs) do
-      direccion
-      |> cast(attrs, [
-        # Identificación
-        :ctedir_codigo_k,
-        :ctedir_responsable,
-        :ctedir_telefono,
-        # Dirección física
-        :ctedir_calle,
-        :ctedir_callenumext,
-        :ctedir_callenumint,
-        :ctedir_colonia,
-        :ctedir_cp,
-        # Contacto
-        :ctedir_celular,
-        :ctedir_mail,
-        # Ubicación geográfica
-        :mapedo_codigo_k,
-        :mapmun_codigo_k,
-        :maploc_codigo_k,
-        :map_x,
-        :map_y,
-        # Rutas
-        :vtarut_codigo_k_pre,
-        :vtarut_codigo_k_ent,
-        :vtarut_codigo_k_cob,
-        :vtarut_codigo_k_aut,
-        :vtarut_codigo_k_simpre,
-        :vtarut_codigo_k_siment,
-        :vtarut_codigo_k_simcob,
-        :vtarut_codigo_k_simaut,
-        :vtarut_codigo_k_sup,
-        # Configuración y catálogos
-        :ctepfr_codigo_k,
-        :cteclu_codigo_k,
-        :ctezni_codigo_k,
-        :ctecor_codigo_k,
-        :condim_codigo_k,
-        :ctepaq_codigo_k,
-        # Embarque
-        :ctevie_codigo_k,
-        :ctesvi_codigo_k,
-        # SAT y CFDI 4.0
-        :satcp_codigo_k,
-        :satcol_codigo_k,
-        :c_estado_k,
-        :c_municipio_k,
-        :c_localidad_k,
-        # Estrategia
-        :cfgest_codigo_k,
-        # Flags
-        :ctedir_tipofis,
-        :ctedir_tipoent,
-        :ctedir_ivafrontera,
-        :ctedir_secuencia,
-        :ctedir_secuenciaent,
-        :ctedir_reqgeo,
-        :ctedir_distancia,
-        :ctedir_novalidavencimiento,
-        :ctedir_edocred,
-        :ctedir_diascredito,
-        :ctedir_limitecredi,
-        :ctedir_tipopago,
-        :ctedir_tipodefacr,
-        :s_maqedo
-      ])
-      |> validate_required(
-        [
-          # Campos obligatorios NOT NULL de CTE_DIRECCION
+      changeset =
+        direccion
+        |> cast(attrs, [
+          # Identificación
           :ctedir_codigo_k,
+          :ctedir_responsable,
+          :ctedir_telefono,
+          # Dirección física
           :ctedir_calle,
           :ctedir_callenumext,
+          :ctedir_callenumint,
+          :ctedir_colonia,
           :ctedir_cp,
+          # Contacto
+          :ctedir_celular,
+          :ctedir_mail,
+          # Ubicación geográfica
           :mapedo_codigo_k,
           :mapmun_codigo_k,
-          :maploc_codigo_k
-        ],
-        message: "Este campo es obligatorio"
-      )
-      |> validate_length(:ctedir_cp, min: 5, max: 5, message: "El CP debe tener 5 dígitos")
-      |> validate_format(:ctedir_cp, ~r/^\d{5}$/, message: "El CP debe contener solo números")
+          :maploc_codigo_k,
+          :map_x,
+          :map_y,
+          # Rutas
+          :vtarut_codigo_k_pre,
+          :vtarut_codigo_k_ent,
+          :vtarut_codigo_k_cob,
+          :vtarut_codigo_k_aut,
+          :vtarut_codigo_k_simpre,
+          :vtarut_codigo_k_siment,
+          :vtarut_codigo_k_simcob,
+          :vtarut_codigo_k_simaut,
+          :vtarut_codigo_k_sup,
+          # Configuración y catálogos
+          :ctepfr_codigo_k,
+          :cteclu_codigo_k,
+          :ctezni_codigo_k,
+          :ctecor_codigo_k,
+          :condim_codigo_k,
+          :ctepaq_codigo_k,
+          # Embarque
+          :ctevie_codigo_k,
+          :ctesvi_codigo_k,
+          # SAT y CFDI 4.0
+          :satcp_codigo_k,
+          :satcol_codigo_k,
+          :c_estado_k,
+          :c_municipio_k,
+          :c_localidad_k,
+          # Estrategia
+          :cfgest_codigo_k,
+          # Flags
+          :ctedir_tipofis,
+          :ctedir_tipoent,
+          :ctedir_ivafrontera,
+          :ctedir_secuencia,
+          :ctedir_secuenciaent,
+          :ctedir_reqgeo,
+          :ctedir_distancia,
+          :ctedir_novalidavencimiento,
+          :ctedir_edocred,
+          :ctedir_diascredito,
+          :ctedir_limitecredi,
+          :ctedir_tipopago,
+          :ctedir_tipodefacr,
+          :s_maqedo
+        ])
+
+      # Solo validar si la dirección tiene al menos un campo lleno (no está completamente vacía)
+      if direccion_tiene_datos?(changeset) do
+        changeset
+        |> validate_required(
+          [
+            # Campos obligatorios NOT NULL de CTE_DIRECCION
+            :ctedir_codigo_k,
+            :ctedir_calle,
+            :ctedir_callenumext,
+            :ctedir_cp,
+            :mapedo_codigo_k,
+            :mapmun_codigo_k,
+            :maploc_codigo_k
+          ],
+          message: "Este campo es obligatorio"
+        )
+        |> validate_length(:ctedir_cp, min: 5, max: 5, message: "El CP debe tener 5 dígitos")
+        |> validate_format(:ctedir_cp, ~r/^\d{5}$/, message: "El CP debe contener solo números")
+      else
+        changeset
+      end
+    end
+
+    defp direccion_tiene_datos?(changeset) do
+      # Verificar si alguno de los campos clave tiene valor
+      campos_clave = [:ctedir_calle, :ctedir_callenumext, :ctedir_cp, :ctedir_codigo_k]
+
+      Enum.any?(campos_clave, fn campo ->
+        valor = get_change(changeset, campo) || get_field(changeset, campo)
+        valor != nil && valor != ""
+      end)
     end
   end
 
@@ -335,6 +353,7 @@ defmodule PrettycoreWeb.ClienteFormLive do
         ],
         message: "Este campo es obligatorio"
       )
+      |> validate_direcciones()
       |> validate_length(:ctecli_rfc, min: 12, max: 13)
       |> validate_format(:ctecli_rfc, ~r/^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/,
         message: "formato RFC inválido"
@@ -344,6 +363,18 @@ defmodule PrettycoreWeb.ClienteFormLive do
     defp put_default_fechaalta(changeset) do
       if is_nil(get_field(changeset, :ctecli_fechaalta)) do
         put_change(changeset, :ctecli_fechaalta, Date.utc_today())
+      else
+        changeset
+      end
+    end
+
+    defp validate_direcciones(changeset) do
+      direcciones = get_field(changeset, :direcciones, [])
+      IO.inspect(direcciones, label: "Direcciones en validate_direcciones")
+
+      # Verificar que haya al menos una dirección válida
+      if Enum.empty?(direcciones) do
+        add_error(changeset, :direcciones, "Debe agregar al menos una dirección")
       else
         changeset
       end
@@ -744,14 +775,8 @@ defmodule PrettycoreWeb.ClienteFormLive do
   defp validate_and_extract(changeset) do
     if changeset.valid? do
       cliente = Ecto.Changeset.apply_changes(changeset)
-
-      # Extraer la primera dirección del array y pasarla como :direccion (singular)
-      direccion = List.first(cliente.direcciones)
-
-      # Reemplazar :direcciones por :direccion
-      cliente_data = Map.put(cliente, :direccion, direccion)
-
-      {:ok, cliente_data}
+      IO.inspect(cliente.direcciones, label: "Direcciones en validate_and_extract")
+      {:ok, cliente}
     else
       {:error, changeset}
     end
