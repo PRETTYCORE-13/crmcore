@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mix deps.get:*)",
+      "Bash(mix compile:*)",
+      "Bash(mix test:*)",
+      "Bash(mix assets.deploy:*)",
+      "Bash(cat:*)",
+      "Bash(mix assets.build:*)",
+      "Bash(mix tailwind:*)",
+      "Bash(mix tailwind.install:*)",
+      "Bash(del \"c:\\Users\\HP\\Desktop\\ELIXIR\\prettycore\\assets\\css\\program.css\")",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(rm:*)",
+      "Bash(mix phx.server:*)",
+      "Bash(timeout 5 bash:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(timeout 10 bash:*)",
+      "Bash(taskkill:*)",
+      "Bash(mix clean:*)",
+      "Bash(timeout 3 bash:*)",
+      "Bash(mix run:*)",
+      "Bash(if [ ! -d \"priv/repo/migrations\" ])",
+      "Bash(then mkdir -p priv/repo/migrations)",
+      "Bash(else echo \"Migrations directory exists\")",
+      "Bash(fi)",
+      "Bash(mix deps:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

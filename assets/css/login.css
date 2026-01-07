@@ -1,0 +1,14 @@
+/* === LOGIN PAGE - TAILWIND OVERRIDES === */
+
+/* Override core_components fieldset styling for login form labels */
+.fieldset .label {
+  font-size: 0.82rem !important;
+  font-weight: 500 !important;
+  color: #e5e7eb !important;
+  margin-bottom: 0.25rem !important;
+}
+
+/* Ensure fieldsets have proper margin */
+.fieldset {
+  margin-bottom: 0 !important;
+}

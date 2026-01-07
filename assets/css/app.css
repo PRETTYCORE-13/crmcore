@@ -1,0 +1,195 @@
+/* ===== Tailwind CSS v4 ===== */
+@import "tailwindcss";
+
+@source "../lib";
+
+[data-phx-session],
+[data-phx-teleported-src] {
+  display: contents
+}
+
+@import "./login.css";
+@import "./index.css";
+@import "./menu.css";
+@import "./subMenu.css";
+@import "./work_order.css";
+@import "./configuracion.css";
+
+/* ===== PrettyCore Dark Theme ===== */
+:root {
+  --pc-bg: #0a0a0f;
+  --pc-surface: #13131a;
+  --pc-card: #1c1c26;
+  --pc-border: #272733;
+  --pc-text: #e2e8f0;
+  --pc-accent: #5f17db;
+  --pc-accent-light: #a78bfa;
+  --pc-hover: #2b2b3a;
+  --pc-radius: 12px;
+  --pc-transition: all 0.25s ease;
+  --pc-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* === Container === */
+.pc-wrap {
+  padding: clamp(1rem, 2vw, 2rem);
+  background: var(--pc-bg);
+  min-height: 100vh;
+  color: var(--pc-text);
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* === Toolbar === */
+.pc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.pc-input {
+  flex: 1;
+  background: var(--pc-surface);
+  border: 1px solid var(--pc-border);
+  border-radius: var(--pc-radius);
+  padding: 0.6rem 0.8rem;
+  color: var(--pc-text);
+  transition: var(--pc-transition);
+}
+
+.pc-input:focus {
+  outline: none;
+  border-color: var(--pc-accent);
+  box-shadow: 0 0 0 2px var(--pc-accent-light);
+}
+
+/* === Buttons === */
+.pc-btn {
+  background: var(--pc-accent);
+  border: none;
+  color: white;
+  font-weight: 500;
+  border-radius: var(--pc-radius);
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: var(--pc-transition);
+}
+
+.pc-btn:hover {
+  background: var(--pc-accent-light);
+  transform: translateY(-1px);
+}
+
+.pc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* === Table === */
+.pc-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--pc-surface);
+  border-radius: var(--pc-radius);
+  box-shadow: var(--pc-shadow);
+}
+
+.pc-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+  color: var(--pc-text);
+  font-size: 0.875rem;
+}
+
+.pc-table thead {
+  background: var(--pc-card);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.pc-table th,
+.pc-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--pc-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.pc-table th button {
+  background: none;
+  border: none;
+  color: var(--pc-text);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: var(--pc-transition);
+}
+
+.pc-table th button:hover {
+  color: var(--pc-accent-light);
+}
+
+.pc-table tbody tr:nth-child(even) {
+  background: var(--pc-card);
+}
+
+.pc-table tbody tr:hover {
+  background: var(--pc-hover);
+}
+
+/* === Pagination === */
+.pc-pager {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.pc-pager button {
+  background: var(--pc-surface);
+  border: 1px solid var(--pc-border);
+  color: var(--pc-text);
+  border-radius: var(--pc-radius);
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  transition: var(--pc-transition);
+}
+
+.pc-pager button:hover:not(:disabled) {
+  background: var(--pc-accent);
+  color: white;
+}
+
+.pc-pager button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* === Responsive layout === */
+@media (max-width: 768px) {
+  .pc-table {
+    font-size: 0.8rem;
+  }
+
+  .pc-table th,
+  .pc-table td {
+    padding: 0.5rem;
+  }
+
+  .pc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pc-btn {
+    width: 100%;
+  }
+}

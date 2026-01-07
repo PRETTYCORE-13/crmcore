@@ -1,0 +1,427 @@
+    <section class="flex flex-col gap-4 p-4 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+      <!-- HEADER COMPACTO -->
+      <header class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <.link navigate={~p"/admin/clientes"} class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+            </.link>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900">{@page_title}</h1>
+              <p class="text-xs text-gray-500">* Campos obligatorios</p>
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+              Cancelar
+            </button>
+            <button type="submit" form="cliente-form" class="px-4 py-1.5 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-sm">
+              Guardar
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- FORMULARIO CON TABS -->
+      <.form id="cliente-form" for={@form} phx-change="validate" phx-submit="save">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+          <!-- TABS NAVEGACIÓN -->
+          <div class="border-b border-gray-200">
+            <nav class="flex -mb-px overflow-x-auto scrollbar-hide" aria-label="Tabs">
+              <button
+                type="button"
+                phx-click="change_tab"
+                phx-value-tab="basicos"
+                class={"px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap #{if @current_tab == "basicos", do: "border-purple-500 text-purple-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}"}
+              >
+                📋 Datos Básicos
+              </button>
+              <button
+                type="button"
+                phx-click="change_tab"
+                phx-value-tab="clasificacion"
+                class={"px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap #{if @current_tab == "clasificacion", do: "border-purple-500 text-purple-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}"}
+              >
+                🏷️ Clasificación *
+              </button>
+              <button
+                type="button"
+                phx-click="change_tab"
+                phx-value-tab="facturacion"
+                class={"px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap #{if @current_tab == "facturacion", do: "border-purple-500 text-purple-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}"}
+              >
+                💰 Facturación
+              </button>
+              <button
+                type="button"
+                phx-click="change_tab"
+                phx-value-tab="direcciones"
+                class={"px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap #{if @current_tab == "direcciones", do: "border-purple-500 text-purple-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}"}
+              >
+                📍 Direcciones ({length(@form[:direcciones].value || [])})
+              </button>
+              <button
+                type="button"
+                phx-click="change_tab"
+                phx-value-tab="opcionales"
+                class={"px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap #{if @current_tab == "opcionales", do: "border-purple-500 text-purple-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}"}
+              >
+                ⚙️ Opcionales
+              </button>
+            </nav>
+          </div>
+
+          <!-- CONTENIDO DE TABS -->
+          <div class="p-6">
+            <!-- TAB: DATOS BÁSICOS -->
+            <div class={if @current_tab == "basicos", do: "block", else: "hidden"}>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                <.input field={@form[:ctecli_codigo_k]} type="text" label="Cliente *" placeholder="Ej: CLI001" />
+                <.input field={@form[:ctetpo_codigo_k]} type="select" label="Tipo de Cliente *" options={@tipos_cliente} prompt="Seleccione..." />
+
+                <div class="md:col-span-2">
+                  <.input field={@form[:ctecli_dencomercia]} type="text" label="Denominación Comercial" placeholder="Nombre comercial" />
+                </div>
+
+                <div class="md:col-span-2">
+                  <.input field={@form[:ctecli_razonsocial]} type="text" label="Razón Social" placeholder="Razón social del cliente" />
+                </div>
+
+                <.input field={@form[:ctecli_rfc]} type="text" label="RFC" placeholder="XAXX010101000" />
+                <.input field={@form[:ctecli_fechaalta]} type="date" label="Fecha Alta" />
+              </div>
+            </div>
+
+            <!-- TAB: CLASIFICACIÓN -->
+            <div class={if @current_tab == "clasificacion", do: "block", else: "hidden"}>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                <!-- Cadena -->
+                <.input field={@form[:ctecad_codigo_k]} type="select" label="Cadena" options={@cadenas} prompt="Seleccione..." />
+                <.input field={@form[:desccadena]} type="text" label="Descripción Cadena" readonly />
+
+                <!-- Canal -->
+                <.input field={@form[:ctecan_codigo_k]} type="select" label="Código Canal *" options={@canales} prompt="Seleccione..." phx-change="canal_change" />
+                <.input field={@form[:desccanal]} type="text" label="Descripción Canal" readonly />
+
+                <!-- Subcanal -->
+                <.input field={@form[:ctesca_codigo_k]} type="select" label="Sub Canal *" options={@subcanales} prompt="Primero seleccione canal" />
+                <.input field={@form[:descsubcanal]} type="text" label="Descripción Subcanal" readonly />
+
+                <!-- Régimen -->
+                <.input field={@form[:ctereg_codigo_k]} type="select" label="Régimen *" options={@regimenes} prompt="Seleccione..." />
+                <.input field={@form[:desc_regimen]} type="text" label="Descripción Régimen" readonly />
+
+                <!-- Paquete Servicio -->
+                <.input field={@form[:ctepaq_codigo_k]} type="select" label="Paquete Servicio" options={@paquetes_servicio} prompt="Seleccione..." />
+                <.input field={@form[:desc_paqser]} type="text" label="Descripción Paquete" readonly />
+              </div>
+            </div>
+
+            <!-- TAB: FACTURACIÓN -->
+            <div class={if @current_tab == "facturacion", do: "block", else: "hidden"}>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl">
+                <!-- Columna 1: Campos principales -->
+                <div class="space-y-4">
+                  <.input field={@form[:cfgmon_codigo_k]} type="select" label="Moneda" options={@monedas} prompt="Seleccione..." />
+                  <.input field={@form[:ctecli_tipodefact]} type="select" label="Tipo Factura" options={[{"Factura", "F"}, {"Remisión", "R"}]} prompt="Seleccione..." />
+                  <.input field={@form[:ctecli_tipofacdes]} type="select" label="Tipo Descuento" options={[{"Sin descuento", "0"}, {"Con descuento", "1"}]} prompt="Seleccione..." />
+                  <.input field={@form[:ctecli_periodorefac]} type="number" label="Período Refacturación" placeholder="Días" />
+                  <.input field={@form[:faccom_codigo_k]} type="select" label="Complementos que Maneja" options={@complementos} prompt="Seleccione..." />
+                </div>
+
+                <!-- Columna 2: Checkboxes -->
+                <div class="space-y-3 p-4 bg-gray-50 rounded-lg">
+                  <h4 class="text-sm font-semibold text-gray-700 mb-3">Opciones de Facturación</h4>
+
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <.input field={@form[:ctecli_tipodefacr]} type="checkbox" label="" />
+                    <span class="text-sm text-gray-700">Detallar Remisiones</span>
+                  </label>
+
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <.input field={@form[:ctecli_desglosaieps]} type="checkbox" label="" />
+                    <span class="text-sm text-gray-700">Desglosa IEPS</span>
+                  </label>
+
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <.input field={@form[:ctecli_dscantimp]} type="checkbox" label="" />
+                    <span class="text-sm text-gray-700">Descuento Ante Impuestos</span>
+                  </label>
+
+                  <label class="flex items-center gap-3 cursor-pointer">
+                    <.input field={@form[:ctecli_desglosakit]} type="checkbox" label="" />
+                    <span class="text-sm text-gray-700">Desglose Producto Kit FE</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Tabs de CFDI -->
+              <div class="mt-8">
+                <div class="border-b border-gray-200">
+                  <nav class="-mb-px flex space-x-4">
+                    <button
+                      type="button"
+                      phx-click="change_cfdi_tab"
+                      phx-value-tab="cfdi_32"
+                      class={[
+                        "py-2 px-4 text-sm font-medium border-b-2 transition-colors",
+                        if(@cfdi_tab == "cfdi_32", do: "border-indigo-600 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                      ]}
+                    >
+                      CFDI 3.2
+                    </button>
+                    <button
+                      type="button"
+                      phx-click="change_cfdi_tab"
+                      phx-value-tab="cfdi_33"
+                      class={[
+                        "py-2 px-4 text-sm font-medium border-b-2 transition-colors",
+                        if(@cfdi_tab == "cfdi_33", do: "border-indigo-600 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                      ]}
+                    >
+                      CFDI 3.3
+                    </button>
+                    <button
+                      type="button"
+                      phx-click="change_cfdi_tab"
+                      phx-value-tab="cfdi_40"
+                      class={[
+                        "py-2 px-4 text-sm font-medium border-b-2 transition-colors",
+                        if(@cfdi_tab == "cfdi_40", do: "border-indigo-600 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                      ]}
+                    >
+                      CFDI 4.0
+                    </button>
+                    <button
+                      type="button"
+                      phx-click="change_cfdi_tab"
+                      phx-value-tab="email"
+                      class={[
+                        "py-2 px-4 text-sm font-medium border-b-2 transition-colors",
+                        if(@cfdi_tab == "email", do: "border-indigo-600 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                      ]}
+                    >
+                      Correo Electrónico
+                    </button>
+                  </nav>
+                </div>
+
+                <!-- Contenido de los tabs CFDI -->
+                <div class="mt-6 p-4 bg-white border border-gray-200 rounded-lg">
+                  <!-- CFDI 3.2 -->
+                  <div class={if @cfdi_tab == "cfdi_32", do: "block", else: "hidden"}>
+                    <div class="grid grid-cols-1 gap-4 max-w-md">
+                      <.input field={@form[:ctecli_tipopago]} type="select" label="Método Pago" options={[{"Pago en una sola exhibición", "PUE"}, {"Pago en parcialidades", "PPD"}]} prompt="Seleccione..." />
+                    </div>
+                  </div>
+
+                  <!-- CFDI 3.3 -->
+                  <div class={if @cfdi_tab == "cfdi_33", do: "block", else: "hidden"}>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <.input field={@form[:ctecli_pais]} type="select" label="País" options={@paises} prompt="Seleccione..." />
+                      <.input field={@form[:sat_uso_cfdi_k]} type="select" label="Uso CFDI" options={@usos_cfdi} prompt="Seleccione..." />
+                      <.input field={@form[:ctecli_metodopago]} type="select" label="Método Pago" options={@metodos_pago} prompt="Seleccione..." />
+                      <.input field={@form[:ctecli_formapago]} type="select" label="Forma Pago" options={@formas_pago} prompt="Seleccione..." />
+                      <div class="md:col-span-2">
+                        <.input field={@form[:cfgreg_codigo_k]} type="select" label="Régimen Fiscal" options={@regimenes_fiscales} prompt="Seleccione..." />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- CFDI 4.0 -->
+                  <div class={if @cfdi_tab == "cfdi_40", do: "block", else: "hidden"}>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <.input field={@form[:satexp_codigo_k]} type="select" label="Código Exportación" options={@codigos_exportacion} prompt="Seleccione..." />
+                      <.input field={@form[:ctecli_cfdi_ver]} type="select" label="Versión CFDI" options={[{"3.3", "3.3"}, {"4.0", "4.0"}]} prompt="Seleccione..." />
+                    </div>
+                  </div>
+
+                  <!-- Correo Electrónico -->
+                  <div class={if @cfdi_tab == "email", do: "block", else: "hidden"}>
+                    <div class="grid grid-cols-1 gap-4">
+                      <.input field={@form[:ctecli_fereceptormail]} type="email" label="Correo Receptor" placeholder="ejemplo@correo.com" />
+                      <.input field={@form[:ctecli_fereceptor]} type="text" label="Nombre Receptor" placeholder="Nombre del receptor" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB: DIRECCIONES -->
+            <div class={if @current_tab == "direcciones", do: "block", else: "hidden"}>
+              <!-- Tabs para Datos de Dirección y Ubicación Geográfica -->
+              <div class="border-b border-gray-200 mb-6">
+                <nav class="-mb-px flex space-x-4">
+                  <button
+                    type="button"
+                    phx-click="change_direccion_tab"
+                    phx-value-tab="datos"
+                    class={[
+                      "py-2 px-4 text-sm font-medium border-b-2 transition-colors",
+                      if(@direccion_tab == "datos", do: "border-indigo-600 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                    ]}
+                  >
+                    Datos de Dirección
+                  </button>
+                  <button
+                    type="button"
+                    phx-click="change_direccion_tab"
+                    phx-value-tab="ubicacion"
+                    class={[
+                      "py-2 px-4 text-sm font-medium border-b-2 transition-colors",
+                      if(@direccion_tab == "ubicacion", do: "border-indigo-600 text-indigo-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300")
+                    ]}
+                  >
+                    Ubicación Geográfica
+                  </button>
+                </nav>
+              </div>
+
+              <!-- TAB 1: Datos de Dirección -->
+              <div class={if @direccion_tab == "datos", do: "block", else: "hidden"}>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl">
+                  <!-- Columna 1 -->
+                  <div class="space-y-4">
+                    <.input field={@form[:ctecli_codigo_k]} type="text" label="Cliente" placeholder="Código del cliente" />
+
+                    <div class="flex items-center gap-4">
+                      <div class="flex-1">
+                        <.input field={@form[:ctedir_codigo_k]} type="text" label="Dirección" placeholder="Código" />
+                      </div>
+                      <div class="mt-6">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <.input field={@form[:ctedir_tipofis]} type="checkbox" label="" />
+                          <span class="text-sm text-gray-700">Tipo Fiscal</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <.input field={@form[:ctedir_tipoent]} type="select" label="Tipo Entrega" options={[{"Normal", "N"}, {"Especial", "E"}]} prompt="Seleccione..." />
+                    <.input field={@form[:ctedir_ivafrontera]} type="select" label="Tipo IVA" options={[{"General 16%", "G"}, {"Frontera 8%", "F"}]} prompt="Seleccione..." />
+                  </div>
+
+                  <!-- Columna 2 -->
+                  <div class="space-y-4">
+                    <.input field={@form[:ctecli_razonsocial]} type="text" label="Razón Social" placeholder="Razón social" />
+                    <.input field={@form[:ctecli_dencomercia]} type="text" label="Denominación Comercial" placeholder="Nombre comercial" />
+                    <.input field={@form[:ctepaq_codigo_k]} type="select" label="Paquete Servicio" options={@paquetes_servicio} prompt="Seleccione..." />
+                  </div>
+                </div>
+
+                <!-- Sección de Detalles de Dirección -->
+                <div class="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-4">Detalles de Ubicación</h3>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <.input field={@form[:ctedir_calle]} type="text" label="Calle *" placeholder="Nombre de la calle" />
+                    <.input field={@form[:ctedir_callenumext]} type="text" label="Número Exterior *" placeholder="S/N" />
+                    <.input field={@form[:ctedir_callenumint]} type="text" label="Número Interior" placeholder="Opcional" />
+
+                    <.input field={@form[:ctedir_calleentre1]} type="text" label="Entre Calle 1" placeholder="Nombre" />
+                    <.input field={@form[:ctedir_calleentre2]} type="text" label="Entre Calle 2" placeholder="Nombre" />
+                    <.input field={@form[:ctedir_cp]} type="text" label="Código Postal *" placeholder="00000" maxlength="5" />
+
+                    <.input field={@form[:mapedo_codigo_k]} type="select" label="Estado *" options={@estados} prompt="Seleccione..." />
+                    <.input field={@form[:mapmun_codigo_k]} type="select" label="Municipio *" options={@municipios} prompt="Seleccione estado" />
+                    <.input field={@form[:maploc_codigo_k]} type="select" label="Localidad *" options={@localidades} prompt="Seleccione municipio" />
+
+                    <.input field={@form[:satcol_codigo_k]} type="text" label="Clave Colonia SAT" placeholder="Código" />
+                    <.input field={@form[:ctedir_colonia]} type="text" label="Colonia" placeholder="Nombre de la colonia" />
+                    <.input field={@form[:ctedir_mail]} type="email" label="Email" placeholder="ejemplo@correo.com" />
+
+                    <.input field={@form[:ctedir_responsable]} type="text" label="Responsable" placeholder="Nombre del responsable" />
+                    <.input field={@form[:ctedir_telefono]} type="text" label="Teléfono" placeholder="5551234567" />
+                    <.input field={@form[:ctedir_distancia]} type="number" label="Distancia (km)" placeholder="0.0" step="0.01" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- TAB 2: Ubicación Geográfica -->
+              <div class={if @direccion_tab == "ubicacion", do: "block", else: "hidden"}>
+                <div class="p-6 bg-white border border-gray-200 rounded-lg">
+                  <h3 class="text-lg font-semibold text-gray-800 mb-4">Mapa para Selección de Ubicación</h3>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <.input
+                        field={@form[:map_x]}
+                        type="text"
+                        label="Coordenada X (Longitud)"
+                        placeholder="-99.1332"
+                        phx-blur="update_map_from_coords"
+                      />
+                    </div>
+                    <div>
+                      <.input
+                        field={@form[:map_y]}
+                        type="text"
+                        label="Coordenada Y (Latitud)"
+                        placeholder="19.4326"
+                        phx-blur="update_map_from_coords"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Mapa Interactivo con Leaflet -->
+                  <div
+                    id="location-map"
+                    phx-hook="LocationMap"
+                    phx-update="ignore"
+                    data-lat={@form[:map_y].value || "19.4326"}
+                    data-lng={@form[:map_x].value || "-99.1332"}
+                    class="w-full bg-gray-100 border-2 border-gray-300 rounded-lg"
+                    style="height: 400px; min-height: 400px; z-index: 1; position: relative;"
+                  >
+                  </div>
+
+                  <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p class="text-sm text-blue-800">💡 Haga clic en el mapa para seleccionar la ubicación o ingrese las coordenadas manualmente en los campos de arriba.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB: OPCIONALES -->
+            <div class={if @current_tab == "opcionales", do: "block", else: "hidden"}>
+              <div class="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                <p class="text-sm text-gray-600">Campos opcionales con referencias a catálogos del sistema</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <.input field={@form[:ctepaq_codigo_k]} type="text" label="Paquete" placeholder="Código" />
+                <.input field={@form[:facadd_codigo_k]} type="text" label="Adenda" placeholder="Código" />
+                <.input field={@form[:ctepor_codigo_k]} type="text" label="Portafolio" placeholder="Código" />
+                <.input field={@form[:condim_codigo_k]} type="text" label="Dimensión" placeholder="Código" />
+                <.input field={@form[:ctecad_codigo_k]} type="text" label="Cadena" placeholder="Código" />
+                <.input field={@form[:cfgban_codigo_k]} type="text" label="Banco" placeholder="Código" />
+                <.input field={@form[:sysemp_codigo_k]} type="text" label="Empresa" placeholder="Código" />
+                <.input field={@form[:faccom_codigo_k]} type="text" label="Comprobante" placeholder="Código" />
+                <.input field={@form[:facads_codigo_k]} type="text" label="Adenda SAT" placeholder="Código" />
+                <.input field={@form[:cteseg_codigo_k]} type="text" label="Segmento" placeholder="Código" />
+                <.input field={@form[:catind_codigo_k]} type="text" label="Industria" placeholder="Código" />
+                <.input field={@form[:catpfi_codigo_k]} type="text" label="Perfil" placeholder="Código" />
+                <.input field={@form[:satexp_codigo_k]} type="text" label="Exportación SAT" placeholder="01" />
+                <.input field={@form[:ctecli_pais]} type="text" label="País" placeholder="MEX" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTONES FLOTANTES (STICKY) -->
+        <div class="sticky bottom-0 mt-4 p-4 bg-white border-t border-gray-200 rounded-lg shadow-lg flex justify-between items-center">
+          <div class="text-sm text-gray-600">
+            Tab actual: <span class="font-semibold">{@current_tab}</span>
+          </div>
+          <div class="flex gap-3">
+            <.link navigate={~p"/admin/clientes"} class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">
+              Cancelar
+            </.link>
+            <button type="submit" class="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-lg shadow-md">
+              💾 Guardar Cliente
+            </button>
+          </div>
+        </div>
+      </.form>
+    </section>

@@ -1,0 +1,50 @@
+  @impl true
+  def handle_event("cp_blur", %{"codigo_postal" => cp, "direccion_index" => index_str}, socket) do
+    # Validar que el CP tenga 5 dígitos
+    if String.match?(cp, ~r/^\d{5}$/) do
+      case Catalogos.buscar_por_cp(cp) do
+        {:ok, ubicacion} ->
+          # Cargar municipios y localidades para el estado encontrado
+          municipios = Catalogos.listar_municipios(ubicacion.estado_codigo)
+          localidades = Catalogos.listar_localidades(ubicacion.estado_codigo, ubicacion.municipio_codigo)
+
+          # Obtener params actuales del formulario
+          current_form = socket.assigns.form
+          params = current_form.params || %{}
+          direcciones = Map.get(params, "direcciones", [])
+
+          # Actualizar la dirección en el índice especificado
+          index = String.to_integer(index_str)
+
+          updated_direccion =
+            Enum.at(direcciones, index)
+            |> Map.put("mapedo_codigo_k", ubicacion.estado_codigo)
+            |> Map.put("mapmun_codigo_k", ubicacion.municipio_codigo)
+            |> Map.put("maploc_codigo_k", ubicacion.localidad_codigo)
+
+          updated_direcciones = List.replace_at(direcciones, index, updated_direccion)
+          updated_params = Map.put(params, "direcciones", updated_direcciones)
+
+          # Crear nuevo changeset
+          changeset =
+            %ClienteForm{}
+            |> ClienteForm.changeset(updated_params)
+            |> Map.put(:action, :validate)
+
+          {:noreply,
+           socket
+           |> assign(:form, to_form(changeset))
+           |> assign(:municipios, municipios)
+           |> assign(:localidades, localidades)
+           |> put_flash(:info, "Ubicación encontrada: #{ubicacion.estado_nombre}, #{ubicacion.municipio_nombre}")}
+
+        {:error, :not_found} ->
+          {:noreply, put_flash(socket, :error, "No se encontró ubicación para el CP: #{cp}")}
+
+        {:error, :invalid_cp} ->
+          {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
+    end
+  end

@@ -1,0 +1,52 @@
+# Handler para auto-completar por código postal
+# Agregar este handler después de municipio_change y antes de change_page en cliente_form_live.ex
+
+  @impl true
+  def handle_event("cp_blur", %{"codigo_postal" => cp, "direccion_index" => index_str}, socket) do
+    if String.match?(cp, ~r/^\d{5}$/) do
+      case Catalogos.buscar_por_cp(cp) do
+        {:ok, ubicacion} ->
+          municipios = Catalogos.listar_municipios(ubicacion.estado_codigo)
+          localidades = Catalogos.listar_localidades(ubicacion.estado_codigo, ubicacion.municipio_codigo)
+
+          current_form = socket.assigns.form
+          params = current_form.params || %{}
+          direcciones = Map.get(params, "direcciones", [])
+          index = String.to_integer(index_str)
+
+          updated_direccion =
+            Enum.at(direcciones, index)
+            |> Map.put("mapedo_codigo_k", ubicacion.estado_codigo)
+            |> Map.put("mapmun_codigo_k", ubicacion.municipio_codigo)
+            |> Map.put("maploc_codigo_k", ubicacion.localidad_codigo)
+
+          updated_direcciones = List.replace_at(direcciones, index, updated_direccion)
+          updated_params = Map.put(params, "direcciones", updated_direcciones)
+
+          changeset =
+            %ClienteForm{}
+            |> ClienteForm.changeset(updated_params)
+            |> Map.put(:action, :validate)
+
+          {:noreply,
+           socket
+           |> assign(:form, to_form(changeset))
+           |> assign(:municipios, municipios)
+           |> assign(:localidades, localidades)
+           |> put_flash(:info, "Ubicación encontrada: #{ubicacion.estado_nombre}, #{ubicacion.municipio_nombre}")}
+
+        {:error, :not_found} ->
+          {:noreply, put_flash(socket, :error, "No se encontró ubicación para el CP: #{cp}")}
+
+        {:error, :invalid_cp} ->
+          {:noreply, socket}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+# También agregar este evento phx-blur en el template para el campo ctedir_cp:
+# phx-blur="cp_blur"
+# phx-value-codigo_postal={f_dir[:ctedir_cp].value}
+# phx-value-direccion_index={f_dir.index}
