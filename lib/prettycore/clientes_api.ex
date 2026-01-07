@@ -71,25 +71,25 @@ defmodule Prettycore.ClientesApi do
       ~s("CTECLI_TIPODEFACT":#{parse_integer(cliente_data.ctecli_tipodefact)}),
       ~s("CTECLI_TIPOFACDES":#{parse_integer(Map.get(cliente_data, :ctecli_tipofacdes, 0))}),
       ~s("CTECLI_TIPOPAGO":#{json_value(Map.get(cliente_data, :ctecli_tipopago, "99"))}),
-      ~s("CTECLI_CREDITOOBS":#{parse_integer(Map.get(cliente_data, :ctecli_creditoobs, 0))}),
-      ~s("CTETPO_CODIGO_K":#{json_value(cliente_data.ctetpo_codigo_k)}),
+      ~s("CTECLI_CREDITOOBS":#{json_value(Map.get(cliente_data, :ctecli_creditoobs))}),
+      ~s("CTETPO_CODIGO_K":#{json_value(Map.get(cliente_data, :ctetpo_codigo_k, "100"))}),
       ~s("CTECAN_CODIGO_K":#{json_value(cliente_data.ctecan_codigo_k)}),
       ~s("CTESCA_CODIGO_K":#{json_value(cliente_data.ctesca_codigo_k)}),
-      ~s("CTEPAQ_CODIGO_K":#{json_value(cliente_data.ctepaq_codigo_k)}),
+      ~s("CTEPAQ_CODIGO_K":#{json_value(Map.get(cliente_data, :ctepaq_codigo_k, "100"))}),
       ~s("CTEREG_CODIGO_K":#{json_value(cliente_data.ctereg_codigo_k)}),
       ~s("CTECAD_CODIGO_K":#{json_value(Map.get(cliente_data, :ctecad_codigo_k))}),
       ~s("CTECLI_GENERICO":#{parse_integer(cliente_data.ctecli_generico)}),
-      ~s("CFGMON_CODIGO_K":#{json_value(cliente_data.cfgmon_codigo_k)}),
+      ~s("CFGMON_CODIGO_K":#{json_value(Map.get(cliente_data, :cfgmon_codigo_k, "MXN"))}),
       ~s("CTECLI_OBSERVACIONES":#{json_value(Map.get(cliente_data, :ctecli_observaciones))}),
-      ~s("SYSTRA_CODIGO_K":#{json_value(cliente_data.systra_codigo_k)}),
+      ~s("SYSTRA_CODIGO_K":#{json_value(Map.get(cliente_data, :systra_codigo_k, "FRCTE_CLIENTE"))}),
       ~s("FACADD_CODIGO_K":#{json_value(Map.get(cliente_data, :facadd_codigo_k))}),
       ~s("CTECLI_FERECEPTOR":#{json_value(Map.get(cliente_data, :ctecli_fereceptor))}),
-      ~s("CTECLI_FERECEPTORMAIL":#{json_value(cliente_data.ctecli_fereceptormail)}),
+      ~s("CTECLI_FERECEPTORMAIL":#{json_value(Map.get(cliente_data, :ctecli_fereceptormail))}),
       ~s("CTEPOR_CODIGO_K":#{json_value(Map.get(cliente_data, :ctepor_codigo_k))}),
-      ~s("CTECLI_TIPODEFACR":#{parse_integer(Map.get(cliente_data, :ctecli_tipodefacr, 0))}),
+      ~s("CTECLI_TIPODEFACR":#{json_value(Map.get(cliente_data, :ctecli_tipodefacr))}),
       ~s("CONDIM_CODIGO_K":#{json_value(Map.get(cliente_data, :condim_codigo_k))}),
-      ~s("CTECLI_CXCLIQ":#{parse_integer(Map.get(cliente_data, :ctecli_cxcliq, 0))}),
-      ~s("CTECLI_NOCTA":#{json_value(cliente_data.ctecli_nocta)}),
+      ~s("CTECLI_CXCLIQ":#{json_value(Map.get(cliente_data, :ctecli_cxcliq))}),
+      ~s("CTECLI_NOCTA":#{json_value(Map.get(cliente_data, :ctecli_nocta, 1))}),
       ~s("CTECLI_DSCANTIMP":#{parse_integer(cliente_data.ctecli_dscantimp)}),
       ~s("CTECLI_DESGLOSAIEPS":#{parse_integer(cliente_data.ctecli_desglosaieps)}),
       ~s("CTECLI_PERIODOREFAC":#{parse_integer(Map.get(cliente_data, :ctecli_periodorefac, 0))}),
@@ -98,8 +98,8 @@ defmodule Prettycore.ClientesApi do
       ~s("CTECLI_CARGAESPECIFICA":#{parse_integer(Map.get(cliente_data, :ctecli_cargaespecifica, 0))}),
       ~s("CTECLI_CADUCIDADMIN":#{parse_integer(Map.get(cliente_data, :ctecli_caducidadmin, 0))}),
       ~s("CTECLI_CTLSANITARIO":#{parse_integer(Map.get(cliente_data, :ctecli_ctlsanitario, 0))}),
-      ~s("CTECLI_FORMAPAGO":#{json_value(cliente_data.ctecli_formapago)}),
-      ~s("CTECLI_METODOPAGO":#{json_value(cliente_data.ctecli_metodopago)}),
+      ~s("CTECLI_FORMAPAGO":#{json_value(Map.get(cliente_data, :ctecli_formapago, "01"))}),
+      ~s("CTECLI_METODOPAGO":#{json_value(Map.get(cliente_data, :ctecli_metodopago, "PUE"))}),
       ~s("CTECLI_REGTRIB":#{json_value(Map.get(cliente_data, :ctecli_regtrib))}),
       ~s("CTECLI_PAIS":#{json_value(cliente_data.ctecli_pais)}),
       ~s("CTECLI_FACTABLERO":#{parse_integer(cliente_data.ctecli_factablero)}),
@@ -125,9 +125,9 @@ defmodule Prettycore.ClientesApi do
       ~s("CTECLI_NOACEPTAFRACCIONES":#{parse_integer(Map.get(cliente_data, :ctecli_noaceptafracciones, 0))}),
       ~s("CTESEG_CODIGO_K":#{json_value(Map.get(cliente_data, :cteseg_codigo_k))}),
       ~s("CTECLI_ECOMMERCE":#{json_value(Map.get(cliente_data, :ctecli_ecommerce))}),
-      ~s("CATIND_CODIGO_K":#{json_value(cliente_data.catind_codigo_k)}),
-      ~s("CATPFI_CODIGO_K":#{json_value(cliente_data.catpfi_codigo_k)}),
-      ~s("direcciones":[#{Enum.map_join(direcciones, ",", &build_direccion_json/1)}])
+      ~s("CATIND_CODIGO_K":#{json_value(Map.get(cliente_data, :catind_codigo_k, "3"))}),
+      ~s("CATPFI_CODIGO_K":#{json_value(Map.get(cliente_data, :catpfi_codigo_k, "1"))}),
+      ~s("direcciones":[#{Enum.map_join(direcciones, ",", fn dir -> build_direccion_json(dir, cliente_data) end)}])
     ]
     |> Enum.join(",")
 
@@ -135,9 +135,12 @@ defmodule Prettycore.ClientesApi do
   end
 
   @doc false
-  defp build_direccion_json(direccion) do
+  defp build_direccion_json(direccion, cliente_data) do
     fields = [
+      ~s("CTECLI_CODIGO_K":#{json_value(cliente_data.ctecli_codigo_k)}),
       ~s("CTEDIR_CODIGO_K":#{json_value(direccion.ctedir_codigo_k)}),
+      ~s("CTECLI_RAZONSOCIAL":#{json_value(cliente_data.ctecli_razonsocial)}),
+      ~s("CTECLI_DENCOMERCIA":#{json_value(cliente_data.ctecli_dencomercia)}),
       ~s("CTEDIR_TIPOFIS":#{parse_integer(Map.get(direccion, :ctedir_tipofis, "1"))}),
       ~s("CTEDIR_TIPOENT":#{parse_integer(Map.get(direccion, :ctedir_tipoent, "1"))}),
       ~s("CTEDIR_RESPONSABLE":#{json_value(direccion.ctedir_responsable)}),
@@ -207,7 +210,7 @@ defmodule Prettycore.ClientesApi do
       ~s("CTEDIR_LIMITECREDI":#{format_decimal(Map.get(direccion, :ctedir_limitecredi))}),
       ~s("CTEDIR_TIPOPAGO":#{parse_integer(Map.get(direccion, :ctedir_tipopago, 0))}),
       ~s("CTEDIR_CREDITOOBS":#{parse_integer(Map.get(direccion, :ctedir_creditoobs, 0))}),
-      ~s("CTEDIR_TIPODEFACR":#{parse_integer(Map.get(direccion, :ctedir_tipodefacr, 0))}),
+      ~s("CTEDIR_TIPODEFACR":#{json_value(Map.get(direccion, :ctedir_tipodefacr))}),
       ~s("CFGEST_CODIGO_K":#{parse_integer(Map.get(direccion, :cfgest_codigo_k, 0))}),
       ~s("CTEDIR_TELADICIONAL":#{json_value(Map.get(direccion, :ctedir_teladicional))}),
       ~s("CTEDIR_MAILADICIONAL":#{json_value(Map.get(direccion, :ctedir_mailadicional))}),

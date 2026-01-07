@@ -377,10 +377,27 @@ defmodule Prettycore.Catalogos do
   Obtiene la lista de métodos de pago SAT
   """
   def listar_metodos_pago do
-    [
-      {"PUE - Pago en una sola exhibición", "PUE"},
-      {"PPD - Pago en parcialidades o diferido", "PPD"}
-    ]
+    query = """
+    SELECT
+      CFGMTP_CODIGO_K as codigo,
+      CFGMTP_DESCRIPCION as descripcion
+    FROM
+      CFG_METODOPAGO
+    ORDER BY CFGMTP_CODIGO_K
+    """
+
+    case Repo.query(query) do
+      {:ok, %{rows: rows, columns: columns}} ->
+        rows
+        |> Enum.map(fn row ->
+          row_map = Enum.zip(columns, row) |> Enum.into(%{})
+          {"#{row_map["codigo"]} - #{row_map["descripcion"]}", row_map["codigo"]}
+        end)
+        |> EncodingHelper.convert_catalog_list()
+
+      {:error, _} ->
+        []
+    end
   end
 
   @doc """
