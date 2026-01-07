@@ -55,28 +55,51 @@ defmodule PrettycoreWeb.CoreComponents do
       :if={msg = render_slot(@inner_block) || Phoenix.Flash.get(@flash, @kind)}
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
+      phx-mounted={show_flash(@id, @kind)}
       role="alert"
-      class="toast toast-top toast-end z-50"
+      class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50"
       {@rest}
     >
       <div class={[
-        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
-        @kind == :info && "alert-info",
-        @kind == :error && "alert-error"
+        "flex items-center gap-4 px-8 py-6 rounded-xl shadow-2xl border-l-4 min-w-[400px] max-w-lg transform transition-all duration-300 ease-in-out",
+        @kind == :info && "bg-gradient-to-r from-green-50 to-emerald-50 border-green-500 text-green-900",
+        @kind == :error && "bg-gradient-to-r from-red-50 to-rose-50 border-red-500 text-red-900"
       ]}>
-        <.icon :if={@kind == :info} name="hero-information-circle" class="size-5 shrink-0" />
-        <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-5 shrink-0" />
-        <div>
-          <p :if={@title} class="font-semibold">{@title}</p>
-          <p>{msg}</p>
+        <div class={[
+          "flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center",
+          @kind == :info && "bg-green-500",
+          @kind == :error && "bg-red-500"
+        ]}>
+          <.icon :if={@kind == :info} name="hero-check-circle" class="size-7 text-white" />
+          <.icon :if={@kind == :error} name="hero-exclamation-circle" class="size-7 text-white" />
         </div>
-        <div class="flex-1" />
-        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark" class="size-5 opacity-40 group-hover:opacity-70" />
+        <div class="flex-1">
+          <p :if={@title} class="font-bold text-base mb-1">{@title}</p>
+          <p class="text-base font-semibold">{msg}</p>
+        </div>
+        <button type="button" class="group flex-shrink-0 cursor-pointer hover:scale-110 transition-transform" aria-label={gettext("close")}>
+          <.icon name="hero-x-mark" class={[
+            "size-6 transition-colors",
+            @kind == :info && "text-green-600 group-hover:text-green-800",
+            @kind == :error && "text-red-600 group-hover:text-red-800"
+          ]} />
         </button>
       </div>
     </div>
     """
+  end
+
+  defp show_flash(js \\ %JS{}, id, kind) do
+    js
+    |> JS.show(
+      to: "##{id}",
+      transition: {"ease-out duration-400", "opacity-0 scale-75", "opacity-100 scale-100"}
+    )
+    |> JS.hide(
+      to: "##{id}",
+      time: 6000,
+      transition: {"ease-in duration-600", "opacity-100 scale-100", "opacity-0 scale-90"}
+    )
   end
 
   @doc """

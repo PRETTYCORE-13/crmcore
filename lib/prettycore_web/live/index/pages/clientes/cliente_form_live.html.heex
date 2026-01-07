@@ -1,4 +1,4 @@
-    <section class="flex flex-col gap-4 p-4 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+    <section class="flex flex-col gap-4 p-4 max-w-7xl mx-auto bg-gray-50 min-h-screen" phx-hook="NavigateAfterFlash" id="cliente-form-container">
       <!-- HEADER COMPACTO -->
       <header class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div class="flex items-center justify-between">
@@ -287,19 +287,23 @@
                   <div class="space-y-4">
                     <.input field={@form[:ctecli_codigo_k]} type="text" label="Cliente" placeholder="Código del cliente" />
 
+                    <.input field={direccion_form[:ctedir_codigo_k]} type="text" label="Dirección" placeholder="Código" />
+
                     <div class="flex items-center gap-4">
-                      <div class="flex-1">
-                        <.input field={direccion_form[:ctedir_codigo_k]} type="text" label="Dirección" placeholder="Código" />
-                      </div>
                       <div class="mt-6">
                         <label class="flex items-center gap-2 cursor-pointer">
                           <.input field={direccion_form[:ctedir_tipofis]} type="checkbox" label="" />
                           <span class="text-sm text-gray-700">Tipo Fiscal</span>
                         </label>
                       </div>
+                      <div class="mt-6">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <.input field={direccion_form[:ctedir_tipoent]} type="checkbox" label="" />
+                          <span class="text-sm text-gray-700">Tipo Entrega</span>
+                        </label>
+                      </div>
                     </div>
 
-                    <.input field={direccion_form[:ctedir_tipoent]} type="select" label="Tipo Entrega" options={[{"Normal", "N"}, {"Especial", "E"}]} prompt="Seleccione..." />
                     <.input field={direccion_form[:ctedir_ivafrontera]} type="select" label="Tipo IVA" options={[{"General 16%", "G"}, {"Frontera 8%", "F"}]} prompt="Seleccione..." />
                   </div>
 
@@ -335,6 +339,17 @@
                     <.input field={direccion_form[:ctedir_responsable]} type="text" label="Responsable" placeholder="Nombre del responsable" />
                     <.input field={direccion_form[:ctedir_telefono]} type="text" label="Teléfono" placeholder="5551234567" />
                     <.input field={direccion_form[:ctedir_distancia]} type="number" label="Distancia (km)" placeholder="0.0" step="0.01" />
+                  </div>
+
+                  <!-- Sección de Rutas -->
+                  <div class="mt-6">
+                    <h4 class="text-md font-semibold text-gray-700 mb-3">Rutas</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <.input field={direccion_form[:vtarut_codigo_k_pre]} type="select" label="Ruta Preventa" options={@rutas} prompt="Seleccione..." />
+                      <.input field={direccion_form[:vtarut_codigo_k_ent]} type="select" label="Ruta Entrega" options={@rutas} prompt="Seleccione..." />
+                      <.input field={direccion_form[:vtarut_codigo_k_cob]} type="select" label="Ruta Cobranza" options={@rutas} prompt="Seleccione..." />
+                      <.input field={direccion_form[:vtarut_codigo_k_aut]} type="select" label="Ruta Autoventa" options={@rutas} prompt="Seleccione..." />
+                    </div>
                   </div>
                 </div>
               </div>

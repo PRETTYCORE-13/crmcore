@@ -198,11 +198,22 @@ const LocationMap = {
   }
 };
 
+// Hook para navegación retrasada después de mostrar flash
+const NavigateAfterFlash = {
+  mounted() {
+    this.handleEvent("navigate-after-flash", ({to, delay}) => {
+      setTimeout(() => {
+        window.location.href = to;
+      }, delay);
+    });
+  }
+};
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, LocationMap},
+  hooks: {...colocatedHooks, LocationMap, NavigateAfterFlash},
 })
 
 // Show progress bar on live navigation and form submits

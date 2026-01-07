@@ -569,20 +569,20 @@ defmodule PrettycoreWeb.ClienteFormLive do
                |> assign(:form, to_form(changeset))}
 
           password ->
-            IO.inspect("Cliente")
+            IO.puts("Cliente")
             # Call API to create cliente
             case ClientesApi.crear_cliente(cliente_data, password) do
               {:ok, _response} ->
-                IO.inspect(:info, "Cliente creado exitosamente")
+                IO.puts("Cliente creado exitosamente")
 
                 {:noreply,
                  socket
                  |> put_flash(:info, "Cliente creado exitosamente")
-                 |> push_navigate(to: ~p"/admin/clientes")}
+                 |> push_event("navigate-after-flash", %{to: "/admin/clientes", delay: 3000})}
 
               {:error, {:http_error, status, body}} ->
                 error_msg = extract_error_message(body, status)
-                IO.inspect("Error al crear cliente: #{error_msg}")
+                IO.puts("Error al crear cliente: #{error_msg}")
 
                 {:noreply,
                  socket
