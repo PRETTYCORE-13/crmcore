@@ -37,3 +37,6 @@ npm-debug.log
 
 # Windows reserved files
 nul
+
+# Environment variables
+.env

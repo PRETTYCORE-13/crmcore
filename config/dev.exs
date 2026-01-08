@@ -2,15 +2,15 @@ import Config
 
 # Configure your database
 config :prettycore, :tds,
-  hostname: "ecore.ath.cx",
-  port: 1433,
-  username: "sa",
-  password: "N0vacore",
-  database: "ECOREDES2",
-  pool_size: 10,
+  hostname: System.get_env("DB_HOSTNAME", "localhost"),
+  port: String.to_integer(System.get_env("DB_PORT", "1433")),
+  username: System.get_env("DB_USERNAME"),
+  password: System.get_env("DB_PASSWORD"),
+  database: System.get_env("DB_DATABASE"),
+  pool_size: String.to_integer(System.get_env("DB_POOL_SIZE", "10")),
   # Encryption settings (use true for Azure/SSL)
-  encrypt: false,
-  trust_server_certificate: true,
+  encrypt: System.get_env("DB_ENCRYPT", "false") == "true",
+  trust_server_certificate: System.get_env("DB_TRUST_SERVER_CERTIFICATE", "true") == "true",
   timeout: 15_000,
   idle_timeout: 5_000,
   show_sensitive_data_on_connection_error: true
@@ -26,7 +26,6 @@ config :prettycore, PrettycoreWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "dVSQr16bNS9GzkcsP8d2WdxJ4i5iZjgY9g/v/H+p2GqGsFWXy3rnkLI1++g7MTi1",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:prettycore, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:prettycore, ~w(--watch)]}

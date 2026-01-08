@@ -7,15 +7,18 @@
 # General application configuration
 import Config
 
+# Load environment variables from .env file
+import_config "load_env.exs"
+
 config :prettycore, Prettycore.Repo,
-  hostname: "ecore.ath.cx",
-  port: 1433,
-  username: "sa",
-  password: "N0vacore",
-  database: "ECOREDES2",
-  pool_size: 10,
-  encrypt: false,
-  trust_server_certificate: true,
+  hostname: System.get_env("DB_HOSTNAME", "localhost"),
+  port: String.to_integer(System.get_env("DB_PORT", "1433")),
+  username: System.get_env("DB_USERNAME"),
+  password: System.get_env("DB_PASSWORD"),
+  database: System.get_env("DB_DATABASE"),
+  pool_size: String.to_integer(System.get_env("DB_POOL_SIZE", "10")),
+  encrypt: System.get_env("DB_ENCRYPT", "false") == "true",
+  trust_server_certificate: System.get_env("DB_TRUST_SERVER_CERTIFICATE", "true") == "true",
   # 30 segundos para queries complejas
   timeout: 30_000,
   # 30 segundos para conectar
@@ -39,7 +42,8 @@ config :prettycore, PrettycoreWeb.Endpoint,
     layout: false
   ],
   pubsub_server: Prettycore.PubSub,
-  live_view: [signing_salt: "i+ll0By+"]
+  live_view: [signing_salt: "i+ll0By+"],
+  secret_key_base: System.get_env("SECRET_KEY_BASE")
 
 # Configures the mailer
 #
