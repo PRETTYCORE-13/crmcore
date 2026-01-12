@@ -75,6 +75,24 @@ defmodule Prettycore.Clientes.Cliente do
     field(:s_usuariodb, :string)
     field(:s_guidnot, :string)
 
+    # Campos adicionales que están en ClienteForm pero no en la tabla
+    # (agregados virtualmente para facilitar la carga)
+    field(:ctecli_timbracb, :integer, virtual: true, default: 0)
+    field(:sysemp_codigo_k, :string, virtual: true)
+    field(:ctecli_novalidavencimiento, :integer, virtual: true, default: 0)
+    field(:ctecli_compatibilidad, :string, virtual: true)
+    field(:satexp_codigo_k, :string, virtual: true, default: "01")
+    field(:cfgreg_codigo_k, :string, virtual: true, default: "601")
+    field(:ctecli_cfdi_ver, :integer, virtual: true, default: 4)
+    field(:ctecli_nombre, :string, virtual: true)
+    field(:ctecli_aplicaregalo, :integer, virtual: true, default: 0)
+    field(:ctecli_prvporteofac, :string, virtual: true)
+    field(:ctecli_noaceptafracciones, :integer, virtual: true, default: 0)
+    field(:cteseg_codigo_k, :string, virtual: true)
+    field(:ctecli_ecommerce, :string, virtual: true)
+    field(:catind_codigo_k, :string, virtual: true, default: "3")
+    field(:catpfi_codigo_k, :string, virtual: true, default: "1")
+
     # Asociaciones
     has_many(:direcciones, Prettycore.Clientes.Direccion, foreign_key: :ctecli_codigo_k)
 

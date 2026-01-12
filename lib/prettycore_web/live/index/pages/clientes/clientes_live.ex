@@ -246,8 +246,8 @@ defmodule PrettycoreWeb.Clientes do
   ## Handle event para editar cliente
   def handle_event("edit_client", %{"client-id" => client_id}, socket) do
     # Aquí puedes redirigir a la página de edición o abrir un modal
-    # Por ejemplo: push_navigate(socket, to: ~p"/admin/clientes/#{client_id}/edit")
-    {:noreply, socket}
+    # Por ejemplo: push_navigate(socket, to: ~p"/admin/clientes/edit/#{client_id}")
+    {:noreply, push_navigate(socket, to: ~p"/admin/clientes/edit/#{client_id}")}
   end
 
   ## Handle event para enviar email al cliente
@@ -279,6 +279,22 @@ defmodule PrettycoreWeb.Clientes do
 
     {:noreply, assign(socket, :visible_columns, new_visible)}
   end
+
+  # En tu módulo PrettycoreWeb.Clientes
+
+def handle_event("edit_cliente", %{"codigo" => codigo, "dir" => dir}, socket) do
+  # Aquí puedes buscar el cliente por código y dir, o redirigir a una página de edición
+  # Por ejemplo, si tienes una ruta para editar clientes:
+  {:noreply, push_navigate(socket, to: ~p"/admin/clientes/edit/#{codigo}?dir=#{dir}")}
+
+  # O si prefieres abrir un modal:
+  # cliente = Clientes.get_cliente_by_codigo(codigo, dir)
+  # {:noreply,
+  #   socket
+  #   |> assign(:editing_cliente, cliente)
+  #   |> assign(:show_edit_modal, true)
+  # }
+end
 
   ## Navegación centralizada con CASE (modelo recomendado)
   def handle_event("change_page", %{"id" => id}, socket) do
@@ -332,23 +348,27 @@ defmodule PrettycoreWeb.Clientes do
   defp get_initial(_), do: "?"
 
   ## Helper para obtener color de avatar basado en código
-  defp avatar_color(codigo) when is_binary(codigo) do
-    colors = [
-      "bg-purple-600",
-      "bg-blue-600",
-      "bg-emerald-600",
-      "bg-amber-600",
-      "bg-rose-600",
-      "bg-indigo-600",
-      "bg-cyan-600",
-      "bg-pink-600"
-    ]
+defp avatar_color(codigo) when is_binary(codigo) do
+  colors = [
+    # Vibrantes
+    "bg-purple-500 hover:bg-purple-600 shadow-lg shadow-purple-200",
+    "bg-blue-500 hover:bg-blue-600 shadow-lg shadow-blue-200",
+    "bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-200",
+    "bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-200",
+    "bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-200",
+    "bg-indigo-500 hover:bg-indigo-600 shadow-lg shadow-indigo-200",
+    "bg-cyan-500 hover:bg-cyan-600 shadow-lg shadow-cyan-200",
+    "bg-pink-500 hover:bg-pink-600 shadow-lg shadow-pink-200",
 
-    hash = :erlang.phash2(codigo, length(colors))
-    Enum.at(colors, hash)
-  end
-  defp avatar_color(_), do: "bg-gray-600"
+    # Pasteles
+    "bg-purple-400 hover:bg-purple-500 shadow-lg shadow-purple-100",
+    "bg-blue-400 hover:bg-blue-500 shadow-lg shadow-blue-100",
+    "bg-emerald-400 hover:bg-emerald-500 shadow-lg shadow-emerald-100"
+  ]
 
+  hash = :erlang.phash2(codigo, length(colors))
+  Enum.at(colors, hash)
+end
   ## Helper para obtener etiqueta de estatus
   defp estatus_label("A"), do: "Activo"
   defp estatus_label("I"), do: "Inactivo"

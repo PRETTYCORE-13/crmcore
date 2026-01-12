@@ -23,7 +23,7 @@ defmodule Prettycore.ClientesApi do
     json_string = build_json_string(cliente_data)
 
     # Mostrar JSON completo que se va a enviar
-    IO.puts("\n========== JSON ENVIADO AL API ==========")
+    IO.puts("\n========== JSON ENVIADO AL API (CREAR) ==========")
     IO.puts(json_string)
     IO.puts("=========================================\n")
 
@@ -32,7 +32,57 @@ defmodule Prettycore.ClientesApi do
       {"content-type", "application/json"}
     ]
 
-    case Req.post(@url, body: json_string, headers: headers) do
+    # Aumentar timeout a 60 segundos
+    case Req.post(@url, body: json_string, headers: headers, receive_timeout: 60_000) do
+      {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
+        IO.puts("\n========== RESPUESTA EXITOSA (#{status}) ==========")
+        IO.inspect(resp_body, label: "RESPONSE BODY", pretty: true, limit: :infinity)
+        IO.puts("===================================================\n")
+        {:ok, resp_body}
+
+      {:ok, %Req.Response{status: status, body: resp_body}} ->
+        IO.puts("\n========== ERROR HTTP (#{status}) ==========")
+        IO.inspect(resp_body, label: "ERROR BODY", pretty: true, limit: :infinity)
+        IO.puts("============================================\n")
+        {:error, {:http_error, status, resp_body}}
+
+      {:error, reason} ->
+        IO.puts("\n========== ERROR DE CONEXIÓN ==========")
+        IO.inspect(reason, label: "ERROR", pretty: true)
+        IO.puts("========================================\n")
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Updates an existing client via REST API.
+
+  ## Parameters
+    - cliente_data: Map with client data (from embedded schema)
+    - password: User password for authentication
+
+  ## Returns
+    - {:ok, response_body} on success
+    - {:error, reason} on failure
+  """
+  def actualizar_cliente(cliente_data, password) do
+    # Construir JSON manualmente para preservar el orden EXACTO
+    json_string = build_json_string(cliente_data)
+
+    # Mostrar JSON completo que se va a enviar
+    IO.puts("\n========== JSON ENVIADO AL API (ACTUALIZAR) ==========")
+    IO.puts(json_string)
+    IO.puts("======================================================\n")
+
+    headers = [
+      {"authorization", "Bearer " <> password},
+      {"content-type", "application/json"}
+    ]
+
+    # Muchos APIs usan POST tanto para crear como actualizar
+    # El API diferencia por el código del cliente (si existe, actualiza; si no, crea)
+    # Aumentar timeout a 60 segundos
+    case Req.post(@url, body: json_string, headers: headers, receive_timeout: 60_000) do
       {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
         IO.puts("\n========== RESPUESTA EXITOSA (#{status}) ==========")
         IO.inspect(resp_body, label: "RESPONSE BODY", pretty: true, limit: :infinity)

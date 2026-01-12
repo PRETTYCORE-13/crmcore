@@ -2,6 +2,7 @@ defmodule PrettycoreWeb.ClienteFormLive do
   use PrettycoreWeb, :live_view_admin
 
   alias Prettycore.ClientesApi
+  alias Prettycore.Clientes
   alias Prettycore.Auth.User
   alias Prettycore.Repo
   alias Prettycore.Catalogos
@@ -381,13 +382,184 @@ defmodule PrettycoreWeb.ClienteFormLive do
     end
   end
 
+  # Función para generar código de cliente único
+  defp generar_codigo_cliente do
+    # Generar código aleatorio de 7 caracteres
+    # 85% probabilidad de números, 15% de incluir una letra
+    codigo = if :rand.uniform(100) > 15 do
+      # Solo números (7 dígitos)
+      # Usar timestamp parcial + aleatorio para mayor unicidad
+      timestamp_part = System.system_time(:millisecond) |> rem(10000) |> Integer.to_string() |> String.pad_leading(4, "0")
+      random_part = :rand.uniform(1000) |> Integer.to_string() |> String.pad_leading(3, "0")
+      (timestamp_part <> random_part) |> String.slice(0..6)
+    else
+      # Con una letra en posición aleatoria (generalmente al inicio o final)
+      timestamp_part = System.system_time(:millisecond) |> rem(100000) |> Integer.to_string() |> String.pad_leading(5, "0")
+      random_digit = :rand.uniform(10) - 1 |> Integer.to_string()
+      letra = Enum.random(?A..?Z) |> List.to_string()
+
+      # 50% probabilidad de poner la letra al inicio o al final
+      if :rand.uniform(2) == 1 do
+        letra <> timestamp_part <> random_digit
+      else
+        timestamp_part <> random_digit <> letra
+      end
+      |> String.slice(0..6)
+    end
+
+    codigo
+  end
+
   @impl true
-  def mount(_params, session, socket) do
-    # Crear cliente con valores por defecto y una dirección inicial
-    cliente = %ClienteForm{
-      ctecli_fechaalta: Date.utc_today(),
-      direcciones: [%DireccionForm{ctedir_codigo_k: "1"}]
-    }
+  def mount(params, session, socket) do
+    # Determinar si estamos en modo edición o creación
+    cliente_id = Map.get(params, "id")
+
+    # Crear o cargar cliente
+    {cliente, page_title, current_path} = if cliente_id do
+      # Modo edición: Cargar datos existentes desde la BD
+      case Clientes.get_cliente_by_codigo(cliente_id) do
+        {:ok, %{cliente: cliente_db, direcciones: direcciones_db}} ->
+          # Convertir direcciones de la BD al formato del formulario
+          direcciones_form = Enum.map(direcciones_db, fn dir ->
+            %DireccionForm{
+              ctedir_codigo_k: dir.ctedir_codigo_k,
+              ctedir_responsable: dir.ctedir_responsable,
+              ctedir_telefono: dir.ctedir_telefono,
+              ctedir_calle: dir.ctedir_calle,
+              ctedir_callenumext: dir.ctedir_callenumext,
+              ctedir_callenumint: dir.ctedir_callenumint,
+              ctedir_colonia: dir.ctedir_colonia,
+              ctedir_cp: dir.ctedir_cp,
+              ctedir_celular: dir.ctedir_celular,
+              ctedir_mail: dir.ctedir_mail,
+              mapedo_codigo_k: dir.mapedo_codigo_k,
+              mapmun_codigo_k: dir.mapmun_codigo_k,
+              maploc_codigo_k: dir.maploc_codigo_k,
+              map_x: dir.map_x,
+              map_y: dir.map_y,
+              vtarut_codigo_k_pre: dir.vtarut_codigo_k_pre,
+              vtarut_codigo_k_ent: dir.vtarut_codigo_k_ent,
+              vtarut_codigo_k_cob: dir.vtarut_codigo_k_cob,
+              vtarut_codigo_k_aut: dir.vtarut_codigo_k_aut,
+              vtarut_codigo_k_simpre: dir.vtarut_codigo_k_simpre,
+              vtarut_codigo_k_siment: dir.vtarut_codigo_k_siment,
+              vtarut_codigo_k_simcob: dir.vtarut_codigo_k_simcob,
+              vtarut_codigo_k_simaut: dir.vtarut_codigo_k_simaut,
+              vtarut_codigo_k_sup: dir.vtarut_codigo_k_sup,
+              ctepfr_codigo_k: dir.ctepfr_codigo_k,
+              cteclu_codigo_k: dir.cteclu_codigo_k,
+              ctezni_codigo_k: dir.ctezni_codigo_k,
+              ctecor_codigo_k: dir.ctecor_codigo_k,
+              condim_codigo_k: dir.condim_codigo_k,
+              ctepaq_codigo_k: dir.ctepaq_codigo_k,
+              ctevie_codigo_k: dir.ctevie_codigo_k,
+              ctesvi_codigo_k: dir.ctesvi_codigo_k,
+              satcp_codigo_k: dir.satcp_codigo_k,
+              satcol_codigo_k: dir.satcol_codigo_k,
+              c_estado_k: dir.c_estado_k,
+              c_municipio_k: dir.c_municipio_k,
+              c_localidad_k: dir.c_localidad_k,
+              cfgest_codigo_k: dir.cfgest_codigo_k,
+              ctedir_tipofis: to_string(dir.ctedir_tipofis || 0),
+              ctedir_tipoent: to_string(dir.ctedir_tipoent || 0),
+              ctedir_ivafrontera: to_string(dir.ctedir_ivafrontera || 0),
+              ctedir_secuencia: dir.ctedir_secuencia || 0,
+              ctedir_secuenciaent: dir.ctedir_secuenciaent || 0,
+              ctedir_reqgeo: dir.ctedir_reqgeo || 0,
+              ctedir_distancia: dir.ctedir_distancia || Decimal.new("1.0"),
+              ctedir_novalidavencimiento: dir.ctedir_novalidavencimiento || 0,
+              ctedir_edocred: dir.ctedir_edocred || 0,
+              ctedir_diascredito: dir.ctedir_diascredito || 0,
+              ctedir_limitecredi: dir.ctedir_limitecredi || Decimal.new("0"),
+              ctedir_tipopago: dir.ctedir_tipopago || 0,
+              ctedir_tipodefacr: dir.ctedir_tipodefacr || 0,
+              s_maqedo: dir.s_maqedo || 0
+            }
+          end)
+
+          # Si no hay direcciones, crear una por defecto
+          direcciones_form = if Enum.empty?(direcciones_form) do
+            [%DireccionForm{ctedir_codigo_k: "1"}]
+          else
+            direcciones_form
+          end
+
+          # Convertir cliente de BD al formato del formulario
+          cliente = %ClienteForm{
+            ctecli_codigo_k: cliente_db.ctecli_codigo_k,
+            ctecli_razonsocial: cliente_db.ctecli_razonsocial,
+            ctecli_dencomercia: cliente_db.ctecli_dencomercia,
+            ctecli_rfc: cliente_db.ctecli_rfc || "XAXX010101000",
+            ctecli_fechaalta: cliente_db.ctecli_fechaalta && NaiveDateTime.to_date(cliente_db.ctecli_fechaalta) || Date.utc_today(),
+            ctecli_edocred: cliente_db.ctecli_edocred || 0,
+            ctecli_diascredito: cliente_db.ctecli_diascredito || 0,
+            ctecli_limitecredi: cliente_db.ctecli_limitecredi || Decimal.new("0.0"),
+            ctecli_tipodefact: to_string(cliente_db.ctecli_tipodefact || 0),
+            ctecli_tipofacdes: to_string(cliente_db.ctecli_tipofacdes || 0),
+            ctecli_tipodefacr: (cliente_db.ctecli_tipodefacr || 0) == 1,
+            ctecli_formapago: cliente_db.ctecli_formapago,
+            ctecli_metodopago: cliente_db.ctecli_metodopago,
+            ctecli_tipopago: cliente_db.ctecli_tipopago || "99",
+            sat_uso_cfdi_k: cliente_db.sat_uso_cfdi_k || "G01",
+            ctecli_fereceptormail: cliente_db.ctecli_fereceptormail,
+            ctetpo_codigo_k: to_string(cliente_db.ctetpo_codigo_k || 1),
+            ctecan_codigo_k: cliente_db.ctecan_codigo_k,
+            ctesca_codigo_k: cliente_db.ctesca_codigo_k,
+            ctereg_codigo_k: cliente_db.ctereg_codigo_k,
+            systra_codigo_k: cliente_db.systra_codigo_k,
+            ctepaq_codigo_k: cliente_db.ctepaq_codigo_k,
+            facadd_codigo_k: cliente_db.facadd_codigo_k,
+            ctepor_codigo_k: cliente_db.ctepor_codigo_k,
+            condim_codigo_k: cliente_db.condim_codigo_k,
+            ctecad_codigo_k: cliente_db.ctecad_codigo_k,
+            cfgban_codigo_k: cliente_db.cfgban_codigo_k,
+            faccom_codigo_k: cliente_db.faccom_codigo_k,
+            facads_codigo_k: cliente_db.facads_codigo_k,
+            cteseg_codigo_k: Map.get(cliente_db, :cteseg_codigo_k),
+            cfgmon_codigo_k: cliente_db.cfgmon_codigo_k,
+            catind_codigo_k: Map.get(cliente_db, :catind_codigo_k, "3"),
+            catpfi_codigo_k: Map.get(cliente_db, :catpfi_codigo_k, "1"),
+            ctecli_pais: cliente_db.ctecli_pais || "MEX",
+            ctecli_generico: cliente_db.ctecli_generico || 0,
+            ctecli_nocta: cliente_db.ctecli_nocta,
+            ctecli_dscantimp: (cliente_db.ctecli_dscantimp || 1) == 1,
+            ctecli_desglosaieps: (cliente_db.ctecli_desglosaieps || 0) == 1,
+            ctecli_periodorefac: cliente_db.ctecli_periodorefac || 0,
+            ctecli_cargaespecifica: cliente_db.ctecli_cargaespecifica || 0,
+            ctecli_caducidadmin: cliente_db.ctecli_caducidadmin || 0,
+            ctecli_ctlsanitario: cliente_db.ctecli_ctlsanitario || 0,
+            ctecli_factablero: cliente_db.ctecli_factablero || 0,
+            ctecli_aplicacanje: cliente_db.ctecli_aplicacanje || 0,
+            ctecli_aplicadev: cliente_db.ctecli_aplicadev || 0,
+            ctecli_desglosakit: (cliente_db.ctecli_desglosakit || 0) == 1,
+            ctecli_facgrupo: cliente_db.ctecli_facgrupo || 0,
+            ctecli_cxcliq: cliente_db.ctecli_cxcliq || 0,
+            s_maqedo: cliente_db.s_maqedo || 0,
+            direcciones: direcciones_form
+          }
+
+          {cliente, "Editar Cliente #{cliente_id}", "/admin/clientes/edit/#{cliente_id}"}
+
+        {:error, :not_found} ->
+          # Si no se encuentra el cliente, crear uno vacío con ese código
+          cliente = %ClienteForm{
+            ctecli_codigo_k: cliente_id,
+            ctecli_fechaalta: Date.utc_today(),
+            direcciones: [%DireccionForm{ctedir_codigo_k: "1"}]
+          }
+          {cliente, "Editar Cliente #{cliente_id} (No encontrado)", "/admin/clientes/edit/#{cliente_id}"}
+      end
+    else
+      # Modo creación: nuevo cliente con código autogenerado
+      codigo_generado = generar_codigo_cliente()
+      cliente = %ClienteForm{
+        ctecli_codigo_k: codigo_generado,
+        ctecli_fechaalta: Date.utc_today(),
+        direcciones: [%DireccionForm{ctedir_codigo_k: "1"}]
+      }
+      {cliente, "Nuevo Cliente", "/admin/clientes/new"}
+    end
 
     form = to_form(ClienteForm.changeset(cliente, %{}))
 
@@ -415,10 +587,11 @@ defmodule PrettycoreWeb.ClienteFormLive do
      |> assign(:sidebar_open, true)
      |> assign(:show_programacion_children, false)
      |> assign(:current_user_email, user_email)
-     |> assign(:current_path, "/admin/clientes/new")
+     |> assign(:current_path, current_path)
      |> assign(:form, form)
-     |> assign(:page_title, "Nuevo Cliente")
+     |> assign(:page_title, page_title)
      |> assign(:current_tab, "basicos")
+     |> assign(:cliente_id, cliente_id)
      |> assign(:tipos_cliente, tipos_cliente)
      |> assign(:cadenas, cadenas)
      |> assign(:canales, canales)
@@ -450,7 +623,15 @@ defmodule PrettycoreWeb.ClienteFormLive do
     valid_tabs = ["basicos", "clasificacion", "facturacion", "direcciones", "opcionales"]
     current_tab = if tab in valid_tabs, do: tab, else: "basicos"
 
-    {:noreply, assign(socket, :current_tab, current_tab)}
+    # Update current_path based on id if present
+    cliente_id = Map.get(params, "id")
+    current_path = if cliente_id do
+      "/admin/clientes/edit/#{cliente_id}"
+    else
+      "/admin/clientes/new"
+    end
+
+    {:noreply, socket |> assign(:current_tab, current_tab) |> assign(:current_path, current_path)}
   end
 
   @impl true
@@ -540,7 +721,12 @@ defmodule PrettycoreWeb.ClienteFormLive do
   @impl true
   def handle_event("save", %{"cliente_form" => params}, socket) do
     changeset = ClienteForm.changeset(%ClienteForm{}, params)
-    IO.inspect("nuevo")
+
+    # Determinar si estamos en modo edición o creación
+    cliente_id = socket.assigns[:cliente_id]
+    is_edit_mode = !is_nil(cliente_id)
+
+    IO.inspect(if(is_edit_mode, do: "actualizar", else: "nuevo"), label: "MODO")
 
     case validate_and_extract(changeset) do
       {:ok, cliente_data} ->
@@ -569,28 +755,35 @@ defmodule PrettycoreWeb.ClienteFormLive do
                |> assign(:form, to_form(changeset))}
 
           password ->
-            IO.puts("Cliente")
-            # Call API to create cliente
-            case ClientesApi.crear_cliente(cliente_data, password) do
+            # Llamar al API según el modo (crear o actualizar)
+            api_result = if is_edit_mode do
+              ClientesApi.actualizar_cliente(cliente_data, password)
+            else
+              ClientesApi.crear_cliente(cliente_data, password)
+            end
+
+            action = if is_edit_mode, do: "actualizado", else: "creado"
+
+            case api_result do
               {:ok, _response} ->
-                IO.puts("Cliente creado exitosamente")
+                IO.puts("Cliente #{action} exitosamente")
 
                 {:noreply,
                  socket
-                 |> put_flash(:info, "Cliente creado exitosamente")
+                 |> put_flash(:info, "Cliente #{action} exitosamente")
                  |> push_event("navigate-after-flash", %{to: "/admin/clientes", delay: 3000})}
 
               {:error, {:http_error, status, body}} ->
                 error_msg = extract_error_message(body, status)
-                IO.puts("Error al crear cliente: #{error_msg}")
+                IO.puts("Error al #{action} cliente: #{error_msg}")
 
                 {:noreply,
                  socket
-                 |> put_flash(:error, "Error al crear cliente: #{error_msg}")
+                 |> put_flash(:error, "Error al #{action} cliente: #{error_msg}")
                  |> assign(:form, to_form(changeset))}
 
               {:error, reason} ->
-                IO.inspect("Error al crear cliente")
+                IO.inspect("Error al #{action} cliente")
 
                 {:noreply,
                  socket
@@ -752,7 +945,12 @@ defmodule PrettycoreWeb.ClienteFormLive do
 
   @impl true
   def handle_event("change_tab", %{"tab" => tab}, socket) do
-    {:noreply, push_patch(socket, to: ~p"/admin/clientes/new/#{tab}")}
+    path = if socket.assigns[:cliente_id] do
+      ~p"/admin/clientes/edit/#{socket.assigns.cliente_id}/#{tab}"
+    else
+      ~p"/admin/clientes/new/#{tab}"
+    end
+    {:noreply, push_patch(socket, to: path)}
   end
 
   @impl true

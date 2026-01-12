@@ -440,4 +440,102 @@ defmodule Prettycore.Clientes do
   defp get_param_or_default(nil, default), do: default
   defp get_param_or_default("", default), do: default
   defp get_param_or_default(value, _default) when is_binary(value), do: value
+
+  @doc """
+  Obtiene un cliente por su código con todas sus direcciones.
+
+  ## Parámetros
+    * `codigo` - Código del cliente
+
+  ## Ejemplos
+      iex> get_cliente_by_codigo("0002")
+      {:ok, %{cliente: %{...}, direcciones: [...]}}
+  """
+  def get_cliente_by_codigo(codigo) do
+    # Buscar cliente - seleccionar solo campos reales (no virtuales)
+    cliente_query =
+      from(c in Cliente,
+        where: c.ctecli_codigo_k == ^codigo,
+        select: %{
+          ctecli_codigo_k: c.ctecli_codigo_k,
+          ctecli_razonsocial: c.ctecli_razonsocial,
+          ctecli_dencomercia: c.ctecli_dencomercia,
+          ctecli_rfc: c.ctecli_rfc,
+          ctecli_fechaalta: c.ctecli_fechaalta,
+          ctecli_fechabaja: c.ctecli_fechabaja,
+          ctecli_causabaja: c.ctecli_causabaja,
+          ctecli_edocred: c.ctecli_edocred,
+          ctecli_diascredito: c.ctecli_diascredito,
+          ctecli_limitecredi: c.ctecli_limitecredi,
+          ctecli_tipodefact: c.ctecli_tipodefact,
+          ctecli_tipofacdes: c.ctecli_tipofacdes,
+          ctecli_tipopago: c.ctecli_tipopago,
+          ctecli_creditoobs: c.ctecli_creditoobs,
+          ctetpo_codigo_k: c.ctetpo_codigo_k,
+          ctesca_codigo_k: c.ctesca_codigo_k,
+          ctepaq_codigo_k: c.ctepaq_codigo_k,
+          ctereg_codigo_k: c.ctereg_codigo_k,
+          ctecad_codigo_k: c.ctecad_codigo_k,
+          ctecan_codigo_k: c.ctecan_codigo_k,
+          ctecli_generico: c.ctecli_generico,
+          cfgmon_codigo_k: c.cfgmon_codigo_k,
+          ctecli_observaciones: c.ctecli_observaciones,
+          systra_codigo_k: c.systra_codigo_k,
+          facadd_codigo_k: c.facadd_codigo_k,
+          ctecli_fereceptor: c.ctecli_fereceptor,
+          ctecli_fereceptormail: c.ctecli_fereceptormail,
+          ctepor_codigo_k: c.ctepor_codigo_k,
+          ctecli_tipodefacr: c.ctecli_tipodefacr,
+          condim_codigo_k: c.condim_codigo_k,
+          ctecli_cxcliq: c.ctecli_cxcliq,
+          ctecli_nocta: c.ctecli_nocta,
+          ctecli_dscantimp: c.ctecli_dscantimp,
+          ctecli_desglosaieps: c.ctecli_desglosaieps,
+          ctecli_periodorefac: c.ctecli_periodorefac,
+          ctecli_contacto: c.ctecli_contacto,
+          cfgban_codigo_k: c.cfgban_codigo_k,
+          ctecli_cargaespecifica: c.ctecli_cargaespecifica,
+          ctecli_caducidadmin: c.ctecli_caducidadmin,
+          ctecli_ctlsanitario: c.ctecli_ctlsanitario,
+          ctecli_formapago: c.ctecli_formapago,
+          ctecli_metodopago: c.ctecli_metodopago,
+          ctecli_regtrib: c.ctecli_regtrib,
+          ctecli_pais: c.ctecli_pais,
+          ctecli_factablero: c.ctecli_factablero,
+          sat_uso_cfdi_k: c.sat_uso_cfdi_k,
+          ctecli_complemento: c.ctecli_complemento,
+          ctecli_aplicacanje: c.ctecli_aplicacanje,
+          ctecli_aplicadev: c.ctecli_aplicadev,
+          ctecli_desglosakit: c.ctecli_desglosakit,
+          faccom_codigo_k: c.faccom_codigo_k,
+          ctecli_facgrupo: c.ctecli_facgrupo,
+          facads_codigo_k: c.facads_codigo_k,
+          s_maqedo: c.s_maqedo,
+          s_fecha: c.s_fecha,
+          s_fi: c.s_fi,
+          s_guid: c.s_guid,
+          s_guidlog: c.s_guidlog,
+          s_usuario: c.s_usuario,
+          s_usuariodb: c.s_usuariodb,
+          s_guidnot: c.s_guidnot
+        }
+      )
+
+    case Repo.one(cliente_query) do
+      nil ->
+        {:error, :not_found}
+
+      cliente ->
+        # Buscar direcciones del cliente
+        direcciones_query =
+          from(d in Direccion,
+            where: d.ctecli_codigo_k == ^codigo,
+            select: d
+          )
+
+        direcciones = Repo.all(direcciones_query)
+
+        {:ok, %{cliente: cliente, direcciones: direcciones}}
+    end
+  end
 end

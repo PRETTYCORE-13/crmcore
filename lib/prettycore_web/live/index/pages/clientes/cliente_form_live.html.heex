@@ -1,24 +1,24 @@
-    <section class="flex flex-col gap-4 p-4 max-w-7xl mx-auto bg-gray-50 min-h-screen" phx-hook="NavigateAfterFlash" id="cliente-form-container">
-      <!-- HEADER COMPACTO -->
-      <header class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+    <section class="flex flex-col gap-6 p-6 max-w-7xl mx-auto min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50" phx-hook="NavigateAfterFlash" id="cliente-form-container">
+      <!-- HEADER MODERNO CON GRADIENTE -->
+      <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl shadow-2xl p-6 text-white">
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <.link navigate={~p"/admin/clientes"} class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          <div class="flex items-center gap-4">
+            <.link navigate={~p"/admin/clientes"} class="p-2.5 hover:bg-white/20 rounded-xl transition-all duration-200 backdrop-blur-sm">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
               </svg>
             </.link>
             <div>
-              <h1 class="text-xl font-bold text-gray-900">{@page_title}</h1>
-              <p class="text-xs text-gray-500">* Campos obligatorios</p>
+              <h1 class="text-2xl font-bold tracking-tight">{@page_title}</h1>
+              <p class="text-sm text-white/80 mt-0.5">* Campos obligatorios | Complete la información del cliente</p>
             </div>
           </div>
-          <div class="flex gap-2">
-            <button type="button" class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+          <div class="flex gap-3">
+            <button type="button" class="px-5 py-2.5 text-sm font-medium bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-200 border border-white/30">
               Cancelar
             </button>
-            <button type="submit" form="cliente-form" class="px-4 py-1.5 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg shadow-sm">
-              Guardar
+            <button type="submit" form="cliente-form" class="px-6 py-2.5 text-sm font-semibold bg-white text-indigo-600 hover:bg-white/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+              💾 Guardar Cliente
             </button>
           </div>
         </div>
@@ -26,15 +26,15 @@
 
       <!-- FORMULARIO CON TABS -->
       <.form id="cliente-form" for={@form} phx-change="validate" phx-submit="save">
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-          <!-- TABS NAVEGACIÓN -->
-          <div class="border-b border-gray-200">
-            <nav class="flex -mb-px overflow-x-auto scrollbar-hide" aria-label="Tabs">
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-indigo-100">
+          <!-- TABS NAVEGACIÓN MODERNA -->
+          <div class="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-t-2xl border-b-2 border-indigo-200">
+            <nav class="flex -mb-0.5 overflow-x-auto scrollbar-hide p-2 gap-2" aria-label="Tabs">
               <button
                 type="button"
                 phx-click="change_tab"
                 phx-value-tab="basicos"
-                class={"px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap #{if @current_tab == "basicos", do: "border-purple-500 text-purple-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}"}
+                class={"px-6 py-3 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "basicos", do: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-indigo-600"}"}
               >
                 📋 Datos Básicos
               </button>
@@ -42,7 +42,7 @@
                 type="button"
                 phx-click="change_tab"
                 phx-value-tab="clasificacion"
-                class={"px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap #{if @current_tab == "clasificacion", do: "border-purple-500 text-purple-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}"}
+                class={"px-6 py-3 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "clasificacion", do: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-indigo-600"}"}
               >
                 🏷️ Clasificación *
               </button>
@@ -50,7 +50,7 @@
                 type="button"
                 phx-click="change_tab"
                 phx-value-tab="facturacion"
-                class={"px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap #{if @current_tab == "facturacion", do: "border-purple-500 text-purple-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}"}
+                class={"px-6 py-3 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "facturacion", do: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-indigo-600"}"}
               >
                 💰 Facturación
               </button>
@@ -58,15 +58,15 @@
                 type="button"
                 phx-click="change_tab"
                 phx-value-tab="direcciones"
-                class={"px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap #{if @current_tab == "direcciones", do: "border-purple-500 text-purple-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}"}
+                class={"px-6 py-3 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "direcciones", do: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-indigo-600"}"}
               >
-                📍 Direcciones ({length(@form[:direcciones].value || [])})
+                📍 Direcciones <span class="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">({length(@form[:direcciones].value || [])})</span>
               </button>
               <button
                 type="button"
                 phx-click="change_tab"
                 phx-value-tab="opcionales"
-                class={"px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap #{if @current_tab == "opcionales", do: "border-purple-500 text-purple-600", else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}"}
+                class={"px-6 py-3 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "opcionales", do: "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-indigo-600"}"}
               >
                 ⚙️ Opcionales
               </button>
@@ -74,85 +74,146 @@
           </div>
 
           <!-- CONTENIDO DE TABS -->
-          <div class="p-6">
+          <div class="p-8">
             <!-- TAB: DATOS BÁSICOS -->
             <div class={if @current_tab == "basicos", do: "block", else: "hidden"}>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
-                <.input field={@form[:ctecli_codigo_k]} type="text" label="Cliente *" placeholder="Ej: CLI001" />
+              <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center text-white text-sm">1</span>
+                  Información Básica del Cliente
+                </h3>
+                <p class="text-sm text-gray-500 mt-1 ml-10">Complete los datos principales de identificación</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-xl border-2 border-indigo-200">
+                  <%!-- Campo hidden para enviar el código en el formulario --%>
+                  <.input
+                    field={@form[:ctecli_codigo_k]}
+                    type="hidden"
+                  />
+                  <%!-- Campo visible (disabled) solo para mostrar --%>
+                  <.input
+                    field={@form[:ctecli_codigo_k]}
+                    type="text"
+                    label="Cliente * (Autogenerado)"
+                    readonly
+                    disabled
+                    class="bg-white/50 cursor-not-allowed font-mono text-lg font-bold text-indigo-700"
+                    name="display_only"
+                  />
+                  <p class="mt-2 text-xs text-indigo-600 flex items-center gap-1">
+                    <span class="text-base">🔒</span>
+                    <span class="font-medium">Código único generado automáticamente - No editable</span>
+                  </p>
+                </div>
                 <.input field={@form[:ctetpo_codigo_k]} type="select" label="Tipo de Cliente *" options={@tipos_cliente} prompt="Seleccione..." />
 
-                <div class="md:col-span-2">
-                  <.input field={@form[:ctecli_dencomercia]} type="text" label="Denominación Comercial" placeholder="Nombre comercial" />
+                <div class="md:col-span-2 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                  <.input field={@form[:ctecli_dencomercia]} type="text" label="Denominación Comercial" placeholder="Nombre comercial del cliente" />
                 </div>
 
-                <div class="md:col-span-2">
-                  <.input field={@form[:ctecli_razonsocial]} type="text" label="Razón Social" placeholder="Razón social del cliente" />
+                <div class="md:col-span-2 p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-200">
+                  <.input field={@form[:ctecli_razonsocial]} type="text" label="Razón Social *" placeholder="Razón social completa del cliente" />
                 </div>
 
-                <.input field={@form[:ctecli_rfc]} type="text" label="RFC" placeholder="XAXX010101000" />
+                <.input field={@form[:ctecli_rfc]} type="text" label="RFC *" placeholder="XAXX010101000" />
                 <.input field={@form[:ctecli_fechaalta]} type="date" label="Fecha Alta" />
               </div>
             </div>
 
             <!-- TAB: CLASIFICACIÓN -->
             <div class={if @current_tab == "clasificacion", do: "block", else: "hidden"}>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+              <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white text-sm">2</span>
+                  Clasificación Comercial
+                </h3>
+                <p class="text-sm text-gray-500 mt-1 ml-10">Defina la categorización y segmentación del cliente</p>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl">
                 <!-- Cadena -->
-                <.input field={@form[:ctecad_codigo_k]} type="select" label="Cadena" options={@cadenas} prompt="Seleccione..." />
-                <.input field={@form[:desccadena]} type="text" label="Descripción Cadena" readonly />
+                <div class="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+                  <.input field={@form[:ctecad_codigo_k]} type="select" label="🏢 Cadena" options={@cadenas} prompt="Seleccione..." />
+                </div>
+                <.input field={@form[:desccadena]} type="text" label="Descripción Cadena" readonly class="bg-gray-50" />
 
                 <!-- Canal -->
-                <.input field={@form[:ctecan_codigo_k]} type="select" label="Código Canal *" options={@canales} prompt="Seleccione..." phx-change="canal_change" />
-                <.input field={@form[:desccanal]} type="text" label="Descripción Canal" readonly />
+                <div class="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-200">
+                  <.input field={@form[:ctecan_codigo_k]} type="select" label="📊 Código Canal *" options={@canales} prompt="Seleccione..." phx-change="canal_change" />
+                </div>
+                <.input field={@form[:desccanal]} type="text" label="Descripción Canal" readonly class="bg-gray-50" />
 
                 <!-- Subcanal -->
-                <.input field={@form[:ctesca_codigo_k]} type="select" label="Sub Canal *" options={@subcanales} prompt="Primero seleccione canal" />
-                <.input field={@form[:descsubcanal]} type="text" label="Descripción Subcanal" readonly />
+                <div class="p-4 bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl border border-violet-200">
+                  <.input field={@form[:ctesca_codigo_k]} type="select" label="🎯 Sub Canal *" options={@subcanales} prompt="Primero seleccione canal" />
+                </div>
+                <.input field={@form[:descsubcanal]} type="text" label="Descripción Subcanal" readonly class="bg-gray-50" />
 
                 <!-- Régimen -->
-                <.input field={@form[:ctereg_codigo_k]} type="select" label="Régimen *" options={@regimenes} prompt="Seleccione..." />
-                <.input field={@form[:desc_regimen]} type="text" label="Descripción Régimen" readonly />
+                <div class="p-4 bg-gradient-to-br from-emerald-50 to-green-50 rounded-xl border border-emerald-200">
+                  <.input field={@form[:ctereg_codigo_k]} type="select" label="⚖️ Régimen *" options={@regimenes} prompt="Seleccione..." />
+                </div>
+                <.input field={@form[:desc_regimen]} type="text" label="Descripción Régimen" readonly class="bg-gray-50" />
 
                 <!-- Paquete Servicio -->
-                <.input field={@form[:ctepaq_codigo_k]} type="select" label="Paquete Servicio" options={@paquetes_servicio} prompt="Seleccione..." />
-                <.input field={@form[:desc_paqser]} type="text" label="Descripción Paquete" readonly />
+                <div class="p-4 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl border border-pink-200">
+                  <.input field={@form[:ctepaq_codigo_k]} type="select" label="📦 Paquete Servicio" options={@paquetes_servicio} prompt="Seleccione..." />
+                </div>
+                <.input field={@form[:desc_paqser]} type="text" label="Descripción Paquete" readonly class="bg-gray-50" />
               </div>
             </div>
 
             <!-- TAB: FACTURACIÓN -->
             <div class={if @current_tab == "facturacion", do: "block", else: "hidden"}>
+              <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                  <span class="w-8 h-8 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 flex items-center justify-center text-white text-sm">3</span>
+                  Configuración de Facturación
+                </h3>
+                <p class="text-sm text-gray-500 mt-1 ml-10">Establezca parámetros y opciones fiscales</p>
+              </div>
+
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl">
                 <!-- Columna 1: Campos principales -->
-                <div class="space-y-4">
-                  <.input field={@form[:cfgmon_codigo_k]} type="select" label="Moneda" options={@monedas} prompt="Seleccione..." />
-                  <.input field={@form[:ctecli_tipodefact]} type="select" label="Tipo Factura" options={[{"Factura", "F"}, {"Remisión", "R"}]} prompt="Seleccione..." />
-                  <.input field={@form[:ctecli_tipofacdes]} type="select" label="Tipo Descuento" options={[{"Sin descuento", "0"}, {"Con descuento", "1"}]} prompt="Seleccione..." />
-                  <.input field={@form[:ctecli_periodorefac]} type="number" label="Período Refacturación" placeholder="Días" />
-                  <.input field={@form[:faccom_codigo_k]} type="select" label="Complementos que Maneja" options={@complementos} prompt="Seleccione..." />
+                <div class="space-y-5 p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-emerald-200">
+                  <h4 class="text-base font-bold text-gray-800 flex items-center gap-2 mb-4">
+                    <span class="text-2xl">💰</span>
+                    Datos Fiscales
+                  </h4>
+                  <.input field={@form[:cfgmon_codigo_k]} type="select" label="💵 Moneda" options={@monedas} prompt="Seleccione..." />
+                  <.input field={@form[:ctecli_tipodefact]} type="select" label="📄 Tipo Factura" options={[{"Factura", "F"}, {"Remisión", "R"}]} prompt="Seleccione..." />
+                  <.input field={@form[:ctecli_tipofacdes]} type="select" label="🏷️ Tipo Descuento" options={[{"Sin descuento", "0"}, {"Con descuento", "1"}]} prompt="Seleccione..." />
+                  <.input field={@form[:ctecli_periodorefac]} type="number" label="📅 Período Refacturación" placeholder="Días" />
+                  <.input field={@form[:faccom_codigo_k]} type="select" label="📋 Complementos que Maneja" options={@complementos} prompt="Seleccione..." />
                 </div>
 
                 <!-- Columna 2: Checkboxes -->
-                <div class="space-y-3 p-4 bg-gray-50 rounded-lg">
-                  <h4 class="text-sm font-semibold text-gray-700 mb-3">Opciones de Facturación</h4>
+                <div class="space-y-4 p-6 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200">
+                  <h4 class="text-base font-bold text-gray-800 flex items-center gap-2 mb-4">
+                    <span class="text-2xl">⚙️</span>
+                    Opciones de Facturación
+                  </h4>
 
-                  <label class="flex items-center gap-3 cursor-pointer">
+                  <label class="flex items-center gap-3 p-3 bg-white rounded-lg hover:bg-blue-50 cursor-pointer transition-colors border border-blue-100">
                     <.input field={@form[:ctecli_tipodefacr]} type="checkbox" label="" />
-                    <span class="text-sm text-gray-700">Detallar Remisiones</span>
+                    <span class="text-sm font-medium text-gray-700">📝 Detallar Remisiones</span>
                   </label>
 
-                  <label class="flex items-center gap-3 cursor-pointer">
+                  <label class="flex items-center gap-3 p-3 bg-white rounded-lg hover:bg-blue-50 cursor-pointer transition-colors border border-blue-100">
                     <.input field={@form[:ctecli_desglosaieps]} type="checkbox" label="" />
-                    <span class="text-sm text-gray-700">Desglosa IEPS</span>
+                    <span class="text-sm font-medium text-gray-700">📊 Desglosa IEPS</span>
                   </label>
 
-                  <label class="flex items-center gap-3 cursor-pointer">
+                  <label class="flex items-center gap-3 p-3 bg-white rounded-lg hover:bg-blue-50 cursor-pointer transition-colors border border-blue-100">
                     <.input field={@form[:ctecli_dscantimp]} type="checkbox" label="" />
-                    <span class="text-sm text-gray-700">Descuento Ante Impuestos</span>
+                    <span class="text-sm font-medium text-gray-700">💸 Descuento Ante Impuestos</span>
                   </label>
 
-                  <label class="flex items-center gap-3 cursor-pointer">
+                  <label class="flex items-center gap-3 p-3 bg-white rounded-lg hover:bg-blue-50 cursor-pointer transition-colors border border-blue-100">
                     <.input field={@form[:ctecli_desglosakit]} type="checkbox" label="" />
-                    <span class="text-sm text-gray-700">Desglose Producto Kit FE</span>
+                    <span class="text-sm font-medium text-gray-700">📦 Desglose Producto Kit FE</span>
                   </label>
                 </div>
               </div>
@@ -285,7 +346,6 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl">
                   <!-- Columna 1 -->
                   <div class="space-y-4">
-                    <.input field={@form[:ctecli_codigo_k]} type="text" label="Cliente" placeholder="Código del cliente" />
 
                     <.input field={direccion_form[:ctedir_codigo_k]} type="text" label="Dirección" placeholder="Código" />
 
@@ -309,8 +369,6 @@
 
                   <!-- Columna 2 -->
                   <div class="space-y-4">
-                    <.input field={@form[:ctecli_razonsocial]} type="text" label="Razón Social" placeholder="Razón social" />
-                    <.input field={@form[:ctecli_dencomercia]} type="text" label="Denominación Comercial" placeholder="Nombre comercial" />
                     <.input field={@form[:ctepaq_codigo_k]} type="select" label="Paquete Servicio" options={@paquetes_servicio} prompt="Seleccione..." />
                   </div>
                 </div>
@@ -329,6 +387,7 @@
                     <.input field={direccion_form[:ctedir_cp]} type="text" label="Código Postal *" placeholder="00000" maxlength="5" />
 
                     <.input field={direccion_form[:mapedo_codigo_k]} type="select" label="Estado *" options={@estados} prompt="Seleccione..." />
+                  {raise @municipios}
                     <.input field={direccion_form[:mapmun_codigo_k]} type="select" label="Municipio *" options={@municipios} prompt="Seleccione estado" />
                     <.input field={direccion_form[:maploc_codigo_k]} type="select" label="Localidad *" options={@localidades} prompt="Seleccione municipio" />
 
