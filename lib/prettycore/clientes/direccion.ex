@@ -112,7 +112,7 @@ defmodule Prettycore.Clientes.Direccion do
     field(:ctedir_municipio, :string)
     field(:ctedir_estado, :string)
     field(:ctedir_localidad, :string)
-    field(:ctedir_creditoobs, :integer)
+    field(:ctedir_creditoobs, :string)
 
     # Razón social y denominación comercial en dirección
     field(:ctecli_razonsocial, :string)

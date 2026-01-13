@@ -101,6 +101,7 @@
                     disabled
                     class="bg-white/50 cursor-not-allowed font-mono text-lg font-bold text-indigo-700"
                     name="display_only"
+                    id="cliente_form_ctecli_codigo_k_display"
                   />
                   <p class="mt-2 text-xs text-indigo-600 flex items-center gap-1">
                     <span class="text-base">🔒</span>
@@ -366,11 +367,6 @@
 
                     <.input field={direccion_form[:ctedir_ivafrontera]} type="select" label="Tipo IVA" options={[{"General 16%", "G"}, {"Frontera 8%", "F"}]} prompt="Seleccione..." />
                   </div>
-
-                  <!-- Columna 2 -->
-                  <div class="space-y-4">
-                    <.input field={@form[:ctepaq_codigo_k]} type="select" label="Paquete Servicio" options={@paquetes_servicio} prompt="Seleccione..." />
-                  </div>
                 </div>
 
                 <!-- Sección de Detalles de Dirección -->
@@ -387,7 +383,6 @@
                     <.input field={direccion_form[:ctedir_cp]} type="text" label="Código Postal *" placeholder="00000" maxlength="5" />
 
                     <.input field={direccion_form[:mapedo_codigo_k]} type="select" label="Estado *" options={@estados} prompt="Seleccione..." />
-                  {raise @municipios}
                     <.input field={direccion_form[:mapmun_codigo_k]} type="select" label="Municipio *" options={@municipios} prompt="Seleccione estado" />
                     <.input field={direccion_form[:maploc_codigo_k]} type="select" label="Localidad *" options={@localidades} prompt="Seleccione municipio" />
 
@@ -466,20 +461,15 @@
               </div>
 
               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <.input field={@form[:ctepaq_codigo_k]} type="text" label="Paquete" placeholder="Código" />
                 <.input field={@form[:facadd_codigo_k]} type="text" label="Adenda" placeholder="Código" />
                 <.input field={@form[:ctepor_codigo_k]} type="text" label="Portafolio" placeholder="Código" />
                 <.input field={@form[:condim_codigo_k]} type="text" label="Dimensión" placeholder="Código" />
-                <.input field={@form[:ctecad_codigo_k]} type="text" label="Cadena" placeholder="Código" />
                 <.input field={@form[:cfgban_codigo_k]} type="text" label="Banco" placeholder="Código" />
                 <.input field={@form[:sysemp_codigo_k]} type="text" label="Empresa" placeholder="Código" />
-                <.input field={@form[:faccom_codigo_k]} type="text" label="Comprobante" placeholder="Código" />
                 <.input field={@form[:facads_codigo_k]} type="text" label="Adenda SAT" placeholder="Código" />
                 <.input field={@form[:cteseg_codigo_k]} type="text" label="Segmento" placeholder="Código" />
                 <.input field={@form[:catind_codigo_k]} type="text" label="Industria" placeholder="Código" />
                 <.input field={@form[:catpfi_codigo_k]} type="text" label="Perfil" placeholder="Código" />
-                <.input field={@form[:satexp_codigo_k]} type="text" label="Exportación SAT" placeholder="01" />
-                <.input field={@form[:ctecli_pais]} type="text" label="País" placeholder="MEX" />
               </div>
             </div>
           </div>

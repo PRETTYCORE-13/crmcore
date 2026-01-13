@@ -44,8 +44,8 @@ defmodule PrettycoreWeb.Programacion do
       "clientes" ->
         {:noreply, push_navigate(socket, to: ~p"/admin/clientes")}
 
-      "config" ->
-        {:noreply, push_navigate(socket, to: ~p"/admin/configuracion")}
+  #    "config" ->
+  #      {:noreply, push_navigate(socket, to: ~p"/admin/configuracion")}
 
       _ ->
         {:noreply, socket}

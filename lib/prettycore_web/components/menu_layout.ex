@@ -3,7 +3,8 @@ defmodule PrettycoreWeb.MenuLayout do
 
   @menu [
     %{id: "inicio", label: "Inicio"},
-    %{id: "programacion", label: "Programación"},
+
+  #  %{id: "programacion", label: "Programación"},
     %{id: "workorder", label: "Workorder"},
     %{id: "clientes", label: "Clientes"}
   ]
@@ -77,7 +78,7 @@ defmodule PrettycoreWeb.MenuLayout do
           <!-- TEXTO (oculto si sidebar está cerrado) -->
           <div class="pc-user-info">
             <div class="pc-user-name">{@current_user_email || "desconocido"}</div>
-            
+
             <div class="pc-user-role">Usuario</div>
           </div>
         </div>
@@ -110,7 +111,7 @@ defmodule PrettycoreWeb.MenuLayout do
               <% end %>
             <% end %>
           </nav>
-          <!-- CONFIGURACIÓN -->
+          <!-- CONFIGURACIÓN
           <button
             type="button"
             class={menu_item_class(menu_active?("config", @current_page)) <> " pc-menu-item-bottom"}
@@ -120,7 +121,7 @@ defmodule PrettycoreWeb.MenuLayout do
             <span class="pc-menu-item-indicator" />
             <span class="pc-menu-item-icon"><.pc_icon name="config" /></span>
             <span class="pc-menu-item-label">Configuración</span>
-          </button>
+          </button>  -->
           <!-- LOGOUT -->
           <.link
             href="/logout"

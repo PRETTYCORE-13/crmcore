@@ -1,4 +1,4 @@
-defmodule PrettycoreWeb.ClienteFormLiveTest do
+defmodule PrettycoreWeb.ClienteFormNewLiveTest do
   use PrettycoreWeb.LiveCase, async: false
 
   alias Prettycore.Catalogos

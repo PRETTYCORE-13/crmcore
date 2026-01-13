@@ -28,7 +28,11 @@
       "Bash(fi)",
       "Bash(mix deps:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nMove database credentials to .env file\n\n- Add .env to .gitignore\n- Create .env.example template\n- Create config/load_env.exs for native Elixir .env loading\n- Update config.exs to use environment variables\n- Update dev.exs to use environment variables\n- Remove hardcoded credentials from config files\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(ls -la \"c:\\\\Users\\\\HP\\\\Desktop\\\\ELIXIR\\\\prettycore\\\\lib\\\\prettycore_web\\\\live\\\\index\\\\pages\\\\clientes\"\" | grep -E \"edit)",
+      "Bash(new \")",
+      "Bash(git mv:*)",
+      "Bash(timeout 180 mix test:*)"
     ],
     "deny": [],
     "ask": []

@@ -38,9 +38,9 @@ defmodule PrettycoreWeb.ConfiguracionLive do
       "clientes" ->
         {:noreply, push_navigate(socket, to: ~p"/admin/clientes")}
 
-      "config" ->
+   #   "config" ->
         # ya estás aquí
-        {:noreply, push_navigate(socket, to: ~p"/admin/configuracion")}
+  #    {:noreply, push_navigate(socket, to: ~p"/admin/configuracion")}
 
       _ ->
         {:noreply, socket}

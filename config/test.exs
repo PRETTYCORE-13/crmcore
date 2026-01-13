@@ -5,7 +5,7 @@ import Config
 # SQL Sandbox is not fully supported with SQL Server (TDS)
 config :prettycore, Prettycore.Repo,
   hostname: "ecore.ath.cx",
-  port: 1433,
+  port: 20000,
   username: "sa",
   password: "N0vacore",
   database: "ECOREDES2",

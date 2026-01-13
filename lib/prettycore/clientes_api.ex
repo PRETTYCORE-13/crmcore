@@ -1,28 +1,13 @@
 defmodule Prettycore.ClientesApi do
-  @moduledoc """
-  API client for managing clientes via REST API
-  """
 
   alias Prettycore.EncodingUtils
 
-  @url "http://ecore.ath.cx:1405/SP/EN_RESTHELPER/Clientes"
+  @url_New "http://ecore.ath.cx:1405/SP/EN_RESTHELPER/ClientesNew"
+  @url_Edit "http://ecore.ath.cx:1405/SP/EN_RESTHELPER/ClientesEdit"
 
-  @doc """
-  Creates a new client via REST API.
-
-  ## Parameters
-    - cliente_data: Map with client data (from embedded schema)
-    - password: User password for authentication
-
-  ## Returns
-    - {:ok, response_body} on success
-    - {:error, reason} on failure
-  """
   def crear_cliente(cliente_data, password) do
-    # Construir JSON manualmente para preservar el orden EXACTO
     json_string = build_json_string(cliente_data)
 
-    # Mostrar JSON completo que se va a enviar
     IO.puts("\n========== JSON ENVIADO AL API (CREAR) ==========")
     IO.puts(json_string)
     IO.puts("=========================================\n")
@@ -32,8 +17,7 @@ defmodule Prettycore.ClientesApi do
       {"content-type", "application/json"}
     ]
 
-    # Aumentar timeout a 60 segundos
-    case Req.post(@url, body: json_string, headers: headers, receive_timeout: 60_000) do
+    case Req.post(@url_New, body: json_string, headers: headers, receive_timeout: 60_000) do
       {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
         IO.puts("\n========== RESPUESTA EXITOSA (#{status}) ==========")
         IO.inspect(resp_body, label: "RESPONSE BODY", pretty: true, limit: :infinity)
@@ -54,22 +38,10 @@ defmodule Prettycore.ClientesApi do
     end
   end
 
-  @doc """
-  Updates an existing client via REST API.
 
-  ## Parameters
-    - cliente_data: Map with client data (from embedded schema)
-    - password: User password for authentication
-
-  ## Returns
-    - {:ok, response_body} on success
-    - {:error, reason} on failure
-  """
-  def actualizar_cliente(cliente_data, password) do
-    # Construir JSON manualmente para preservar el orden EXACTO
+  def editar_cliente(cliente_data, password) do
     json_string = build_json_string(cliente_data)
 
-    # Mostrar JSON completo que se va a enviar
     IO.puts("\n========== JSON ENVIADO AL API (ACTUALIZAR) ==========")
     IO.puts(json_string)
     IO.puts("======================================================\n")
@@ -79,10 +51,8 @@ defmodule Prettycore.ClientesApi do
       {"content-type", "application/json"}
     ]
 
-    # Muchos APIs usan POST tanto para crear como actualizar
-    # El API diferencia por el código del cliente (si existe, actualiza; si no, crea)
-    # Aumentar timeout a 60 segundos
-    case Req.post(@url, body: json_string, headers: headers, receive_timeout: 60_000) do
+
+    case Req.post(@url_Edit, body: json_string, headers: headers, receive_timeout: 60_000) do
       {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
         IO.puts("\n========== RESPUESTA EXITOSA (#{status}) ==========")
         IO.inspect(resp_body, label: "RESPONSE BODY", pretty: true, limit: :infinity)

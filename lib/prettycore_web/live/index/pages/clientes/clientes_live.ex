@@ -320,8 +320,8 @@ end
         {:noreply, socket}  # ya estás aquí
 
 
-      "config" ->
-        {:noreply, push_navigate(socket, to: ~p"/admin/configuracion")}
+  #    "config" ->
+  #      {:noreply, push_navigate(socket, to: ~p"/admin/configuracion")}
       _->
         {:noreply, socket}
     end

@@ -831,13 +831,13 @@
       phx-value-codigo={cliente.codigo}
       phx-value-dir={cliente.ctedir_codigo_k}
     >
-      <!-- BOTÓN EDITAR (ÍCONO LÁPIZ DENTRO DE CÍRCULO COLORIDO) -->
+      <!-- BOTÓN EDITAR (morado) -->
       <div class="w-24 flex-shrink-0">
         <button
           phx-click="edit_cliente"
           phx-value-codigo={cliente.codigo}
           phx-value-dir={cliente.ctedir_codigo_k}
-          class={"w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 group hover:shadow-lg hover:scale-105 #{avatar_bg} animate-pulse"}
+          class="w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 group hover:shadow-lg hover:scale-105 bg-purple-600 hover:bg-purple-700"
           title="Editar cliente"
         >
           <!-- Ícono de lápiz blanco con efecto hover -->

@@ -48,8 +48,8 @@ defmodule PrettycoreWeb.HerramientaSql do
       "clientes" ->
         {:noreply, push_navigate(socket, to: ~p"/admin/clientes")}
 
-      "config" ->
-        {:noreply, push_navigate(socket, to: ~p"/admin/configuracion")}
+  #    "config" ->
+  #      {:noreply, push_navigate(socket, to: ~p"/admin/configuracion")}
 
       _ ->
         {:noreply, socket}
@@ -127,7 +127,7 @@ defmodule PrettycoreWeb.HerramientaSql do
   def render(assigns) do
     ~H"""
     <section>
-      <header class="pc-page-header">
+    <!--   <header class="pc-page-header">
         <h1>Programación · Herramienta SQL</h1>
 
         <p>Ejecuta consultas SELECT, UPDATE, INSERT, DELETE,
@@ -138,7 +138,7 @@ defmodule PrettycoreWeb.HerramientaSql do
           Correo actual: {@current_user_email} <br /> URL actual: {@current_path}
         </p>
       </header>
-
+-->
       <div class="pc-page-card mt-3">
         <form phx-submit="run_sql">
           <label class="block text-xs font-medium text-gray-600 mb-1.5">Consulta SQL</label>
