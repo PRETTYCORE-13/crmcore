@@ -41,6 +41,9 @@ defmodule Prettycore.MixProject do
       # Conector SQL Server
       {:tds, "~> 2.3"},
 
+      # Conector PostgreSQL (para auth)
+      {:postgrex, ">= 0.0.0"},
+
       # Frontend / LiveView
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

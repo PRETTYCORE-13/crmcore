@@ -5,13 +5,12 @@ defmodule PrettycoreWeb.Programacion do
 
   # Recibir el email de /admin/programacion/:email
   @impl true
-  def mount(_params, session, socket) do
+  def mount(_params, _session, socket) do
     {:ok,
      socket
      |> assign(:current_page, "programacion")
      |> assign(:sidebar_open, true)
      |> assign(:show_programacion_children, true)
-     |> assign(:current_user_email, session["user_email"])
      |> assign(:current_path, "/admin/programacion")}
   end
 

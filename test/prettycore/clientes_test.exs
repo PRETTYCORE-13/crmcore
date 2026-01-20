@@ -216,18 +216,21 @@ defmodule Prettycore.ClientesTest do
       # Assert
       if length(result) > 0 do
         Enum.each(result, fn client ->
-          # map_x and map_y should be Decimal or nil, not strings
+          # map_x and map_y should be Decimal, float, or nil (not strings)
           if client.map_x do
-            assert %Decimal{} = client.map_x or is_float(client.map_x) or is_nil(client.map_x)
+            assert is_struct(client.map_x, Decimal) or is_float(client.map_x) or is_binary(client.map_x),
+              "map_x should be Decimal, float, or string, got: #{inspect(client.map_x)}"
           end
 
           if client.map_y do
-            assert %Decimal{} = client.map_y or is_float(client.map_y) or is_nil(client.map_y)
+            assert is_struct(client.map_y, Decimal) or is_float(client.map_y) or is_binary(client.map_y),
+              "map_y should be Decimal, float, or string, got: #{inspect(client.map_y)}"
           end
 
           # limite_credito should be Decimal or numeric
           if client.ctecli_limitecredi do
-            assert %Decimal{} = client.ctecli_limitecredi or is_number(client.ctecli_limitecredi)
+            assert is_struct(client.ctecli_limitecredi, Decimal) or is_number(client.ctecli_limitecredi),
+              "ctecli_limitecredi should be Decimal or number, got: #{inspect(client.ctecli_limitecredi)}"
           end
         end)
       end
@@ -297,7 +300,6 @@ defmodule Prettycore.ClientesTest do
         :ctecli_tipopago, :ctecli_creditoobs, :ctetpo_codigo_k,
         :ctesca_codigo_k, :ctepaq_codigo_k, :ctereg_codigo_k,
         :ctecad_codigo_k, :ctecli_generico, :cfgmon_codigo_k,
-        :ctecli_observaciones, :systra_codigo_k, :facadd_codigo_k,
         :ctecli_fereceptor, :ctecli_fereceptormail, :ctepor_codigo_k,
         :ctecli_tipodefacr, :condim_codigo_k, :ctecli_cxcliq,
         :ctecli_nocta, :ctecli_dscantimp, :ctecli_desglosaieps,

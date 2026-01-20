@@ -72,9 +72,9 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
       field(:cfgest_codigo_k, :string)
 
       # Flags (valores por defecto según spec)
-      field(:ctedir_tipofis, :string, default: "0")
-      field(:ctedir_tipoent, :string, default: "0")
-      field(:ctedir_ivafrontera, :string, default: "0")
+      field(:ctedir_tipofis, :boolean, default: false)
+      field(:ctedir_tipoent, :boolean, default: false)
+      field(:ctedir_ivafrontera, :string, default: "G")
       field(:ctedir_secuencia, :integer, default: 0)
       field(:ctedir_secuenciaent, :integer, default: 0)
       field(:ctedir_reqgeo, :integer, default: 0)
@@ -228,7 +228,6 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
       field(:ctecan_codigo_k, :string)
       field(:ctesca_codigo_k, :string)
       field(:ctereg_codigo_k, :string)
-      field(:systra_codigo_k, :string)
 
       # Catálogos opcionales con foreign keys
       field(:ctepaq_codigo_k, :string)
@@ -306,7 +305,6 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
         :ctecan_codigo_k,
         :ctesca_codigo_k,
         :ctereg_codigo_k,
-        :systra_codigo_k,
         # Catálogos opcionales
         :ctepaq_codigo_k,
         :facadd_codigo_k,
@@ -433,9 +431,9 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
             c_municipio_k: dir.c_municipio_k,
             c_localidad_k: dir.c_localidad_k,
             cfgest_codigo_k: dir.cfgest_codigo_k,
-            ctedir_tipofis: if(dir.ctedir_tipofis, do: to_string(dir.ctedir_tipofis), else: nil),
-            ctedir_tipoent: if(dir.ctedir_tipoent, do: to_string(dir.ctedir_tipoent), else: nil),
-            ctedir_ivafrontera: if(dir.ctedir_ivafrontera, do: to_string(dir.ctedir_ivafrontera), else: nil),
+            ctedir_tipofis: dir.ctedir_tipofis == 1 || dir.ctedir_tipofis == "1" || dir.ctedir_tipofis == true,
+            ctedir_tipoent: dir.ctedir_tipoent == 1 || dir.ctedir_tipoent == "1" || dir.ctedir_tipoent == true,
+            ctedir_ivafrontera: convert_ivafrontera(dir.ctedir_ivafrontera),
             ctedir_secuencia: dir.ctedir_secuencia,
             ctedir_secuenciaent: dir.ctedir_secuenciaent,
             ctedir_reqgeo: dir.ctedir_reqgeo,
@@ -481,7 +479,6 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
           ctecan_codigo_k: cliente_db.ctecan_codigo_k,
           ctesca_codigo_k: cliente_db.ctesca_codigo_k,
           ctereg_codigo_k: cliente_db.ctereg_codigo_k,
-          systra_codigo_k: cliente_db.systra_codigo_k,
           ctepaq_codigo_k: cliente_db.ctepaq_codigo_k,
           facadd_codigo_k: cliente_db.facadd_codigo_k,
           ctepor_codigo_k: cliente_db.ctepor_codigo_k,
@@ -570,15 +567,11 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
       {[], []}
     end
 
-    # Obtener user_email de la sesión o usar un valor por defecto temporal
-    user_email = session["user_email"] || "admin"
-
     {:ok,
      socket
      |> assign(:current_page, "clientes")
      |> assign(:sidebar_open, true)
      |> assign(:show_programacion_children, false)
-     |> assign(:current_user_email, user_email)
      |> assign(:current_path, current_path)
      |> assign(:form, form)
      |> assign(:page_title, page_title)
@@ -766,7 +759,8 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
 
       {:error, %Ecto.Changeset{} = changeset} ->
         IO.inspect(changeset)
-        {:noreply, assign(socket, :form, to_form(changeset))}
+        changeset_with_action = Map.put(changeset, :action, :validate)
+        {:noreply, assign(socket, :form, to_form(changeset_with_action))}
     end
   end
 
@@ -853,8 +847,25 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
   end
 
   @impl true
-  def handle_event("update_coordinates", %{"lat" => lat, "lng" => lng}, socket) do
+  def handle_event("update_coordinates", %{"lat" => lat, "lng" => lng, "index" => index_str}, socket) do
     # Este evento se llama desde el hook de JavaScript cuando se actualiza el mapa
+    current_form = socket.assigns.form
+    params = current_form.params || %{}
+    direcciones = Map.get(params, "direcciones", %{})
+
+    # Actualizar las coordenadas en la dirección correspondiente
+    index = index_str
+    direccion = Map.get(direcciones, index, %{})
+    updated_direccion = Map.merge(direccion, %{"map_y" => to_string(lat), "map_x" => to_string(lng)})
+    updated_direcciones = Map.put(direcciones, index, updated_direccion)
+    updated_params = Map.put(params, "direcciones", updated_direcciones)
+
+    changeset = ClienteForm.changeset(%ClienteForm{}, updated_params)
+    {:noreply, assign(socket, :form, to_form(changeset))}
+  end
+
+  def handle_event("update_coordinates", %{"lat" => _lat, "lng" => _lng}, socket) do
+    # Fallback si no viene el index
     {:noreply, socket}
   end
 
@@ -956,4 +967,14 @@ true -> "Error HTTP #{status}"
   end
 
   defp extract_error_message(_body, status), do: "Error HTTP #{status}"
+
+  # Convierte el valor de IVA frontera de la BD al formato del select
+  # BD: 0 = General, 1 = Frontera | Select: "G" = General, "F" = Frontera
+  defp convert_ivafrontera(0), do: "G"
+  defp convert_ivafrontera("0"), do: "G"
+  defp convert_ivafrontera(1), do: "F"
+  defp convert_ivafrontera("1"), do: "F"
+  defp convert_ivafrontera("G"), do: "G"
+  defp convert_ivafrontera("F"), do: "F"
+  defp convert_ivafrontera(_), do: "G"
 end

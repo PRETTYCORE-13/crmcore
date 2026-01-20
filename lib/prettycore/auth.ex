@@ -1,37 +1,76 @@
 defmodule Prettycore.Auth do
-  @moduledoc false
+  @moduledoc """
+  Módulo de autenticación usando PostgreSQL.
+  """
 
-  alias Prettycore.Repo
-  alias Prettycore.Auth.{User, Desencryptor}
+  alias Prettycore.AuthRepo
+  alias Prettycore.Auth.AuthUser
 
+  @doc """
+  Autentica un usuario con username y password.
+  """
   def authenticate(username, password)
       when is_binary(username) and is_binary(password) do
-    require Logger
-
-    case Repo.get_by(User, sysusr_codigo_k: username) do
+    case AuthRepo.get_by(AuthUser, username: username) do
       nil ->
-        Desencryptor.decrypt_base64("dummy")
+        # Timing attack protection
+        AuthUser.verify_password(%AuthUser{password_hash: "dummy"}, "dummy")
         {:error, :invalid_credentials}
 
       user ->
-        case Desencryptor.decrypt_base64(user.sysusr_password) do
-          {:ok, decrypted_password} ->
-            # Extraer solo la segunda línea (el password real)
-            actual_password =
-              decrypted_password
-              |> String.split("\n")
-              |> Enum.at(1)
-              |> String.trim()
-
-            if Plug.Crypto.secure_compare(actual_password, password) do
-              {:ok, user}
-            else
-              {:error, :invalid_credentials}
-            end
-
-          {:error, reason} ->
-            {:error, :invalid_credentials}
+        if user.active && AuthUser.verify_password(user, password) do
+          {:ok, user}
+        else
+          {:error, :invalid_credentials}
         end
     end
+  end
+
+  @doc """
+  Crea un nuevo usuario.
+  """
+  def create_user(attrs) do
+    %AuthUser{}
+    |> AuthUser.changeset(attrs)
+    |> AuthRepo.insert()
+  end
+
+  @doc """
+  Obtiene un usuario por username.
+  """
+  def get_user_by_username(username) do
+    AuthRepo.get_by(AuthUser, username: username)
+  end
+
+  @doc """
+  Obtiene un usuario por ID.
+  """
+  def get_user(id) do
+    AuthRepo.get(AuthUser, id)
+  end
+
+  @doc """
+  Lista todos los usuarios.
+  """
+  def list_users do
+    AuthRepo.all(AuthUser)
+  end
+
+  @doc """
+  Actualiza un usuario.
+  """
+  def update_user(%AuthUser{} = user, attrs) do
+    user
+    |> AuthUser.update_changeset(attrs)
+    |> AuthRepo.update()
+  end
+
+  @doc """
+  Cambia el password de un usuario.
+  """
+  def change_password(%AuthUser{} = user, new_password) do
+    user
+    |> AuthUser.password_changeset(%{password: new_password})
+    |> AuthRepo.update()
   end
 end

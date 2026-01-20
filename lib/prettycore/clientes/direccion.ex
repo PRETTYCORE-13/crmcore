@@ -83,7 +83,6 @@ defmodule Prettycore.Clientes.Direccion do
     field(:s_maqedo, :integer)
 
     # Campos de sistema (s_*)
-    field(:systra_codigo_k, :string)
     field(:ctedir_geoubicacion, :string)
     field(:ctedir_guidref, :string)
     field(:ctedir_teladicional, :string)

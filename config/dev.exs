@@ -15,6 +15,19 @@ config :prettycore, :tds,
   idle_timeout: 5_000,
   show_sensitive_data_on_connection_error: true
 
+
+  # Configuración de PostgreSQL para autenticación (Render)
+config :prettycore, Prettycore.PsqlRepo,
+username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "prettycore_dev",
+  stacktrace: true,
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 10,
+  ssl: [verify: :verify_none]
+
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #

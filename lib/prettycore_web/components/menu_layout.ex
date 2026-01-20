@@ -15,6 +15,7 @@ defmodule PrettycoreWeb.MenuLayout do
   attr :show_programacion_children, :boolean, default: false
   attr :sidebar_open, :boolean, default: true
   attr :current_user_email, :string, default: nil
+  attr :company_logo, :string, default: nil
   slot :inner_block, required: true
 
   def sidebar(assigns) do
@@ -34,13 +35,21 @@ defmodule PrettycoreWeb.MenuLayout do
               alt="PrettyCore logo"
             />
           </div>
-          <!-- Logo Direem -->
+          <!-- Logo Empresa -->
           <div class="pc-platform-logo-group mini">
-            <img
-              class="pc-platform-logo-img"
-              src="https://th.bing.com/th/id/R.7d592b78f7652da436b9ab21fc4fc25f?rik=g7VE7dZo6JaZrA&riu=http%3a%2f%2fgetwallpapers.com%2fwallpaper%2ffull%2f6%2f6%2f1%2f579397.jpg&ehk=WXw%2bNSZCri4XZrLylh33jyOiBetpiK2UKJLVW0%2bp5Fk%3d&risl=&pid=ImgRaw&r=0"
-              alt="Direem Negocios logo"
-            />
+            <%= if @company_logo do %>
+              <img
+                class="pc-platform-logo-img"
+                src={@company_logo}
+                alt="Logo Empresa"
+              />
+            <% else %>
+              <img
+                class="pc-platform-logo-img"
+                src="https://th.bing.com/th/id/R.7d592b78f7652da436b9ab21fc4fc25f?rik=g7VE7dZo6JaZrA&riu=http%3a%2f%2fgetwallpapers.com%2fwallpaper%2ffull%2f6%2f6%2f1%2f579397.jpg&ehk=WXw%2bNSZCri4XZrLylh33jyOiBetpiK2UKJLVW0%2bp5Fk%3d&risl=&pid=ImgRaw&r=0"
+                alt="Direem Negocios logo"
+              />
+            <% end %>
           </div>
           <!-- Toggle -->
           <button
@@ -72,8 +81,16 @@ defmodule PrettycoreWeb.MenuLayout do
         <div class="pc-user-block">
           <!-- AVATAR -->
           <div class="pc-user-avatar">
-            {((@current_user_email && String.first(@current_user_email)) || "?")
-            |> String.upcase()}
+            <%= if @company_logo do %>
+              <img
+                src={@company_logo}
+                alt="Logo empresa"
+                class="w-full h-full object-cover rounded-full"
+              />
+            <% else %>
+              {((@current_user_email && String.first(@current_user_email)) || "?")
+              |> String.upcase()}
+            <% end %>
           </div>
           <!-- TEXTO (oculto si sidebar está cerrado) -->
           <div class="pc-user-info">

@@ -26,7 +26,7 @@ defmodule PrettycoreWeb.Clientes do
 
   # Recibimos el :email desde la ruta /admin/clientes
   @impl true
-  def mount(_params, session, socket) do
+  def mount(_params, _session, socket) do
     # Opciones para los filtros (podrían venir de BD)
     sysudn_opts = ["100", "200", "300"]
     ruta_opts = ["001", "002", "003", "999"]
@@ -36,7 +36,6 @@ defmodule PrettycoreWeb.Clientes do
      |> assign(:current_page, "clientes")
      |> assign(:sidebar_open, true)
      |> assign(:show_programacion_children, false)
-     |> assign(:current_user_email, session["user_email"])
      |> assign(:current_path, "/admin/clientes")
      |> assign(:filters_open, false)
      |> assign(:expanded_clients, MapSet.new())

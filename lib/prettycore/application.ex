@@ -15,7 +15,10 @@ defmodule Prettycore.Application do
       # {Prettycore.Worker, arg},
       # Start to serve requests, typically the last entry
       PrettycoreWeb.Endpoint,
-      Prettycore.Repo
+      # SQL Server para datos principales
+      Prettycore.Repo,
+      # PostgreSQL para autenticación
+      Prettycore.PsqlRepo
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

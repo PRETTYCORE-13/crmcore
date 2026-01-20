@@ -2,13 +2,12 @@ defmodule PrettycoreWeb.ConfiguracionLive do
   use PrettycoreWeb, :live_view_admin
 
   @impl true
-  def mount(_params, session, socket) do
+  def mount(_params, _session, socket) do
     {:ok,
      socket
      |> assign(:current_page, "config")
      |> assign(:show_programacion_children, false)
      |> assign(:sidebar_open, true)
-     |> assign(:current_user_email, session["email"])
      |> assign(:current_path, "/admin/configuracion")}
   end
 

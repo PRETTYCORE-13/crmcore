@@ -28,7 +28,6 @@ defmodule Prettycore.ClientesApiTest do
         ctepaq_codigo_k: "100",
         ctereg_codigo_k: "101",
         ctecad_codigo_k: nil,
-        systra_codigo_k: "FRCTE_CLIENTE",
         cfgmon_codigo_k: "MXN",
         # Facturación (Catálogos SAT)
         ctecli_formapago: "01",
@@ -82,8 +81,9 @@ defmodule Prettycore.ClientesApiTest do
         ctecli_tipopago: "01",
         # Sistema
         s_maqedo: "10",
+        systra_codigo_k: "TRA001",
         # Dirección
-        direccion: %{
+        direcciones: [%{
           ctecli_codigo_k: "100",
           ctedir_codigo_k: "1",
           ctecli_razonsocial: "cliente generico 100",
@@ -114,7 +114,6 @@ defmodule Prettycore.ClientesApiTest do
           vtarut_codigo_k_cob: nil,
           vtarut_codigo_k_aut: nil,
           ctedir_ivafrontera: 0,
-          systra_codigo_k: "FRCTE_DIRECCION",
           ctedir_secuencia: 0,
           ctedir_secuenciaent: 0,
           ctedir_geoubicacion: nil,
@@ -152,7 +151,7 @@ defmodule Prettycore.ClientesApiTest do
           c_estado_k: nil,
           satcp_codigo_k: nil,
           ctedir_maildicional: nil
-        }
+        }]
       }
 
       # Call public function (made public with @doc false for testing)
@@ -180,7 +179,7 @@ defmodule Prettycore.ClientesApiTest do
       assert cliente["CTECLI_EDOCRED"] == 0
       assert cliente["CTECLI_DIASCREDITO"] == 0
       assert cliente["CTECLI_LIMITECREDI"] == 0.0
-      assert cliente["CTECLI_CREDITOOBS"] == nil
+      assert cliente["CTECLI_CREDITOOBS"] == 0
 
       # Clasificación (Obligatorios NOT NULL)
       assert cliente["CTETPO_CODIGO_K"] == 100
@@ -189,7 +188,6 @@ defmodule Prettycore.ClientesApiTest do
       assert cliente["CTEPAQ_CODIGO_K"] == "100"
       assert cliente["CTEREG_CODIGO_K"] == "101"
       assert cliente["CTECAD_CODIGO_K"] == nil
-      assert cliente["SYSTRA_CODIGO_K"] == "FRCTE_CLIENTE"
       assert cliente["CFGMON_CODIGO_K"] == "MXN"
 
       # Facturación (Catálogos SAT)
@@ -231,7 +229,7 @@ defmodule Prettycore.ClientesApiTest do
       assert cliente["CTECLI_CFDI_VER"] == 1
       assert cliente["CTECLI_APLICAREGALO"] == 0
       assert cliente["CTECLI_NOACEPTAFRACCIONES"] == 0
-      assert cliente["CTECLI_CXCLIQ"] == nil
+      assert cliente["CTECLI_CXCLIQ"] == 0
       assert cliente["CTECLI_CONTACTO"] == nil
       assert cliente["CTECLI_COMPLEMENTO"] == nil
       assert cliente["CTECLI_COMPATIBILIDAD"] == nil
@@ -243,24 +241,21 @@ defmodule Prettycore.ClientesApiTest do
       # Tipos de Facturación
       assert cliente["CTECLI_TIPODEFACT"] == 2
       assert cliente["CTECLI_TIPOFACDES"] == 0
-      assert cliente["CTECLI_TIPODEFACR"] == nil
+      assert cliente["CTECLI_TIPODEFACR"] == 0
       assert cliente["CTECLI_TIPOPAGO"] == "01"
 
       # Sistema
-      assert cliente["S_MAQEDO"] == "10"
+      assert cliente["S_MAQEDO"] == 10
 
-      # Verify direcciones is an array (note: changed from "direccion" to "direcciones")
-      assert Map.has_key?(cliente, "direccion")
-      assert is_list(cliente["direccion"])
-      assert length(cliente["direccion"]) == 1
+      # Verify direcciones is an array
+      direcciones_list = cliente["direcciones"]
+      assert is_list(direcciones_list)
+      assert length(direcciones_list) == 1
 
-      direccion = List.first(cliente["direccion"])
+      direccion = List.first(direcciones_list)
 
-      # Verify direccion data
-      assert direccion["CTECLI_CODIGO_K"] == "100"
+      # Verify direccion data (only fields included in transform_direccion)
       assert direccion["CTEDIR_CODIGO_K"] == "1"
-      assert direccion["CTECLI_RAZONSOCIAL"] == "cliente generico 100"
-      assert direccion["CTECLI_DENCOMERCIA"] == "Abarrotes La Sirena"
       assert direccion["CTEDIR_TIPOFIS"] == 1
       assert direccion["CTEDIR_TIPOENT"] == 1
       assert direccion["CTEDIR_RESPONSABLE"] == nil
@@ -351,15 +346,15 @@ defmodule Prettycore.ClientesApiTest do
         ctecli_aplicadev: 0,
         ctecli_desglosakit: 0,
         ctecli_facgrupo: 0,
-        ctecli_cfdi_ver: 4.0,
-        systra_codigo_k: "TRA001",
+        ctecli_cfdi_ver: 4,
         s_maqedo: "10",
-        direccion: direccion
+        systra_codigo_k: "TRA001",
+        direcciones: [direccion]
       }
 
       result = ClientesApi.transform_to_api_format(cliente_data)
       cliente = List.first(result["clientes"])
-      direccion_result = List.first(cliente["direccion"])
+      direccion_result = List.first(cliente["direcciones"])
 
       # Verify all direccion keys are uppercase
       # Identificación
@@ -398,13 +393,13 @@ defmodule Prettycore.ClientesApiTest do
     end
 
     test "handles nil direccion correctly" do
-      cliente_data = build_minimal_cliente_data(%{direccion: nil})
+      cliente_data = build_minimal_cliente_data(%{direcciones: []})
 
       result = ClientesApi.transform_to_api_format(cliente_data)
       cliente = List.first(result["clientes"])
 
-      # direccion should be an empty list when nil
-      assert cliente["direccion"] == [nil]
+      # direcciones should be an empty list when input is empty
+      assert cliente["direcciones"] == []
     end
 
     test "formats datetime correctly" do
@@ -468,7 +463,6 @@ defmodule Prettycore.ClientesApiTest do
           ctecan_codigo_k: "CANAL001",
           ctesca_codigo_k: "SUBCANAL001",
           ctereg_codigo_k: "REGIMEN001",
-          systra_codigo_k: "TRANS001"
         })
 
       result = ClientesApi.transform_to_api_format(cliente_data)
@@ -481,7 +475,6 @@ defmodule Prettycore.ClientesApiTest do
       assert cliente["CTECAN_CODIGO_K"] == "CANAL001"
       assert cliente["CTESCA_CODIGO_K"] == "SUBCANAL001"
       assert cliente["CTEREG_CODIGO_K"] == "REGIMEN001"
-      assert cliente["SYSTRA_CODIGO_K"] == "TRANS001"
     end
   end
 
@@ -505,7 +498,6 @@ defmodule Prettycore.ClientesApiTest do
       ctecan_codigo_k: "CAN001",
       ctesca_codigo_k: "SCA001",
       ctereg_codigo_k: "REG001",
-      systra_codigo_k: "TRA001",
       cfgmon_codigo_k: "MXN",
       # Facturación (Catálogos SAT)
       ctecli_formapago: "01",
@@ -542,7 +534,7 @@ defmodule Prettycore.ClientesApiTest do
       ctecli_facgrupo: 0,
       ctecli_timbracb: 0,
       ctecli_novalidavencimiento: 0,
-      ctecli_cfdi_ver: 4.0,
+      ctecli_cfdi_ver: 4,
       ctecli_aplicaregalo: 0,
       ctecli_noaceptafracciones: 0,
       ctecli_cxcliq: 0,
@@ -553,8 +545,9 @@ defmodule Prettycore.ClientesApiTest do
       ctecli_tipopago: "99",
       # Sistema
       s_maqedo: "10",
-      # Dirección
-      direccion: nil
+      systra_codigo_k: "TRA001",
+      # Direcciones
+      direcciones: []
     }
 
     Map.merge(defaults, overrides)

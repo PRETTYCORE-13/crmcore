@@ -4,7 +4,7 @@ defmodule PrettycoreWeb.Inicio do
   import PrettycoreWeb.MenuLayout
 
   # Recibimos el :email desde la ruta /admin/platform/:email
-  def mount(_params, session, socket) do
+  def mount(_params, _session, socket) do
     current_path = "/admin/platform"
 
     {:ok,
@@ -12,7 +12,6 @@ defmodule PrettycoreWeb.Inicio do
      |> assign(:current_page, "inicio")
      |> assign(:sidebar_open, true)
      |> assign(:show_programacion_children, false)
-     |> assign(:current_user_email, session["user_email"])
      |> assign(:current_path, current_path)}
   end
 

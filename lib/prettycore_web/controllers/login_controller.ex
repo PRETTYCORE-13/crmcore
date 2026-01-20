@@ -2,20 +2,13 @@ defmodule PrettycoreWeb.LoginController do
   use PrettycoreWeb, :controller
   alias Prettycore.Auth
 
-  def create(conn, %{"username" => user, "password" => pass}) do
-    case Auth.authenticate(user, pass) do
-      {:ok, %{id: id}} ->
+  def create(conn, %{"username" => username, "password" => password}) do
+    case Auth.authenticate(username, password) do
+      {:ok, user} ->
         conn
-        # guarda ID real
-        |> put_session(:user_id, id)
-        # rotar session id
-        |> configure_session(renew: true)
-        |> redirect(to: ~p"/ui/platform")
-
-      {:ok, _} ->
-        conn
-        # fallback si no tienes id
-        |> put_session(:user_id, user)
+        |> put_session(:user_id, user.id)
+        |> put_session(:username, user.username)
+        |> put_session(:user_role, user.role)
         |> configure_session(renew: true)
         |> redirect(to: ~p"/ui/platform")
 

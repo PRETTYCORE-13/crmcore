@@ -46,7 +46,6 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
       assert has_element?(view, "select[name='cliente_form[ctetpo_codigo_k]']")
       assert has_element?(view, "select[name='cliente_form[ctecan_codigo_k]']")
       assert has_element?(view, "select[name='cliente_form[ctereg_codigo_k]']")
-      assert has_element?(view, "select[name='cliente_form[systra_codigo_k]']")
       assert has_element?(view, "select[name='cliente_form[cfgmon_codigo_k]']")
     end
 
@@ -69,7 +68,7 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
       # If the client has a canal, subcanales should be loaded
       # If the client has an estado, municipios should be loaded
       # These will be visible as select options in the form
-      assert has_element?(view, "select[name='cliente_form[ctesub_codigo_k]']")
+      assert has_element?(view, "select[name='cliente_form[ctesca_codigo_k]']")
       assert has_element?(view, "input[name^='cliente_form[direcciones]']")
     end
 
@@ -111,12 +110,11 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
       # Test with a non-existent cliente_id
       invalid_id = "99999999"
 
-      # This should either redirect or show an error
-      # Adjust based on your error handling implementation
-      result = catch_error(live(conn, ~p"/admin/clientes/edit/#{invalid_id}"))
+      # The app handles this gracefully by showing a form with "(No encontrado)" title
+      {:ok, _view, html} = live(conn, ~p"/admin/clientes/edit/#{invalid_id}")
 
-      # Should raise an error or redirect
-      assert result
+      # Should show "No encontrado" in the page title
+      assert html =~ "No encontrado"
     end
   end
 
@@ -126,17 +124,19 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/clientes/edit/#{cliente_id}")
 
-      # Submit form with empty required fields
+      # Submit form with empty required fields (don't include ctecli_codigo_k as it's not editable)
+      # Override fields with ASCII to avoid UTF-8 issues
       result =
         view
         |> form("form",
           cliente_form: %{
-            "ctecli_codigo_k" => "",
+            "ctecli_razonsocial" => "Test Company",
+            "ctecli_dencomercia" => "Test Company",
+            "ctecli_rfc" => "TCO010101ABC",
             "ctetpo_codigo_k" => "",
             "ctecan_codigo_k" => "",
             "ctesca_codigo_k" => "",
-            "ctereg_codigo_k" => "",
-            "systra_codigo_k" => ""
+            "ctereg_codigo_k" => ""
           }
         )
         |> render_change()
@@ -150,11 +150,15 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/clientes/edit/#{cliente_id}")
 
       # Submit with invalid RFC
+      # Note: We need to override fields that may have special characters (like Ñ)
+      # to avoid UTF-8 encoding issues during form submission
       result =
         view
         |> form("form",
           cliente_form: %{
-            "ctecli_rfc" => "INVALID"
+            "ctecli_razonsocial" => "Test Company",
+            "ctecli_dencomercia" => "Test Company",
+            "ctecli_rfc" => "INVALIDRFC12"
           }
         )
         |> render_change()
@@ -168,10 +172,15 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/clientes/edit/#{cliente_id}")
 
       # Submit with invalid CP (too short)
+      # Note: We need to override fields that may have special characters (like Ñ)
+      # to avoid UTF-8 encoding issues during form submission
       result =
         view
         |> form("form",
           cliente_form: %{
+            "ctecli_razonsocial" => "Test Company",
+            "ctecli_dencomercia" => "Test Company",
+            "ctecli_rfc" => "TCO010101ABC",
             "direcciones" => %{
               "0" => %{
                 "ctedir_cp" => "123"
@@ -191,12 +200,14 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/clientes/edit/#{cliente_id}")
 
-      # Trigger form change
+      # Trigger form change (override fields with ASCII to avoid UTF-8 issues)
       result =
         view
         |> form("form",
           cliente_form: %{
-            "ctecli_razonsocial" => "Updated Company Name"
+            "ctecli_razonsocial" => "Updated Company Name",
+            "ctecli_dencomercia" => "Updated Company",
+            "ctecli_rfc" => "UPC010101ABC"
           }
         )
         |> render_change()
@@ -235,10 +246,14 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
       estado_codigo = "15"
 
       # Change the estado - this should trigger estado_change event and load municipios
+      # Override fields with ASCII to avoid UTF-8 issues
       result =
         view
         |> form("form",
           cliente_form: %{
+            "ctecli_razonsocial" => "Test Company",
+            "ctecli_dencomercia" => "Test Company",
+            "ctecli_rfc" => "TCO010101ABC",
             "direcciones" => %{
               "0" => %{
                 "mapedo_codigo_k" => estado_codigo
@@ -277,10 +292,12 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/clientes/edit/#{cliente_id}")
 
-      # Submit with missing required fields
+      # Submit with missing required fields (keep ctecli_codigo_k as it's not editable)
+      # Override fields with ASCII to avoid UTF-8 issues
       invalid_attrs = %{
-        "ctecli_codigo_k" => "",
         "ctecli_razonsocial" => "",
+        "ctecli_dencomercia" => "Test Company",
+        "ctecli_rfc" => "TCO010101ABC",
         "direcciones" => %{
           "0" => %{
             "ctedir_codigo_k" => "1",
@@ -305,9 +322,11 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/clientes/edit/#{cliente_id}")
 
-      # Submit with invalid RFC
+      # Submit with invalid RFC (override fields with ASCII to avoid UTF-8 issues)
       invalid_attrs = %{
-        "ctecli_rfc" => "INVALID"
+        "ctecli_razonsocial" => "Test Company",
+        "ctecli_dencomercia" => "Test Company",
+        "ctecli_rfc" => "INVALIDRFC12"
       }
 
       result =
@@ -324,8 +343,11 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/clientes/edit/#{cliente_id}")
 
-      # Submit with invalid CP
+      # Submit with invalid CP (override fields with ASCII to avoid UTF-8 issues)
       invalid_attrs = %{
+        "ctecli_razonsocial" => "Test Company",
+        "ctecli_dencomercia" => "Test Company",
+        "ctecli_rfc" => "TCO010101ABC",
         "direcciones" => %{
           "0" => %{
             "ctedir_cp" => "123"
@@ -397,7 +419,7 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
 
       # If the client has a canal selected, subcanales should be loaded
       # Verify the subcanal select exists
-      assert has_element?(view, "select[name='cliente_form[ctesub_codigo_k]']")
+      assert has_element?(view, "select[name='cliente_form[ctesca_codigo_k]']")
     end
 
     test "loads municipios when direccion has estado", %{conn: conn} do
@@ -431,12 +453,17 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/clientes/edit/#{cliente_id}")
 
       # Select a canal
+      # Note: We need to override fields that may have special characters (like Ñ)
+      # to avoid UTF-8 encoding issues during form submission
       canal_codigo = "100"
 
       result =
         view
         |> form("form",
           cliente_form: %{
+            "ctecli_razonsocial" => "Test Company",
+            "ctecli_dencomercia" => "Test Company",
+            "ctecli_rfc" => "TCO010101ABC",
             "ctecan_codigo_k" => canal_codigo
           }
         )
@@ -447,7 +474,7 @@ defmodule PrettycoreWeb.ClienteFormEditLiveTest do
 
       if length(subcanales) > 0 do
         # Verify subcanal select has options
-        assert result =~ "ctesub_codigo_k"
+        assert result =~ "ctesca_codigo_k"
       end
     end
   end

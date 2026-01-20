@@ -3,17 +3,27 @@ import Config
 # Configure the database for testing
 # Note: Using integration tests with the production database
 # SQL Sandbox is not fully supported with SQL Server (TDS)
-config :prettycore, Prettycore.Repo,
-  hostname: "ecore.ath.cx",
-  port: 20000,
-  username: "sa",
-  password: "N0vacore",
-  database: "ECOREDES2",
-  pool_size: 2,
-  encrypt: false,
-  trust_server_certificate: true,
+config :prettycore, :tds,
+  hostname: System.get_env("DB_HOSTNAME", "localhost"),
+  port: String.to_integer(System.get_env("DB_PORT", "1433")),
+  username: System.get_env("DB_USERNAME"),
+  password: System.get_env("DB_PASSWORD"),
+  database: System.get_env("DB_DATABASE"),
+  pool_size: String.to_integer(System.get_env("DB_POOL_SIZE", "10")),
+  # Encryption settings (use true for Azure/SSL)
+  encrypt: System.get_env("DB_ENCRYPT", "false") == "true",
+  trust_server_certificate: System.get_env("DB_TRUST_SERVER_CERTIFICATE", "true") == "true",
   timeout: 15_000,
-  idle_timeout: 5_000
+  idle_timeout: 5_000,
+  show_sensitive_data_on_connection_error: true
+
+  config :prettycore, PrettyCore.PsqlRepo,
+  username: "postgres",
+  password: "postgres",
+  hostname: "localhost",
+  database: "prettycore_test#{System.get_env("MIX_TEST_PARTITION")}",
+  pool: Ecto.Adapters.SQL.Sandbox,
+  pool_size: System.schedulers_online() * 2
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.

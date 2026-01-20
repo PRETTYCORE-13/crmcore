@@ -9,7 +9,7 @@ defmodule PrettycoreWeb.WorkOrderLive do
 
   ## MOUNT
   @impl true
-  def mount(_params, session, socket) do
+  def mount(_params, _session, socket) do
     # Get all workorders once for filter options
     all_workorders = Workorders.list_enc()
 
@@ -32,7 +32,6 @@ defmodule PrettycoreWeb.WorkOrderLive do
      |> assign(:current_page, "workorder")
      |> assign(:show_programacion_children, false)
      |> assign(:sidebar_open, true)
-     |> assign(:current_user_email, session["user_email"])
      |> assign(:sysudn_opts, sysudn_opts)
      |> assign(:usuario_opts, usuario_opts)
      |> assign(:open_key, nil)

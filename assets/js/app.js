@@ -167,13 +167,14 @@ const LocationMap = {
   },
 
   updateCoordinates(lat, lng) {
-    const mapXInput = document.querySelector('input[name="cliente_form[map_x]"]');
-    const mapYInput = document.querySelector('input[name="cliente_form[map_y]"]');
+    const index = this.el.dataset.index || "0";
+    const mapXInput = document.querySelector(`input[name="cliente_form[direcciones][${index}][map_x]"]`);
+    const mapYInput = document.querySelector(`input[name="cliente_form[direcciones][${index}][map_y]"]`);
 
     if (mapXInput) mapXInput.value = lng.toFixed(6);
     if (mapYInput) mapYInput.value = lat.toFixed(6);
 
-    this.pushEvent("update_coordinates", { lat: lat, lng: lng });
+    this.pushEvent("update_coordinates", { lat: lat, lng: lng, index: index });
   },
 
   updated() {

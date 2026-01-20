@@ -32,7 +32,8 @@
       "Bash(ls -la \"c:\\\\Users\\\\HP\\\\Desktop\\\\ELIXIR\\\\prettycore\\\\lib\\\\prettycore_web\\\\live\\\\index\\\\pages\\\\clientes\"\" | grep -E \"edit)",
       "Bash(new \")",
       "Bash(git mv:*)",
-      "Bash(timeout 180 mix test:*)"
+      "Bash(timeout 180 mix test:*)",
+      "Bash(mix ecto.migrate:*)"
     ],
     "deny": [],
     "ask": []

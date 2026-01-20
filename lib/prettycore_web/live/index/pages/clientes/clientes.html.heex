@@ -3,7 +3,7 @@
       <header class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <div class="flex items-center justify-between gap-4 mb-6">
           <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-lg">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-700 to-black flex items-center justify-center shadow-lg">
               <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
               </svg>
@@ -16,10 +16,10 @@
 
           <div class="flex items-center gap-3">
             <!-- Contador de Clientes -->
-            <div class="px-4 py-2 bg-purple-50 rounded-lg border border-purple-200">
+            <div class="px-4 py-2 bg-gray-100 rounded-lg border border-gray-300">
               <div class="flex items-center gap-2">
-                <span class="text-sm font-medium text-purple-700">Total:</span>
-                <span class="text-xl font-bold text-purple-900">
+                <span class="text-sm font-medium text-gray-700">Total:</span>
+                <span class="text-xl font-bold text-gray-900">
                   <%= Map.get(@meta, :total_count, length(@clientes)) %>
                 </span>
               </div>
@@ -29,7 +29,7 @@
             <!-- Botón Nuevo Cliente -->
             <.link
               navigate={~p"/admin/clientes/new"}
-              class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -52,7 +52,7 @@
                 field={@filter_form[:search]}
                 type="text"
                 placeholder="Buscar por código, nombre, RFC, colónia..."
-                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent transition-all"
               />
             </div>
           </div>
@@ -63,7 +63,7 @@
             type="select"
             prompt="Todas las Rutas"
             options={@ruta_opts}
-            class="px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            class="px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent transition-all"
           />
 
           <.input
@@ -71,14 +71,14 @@
             type="select"
             prompt="Todas las UDN"
             options={@sysudn_opts}
-            class="px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            class="px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent transition-all"
           />
 
           <!-- Botón Filtros Avanzados -->
           <button
             type="button"
             phx-click="toggle_filters"
-            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all bg-green-600 text-white hover:bg-black hover:text-white shadow-lg"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all bg-green-600 text-white hover:bg-green-700 hover:text-white shadow-lg"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
@@ -111,20 +111,20 @@
             <label class="text-[11px] uppercase tracking-wider text-gray-600">Selecciona las columnas a mostrar</label>
 
             <!-- Checkbox para Seleccionar/Deseleccionar todas -->
-            <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-800 border-2 border-indigo-600 rounded-lg cursor-pointer hover:bg-purple-900 hover:border-indigo-500 hover:shadow-sm hover:shadow-indigo-500/10 transition-all select-none mb-2">
+            <label class="flex items-center gap-3 px-3 py-2.5 bg-gray-800 border-2 border-gray-700 rounded-lg cursor-pointer hover:bg-gray-900 hover:border-gray-600 hover:shadow-sm hover:shadow-gray-500/10 transition-all select-none mb-2">
               <input
                 type="checkbox"
                 checked={all_columns_selected?(@visible_columns)}
                 phx-click="toggle_all_columns"
-                class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2"
+                class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2"
               />
-              <span class="flex-1 text-[15px] font-semibold text-indigo-200">Seleccionar todas</span>
+              <span class="flex-1 text-[15px] font-semibold text-gray-200">Seleccionar todas</span>
             </label>
 
             <!-- Botón Descargar Excel -->
             <a
               href={build_excel_download_path(@params, @visible_columns)}
-              class="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-black text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 mb-3"
+              class="flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 mb-3"
               download
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,306 +135,306 @@
 
             <!-- Checkbox para UDN -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["udn"]} phx-click="toggle_column" phx-value-column="udn" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["udn"]} phx-click="toggle_column" phx-value-column="udn" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">UDN</span>
             </label>
 
             <!-- Checkbox para Preventa -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["preventa"]} phx-click="toggle_column" phx-value-column="preventa" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["preventa"]} phx-click="toggle_column" phx-value-column="preventa" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Preventa</span>
             </label>
 
             <!-- Checkbox para Entrega -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["entrega"]} phx-click="toggle_column" phx-value-column="entrega" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["entrega"]} phx-click="toggle_column" phx-value-column="entrega" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Entrega</span>
             </label>
 
             <!-- Checkbox para Autoventa -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["autoventa"]} phx-click="toggle_column" phx-value-column="autoventa" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["autoventa"]} phx-click="toggle_column" phx-value-column="autoventa" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Autoventa</span>
             </label>
 
             <!-- Checkbox para Código Dirección -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctedir_codigo_k"]} phx-click="toggle_column" phx-value-column="ctedir_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctedir_codigo_k"]} phx-click="toggle_column" phx-value-column="ctedir_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Código Dirección</span>
             </label>
 
             <!-- Checkbox para RFC -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["rfc"]} phx-click="toggle_column" phx-value-column="rfc" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["rfc"]} phx-click="toggle_column" phx-value-column="rfc" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">RFC</span>
             </label>
 
             <!-- Checkbox para Código -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["codigo"]} phx-click="toggle_column" phx-value-column="codigo" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["codigo"]} phx-click="toggle_column" phx-value-column="codigo" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Código Cliente</span>
             </label>
 
             <!-- Checkbox para Razón Social -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["razon_social"]} phx-click="toggle_column" phx-value-column="razon_social" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["razon_social"]} phx-click="toggle_column" phx-value-column="razon_social" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Razón Social</span>
             </label>
 
             <!-- Checkbox para Días Crédito -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["diascredito"]} phx-click="toggle_column" phx-value-column="diascredito" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["diascredito"]} phx-click="toggle_column" phx-value-column="diascredito" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Días Crédito</span>
             </label>
 
             <!-- Checkbox para Límite Crédito -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["limite_credito"]} phx-click="toggle_column" phx-value-column="limite_credito" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["limite_credito"]} phx-click="toggle_column" phx-value-column="limite_credito" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Límite Crédito</span>
             </label>
 
             <!-- Checkbox para Lista Precios -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["paquete_codigo"]} phx-click="toggle_column" phx-value-column="paquete_codigo" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["paquete_codigo"]} phx-click="toggle_column" phx-value-column="paquete_codigo" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Lista Precios</span>
             </label>
 
             <!-- Checkbox para Frecuencia -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["frecuencia_codigo"]} phx-click="toggle_column" phx-value-column="frecuencia_codigo" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["frecuencia_codigo"]} phx-click="toggle_column" phx-value-column="frecuencia_codigo" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Frecuencia</span>
             </label>
 
             <!-- Checkbox para Email Receptor -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["email_receptor"]} phx-click="toggle_column" phx-value-column="email_receptor" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["email_receptor"]} phx-click="toggle_column" phx-value-column="email_receptor" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Email Receptor</span>
             </label>
 
             <!-- Checkbox para Forma Pago -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["forma_pago"]} phx-click="toggle_column" phx-value-column="forma_pago" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["forma_pago"]} phx-click="toggle_column" phx-value-column="forma_pago" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Forma Pago</span>
             </label>
 
             <!-- Checkbox para Método Pago -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["metodo_pago"]} phx-click="toggle_column" phx-value-column="metodo_pago" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["metodo_pago"]} phx-click="toggle_column" phx-value-column="metodo_pago" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Método Pago</span>
             </label>
 
             <!-- Checkbox para Estatus -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["estatus"]} phx-click="toggle_column" phx-value-column="estatus" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["estatus"]} phx-click="toggle_column" phx-value-column="estatus" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Estatus</span>
             </label>
 
             <!-- SEPARADOR: Campos Adicionales -->
             <div class="mt-4 mb-2 pt-3 border-t-2 border-slate-700">
-              <label class="text-[11px] uppercase tracking-wider text-indigo-400 font-semibold">Campos Adicionales (para Excel)</label>
+              <label class="text-[11px] uppercase tracking-wider text-gray-600 font-semibold">Campos Adicionales (para Excel)</label>
             </div>
 
             <!-- Nombre Comercial -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["nombre_comercial"]} phx-click="toggle_column" phx-value-column="nombre_comercial" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["nombre_comercial"]} phx-click="toggle_column" phx-value-column="nombre_comercial" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Nombre Comercial</span>
             </label>
 
             <!-- Teléfono -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["telefono"]} phx-click="toggle_column" phx-value-column="telefono" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["telefono"]} phx-click="toggle_column" phx-value-column="telefono" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Teléfono</span>
             </label>
 
             <!-- Estado -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["estado"]} phx-click="toggle_column" phx-value-column="estado" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["estado"]} phx-click="toggle_column" phx-value-column="estado" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Estado</span>
             </label>
 
             <!-- Municipio -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["municipio"]} phx-click="toggle_column" phx-value-column="municipio" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["municipio"]} phx-click="toggle_column" phx-value-column="municipio" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Municipio</span>
             </label>
 
             <!-- Localidad -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["localidad"]} phx-click="toggle_column" phx-value-column="localidad" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["localidad"]} phx-click="toggle_column" phx-value-column="localidad" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Localidad</span>
             </label>
 
             <!-- Colonia -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["colonia"]} phx-click="toggle_column" phx-value-column="colonia" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["colonia"]} phx-click="toggle_column" phx-value-column="colonia" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Colonia</span>
             </label>
 
             <!-- Calle -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["calle"]} phx-click="toggle_column" phx-value-column="calle" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["calle"]} phx-click="toggle_column" phx-value-column="calle" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Calle</span>
             </label>
 
             <!-- Número Exterior -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctedir_callenumext"]} phx-click="toggle_column" phx-value-column="ctedir_callenumext" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctedir_callenumext"]} phx-click="toggle_column" phx-value-column="ctedir_callenumext" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Número Exterior</span>
             </label>
 
             <!-- Número Interior -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctedir_callenumint"]} phx-click="toggle_column" phx-value-column="ctedir_callenumint" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctedir_callenumint"]} phx-click="toggle_column" phx-value-column="ctedir_callenumint" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Número Interior</span>
             </label>
 
             <!-- Código Postal -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctedir_cp"]} phx-click="toggle_column" phx-value-column="ctedir_cp" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctedir_cp"]} phx-click="toggle_column" phx-value-column="ctedir_cp" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Código Postal</span>
             </label>
 
             <!-- Responsable -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctedir_responsable"]} phx-click="toggle_column" phx-value-column="ctedir_responsable" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctedir_responsable"]} phx-click="toggle_column" phx-value-column="ctedir_responsable" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Responsable</span>
             </label>
 
             <!-- Entre Calle 1 -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctedir_calleentre1"]} phx-click="toggle_column" phx-value-column="ctedir_calleentre1" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctedir_calleentre1"]} phx-click="toggle_column" phx-value-column="ctedir_calleentre1" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Entre Calle 1</span>
             </label>
 
             <!-- Entre Calle 2 -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctedir_calleentre2"]} phx-click="toggle_column" phx-value-column="ctedir_calleentre2" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctedir_calleentre2"]} phx-click="toggle_column" phx-value-column="ctedir_calleentre2" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Entre Calle 2</span>
             </label>
 
             <!-- Coordenada X -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["map_x"]} phx-click="toggle_column" phx-value-column="map_x" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["map_x"]} phx-click="toggle_column" phx-value-column="map_x" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Coordenada X</span>
             </label>
 
             <!-- Coordenada Y -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["map_y"]} phx-click="toggle_column" phx-value-column="map_y" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["map_y"]} phx-click="toggle_column" phx-value-column="map_y" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Coordenada Y</span>
             </label>
 
             <!-- Frecuencia Detalle -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["frecuencia"]} phx-click="toggle_column" phx-value-column="frecuencia" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["frecuencia"]} phx-click="toggle_column" phx-value-column="frecuencia" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Frecuencia Completa</span>
             </label>
 
             <!-- Código Frecuencia -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctepfr_codigo_k"]} phx-click="toggle_column" phx-value-column="ctepfr_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctepfr_codigo_k"]} phx-click="toggle_column" phx-value-column="ctepfr_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Código Frecuencia</span>
             </label>
 
             <!-- Canal -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["canal"]} phx-click="toggle_column" phx-value-column="canal" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["canal"]} phx-click="toggle_column" phx-value-column="canal" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Canal</span>
             </label>
 
             <!-- Subcanal -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["subcanal"]} phx-click="toggle_column" phx-value-column="subcanal" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["subcanal"]} phx-click="toggle_column" phx-value-column="subcanal" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Subcanal</span>
             </label>
 
             <!-- Cadena -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["cadena"]} phx-click="toggle_column" phx-value-column="cadena" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["cadena"]} phx-click="toggle_column" phx-value-column="cadena" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Cadena</span>
             </label>
 
             <!-- Paquete Servicio -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["paquete_serv"]} phx-click="toggle_column" phx-value-column="paquete_serv" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["paquete_serv"]} phx-click="toggle_column" phx-value-column="paquete_serv" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Paquete Servicio</span>
             </label>
 
             <!-- Régimen -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["regimen"]} phx-click="toggle_column" phx-value-column="regimen" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["regimen"]} phx-click="toggle_column" phx-value-column="regimen" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Régimen</span>
             </label>
 
             <!-- Fecha Alta -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_fechaalta"]} phx-click="toggle_column" phx-value-column="ctecli_fechaalta" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_fechaalta"]} phx-click="toggle_column" phx-value-column="ctecli_fechaalta" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Fecha Alta</span>
             </label>
 
             <!-- Fecha Baja -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_fechabaja"]} phx-click="toggle_column" phx-value-column="ctecli_fechabaja" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_fechabaja"]} phx-click="toggle_column" phx-value-column="ctecli_fechabaja" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Fecha Baja</span>
             </label>
 
             <!-- Causa Baja -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_causabaja"]} phx-click="toggle_column" phx-value-column="ctecli_causabaja" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_causabaja"]} phx-click="toggle_column" phx-value-column="ctecli_causabaja" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Causa Baja</span>
             </label>
 
             <!-- Estado Crédito -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_edocred"]} phx-click="toggle_column" phx-value-column="ctecli_edocred" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_edocred"]} phx-click="toggle_column" phx-value-column="ctecli_edocred" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Estado Crédito</span>
             </label>
 
             <!-- Tipo Factura -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_tipodefact"]} phx-click="toggle_column" phx-value-column="ctecli_tipodefact" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_tipodefact"]} phx-click="toggle_column" phx-value-column="ctecli_tipodefact" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Tipo Factura</span>
             </label>
 
             <!-- Observaciones Crédito -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_creditoobs"]} phx-click="toggle_column" phx-value-column="ctecli_creditoobs" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_creditoobs"]} phx-click="toggle_column" phx-value-column="ctecli_creditoobs" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Observaciones Crédito</span>
             </label>
 
             <!-- Observaciones -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_observaciones"]} phx-click="toggle_column" phx-value-column="ctecli_observaciones" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_observaciones"]} phx-click="toggle_column" phx-value-column="ctecli_observaciones" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Observaciones</span>
             </label>
 
             <!-- Contacto -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_contacto"]} phx-click="toggle_column" phx-value-column="ctecli_contacto" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_contacto"]} phx-click="toggle_column" phx-value-column="ctecli_contacto" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Contacto</span>
             </label>
 
             <!-- País -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_pais"]} phx-click="toggle_column" phx-value-column="ctecli_pais" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_pais"]} phx-click="toggle_column" phx-value-column="ctecli_pais" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">País</span>
             </label>
 
             <!-- Uso CFDI -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["sat_uso_cfdi_k"]} phx-click="toggle_column" phx-value-column="sat_uso_cfdi_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["sat_uso_cfdi_k"]} phx-click="toggle_column" phx-value-column="sat_uso_cfdi_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Uso CFDI</span>
             </label>
 
             <!-- Moneda -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["cfgmon_codigo_k"]} phx-click="toggle_column" phx-value-column="cfgmon_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["cfgmon_codigo_k"]} phx-click="toggle_column" phx-value-column="cfgmon_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Moneda</span>
             </label>
 
             <!-- Régimen Tributario -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_regtrib"]} phx-click="toggle_column" phx-value-column="ctecli_regtrib" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_regtrib"]} phx-click="toggle_column" phx-value-column="ctecli_regtrib" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Régimen Tributario</span>
             </label>
 
@@ -445,139 +445,139 @@
 
             <!-- Cliente Genérico -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_generico"]} phx-click="toggle_column" phx-value-column="ctecli_generico" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_generico"]} phx-click="toggle_column" phx-value-column="ctecli_generico" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Cliente Genérico</span>
             </label>
 
             <!-- Número Cuenta -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_nocta"]} phx-click="toggle_column" phx-value-column="ctecli_nocta" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_nocta"]} phx-click="toggle_column" phx-value-column="ctecli_nocta" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Número Cuenta</span>
             </label>
 
             <!-- Tipo Pago -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctetpo_codigo_k"]} phx-click="toggle_column" phx-value-column="ctetpo_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctetpo_codigo_k"]} phx-click="toggle_column" phx-value-column="ctetpo_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Tipo Pago (Código)</span>
             </label>
 
             <!-- Subcanal Código -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctesca_codigo_k"]} phx-click="toggle_column" phx-value-column="ctesca_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctesca_codigo_k"]} phx-click="toggle_column" phx-value-column="ctesca_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Subcanal (Código)</span>
             </label>
 
             <!-- Paquete Código -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctepaq_codigo_k"]} phx-click="toggle_column" phx-value-column="ctepaq_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctepaq_codigo_k"]} phx-click="toggle_column" phx-value-column="ctepaq_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Paquete (Código)</span>
             </label>
 
             <!-- Régimen Código -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctereg_codigo_k"]} phx-click="toggle_column" phx-value-column="ctereg_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctereg_codigo_k"]} phx-click="toggle_column" phx-value-column="ctereg_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Régimen (Código)</span>
             </label>
 
             <!-- Cadena Código -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecad_codigo_k"]} phx-click="toggle_column" phx-value-column="ctecad_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecad_codigo_k"]} phx-click="toggle_column" phx-value-column="ctecad_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Cadena (Código)</span>
             </label>
 
             <!-- Sistema Transacción -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["systra_codigo_k"]} phx-click="toggle_column" phx-value-column="systra_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["systra_codigo_k"]} phx-click="toggle_column" phx-value-column="systra_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Sistema Transacción</span>
             </label>
 
             <!-- Descuento Cantidad Importe -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_dscantimp"]} phx-click="toggle_column" phx-value-column="ctecli_dscantimp" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_dscantimp"]} phx-click="toggle_column" phx-value-column="ctecli_dscantimp" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Descuento Cantidad Importe</span>
             </label>
 
             <!-- Desglosa IEPS -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_desglosaieps"]} phx-click="toggle_column" phx-value-column="ctecli_desglosaieps" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_desglosaieps"]} phx-click="toggle_column" phx-value-column="ctecli_desglosaieps" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Desglosa IEPS</span>
             </label>
 
             <!-- Periodo Refacturación -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_periodorefac"]} phx-click="toggle_column" phx-value-column="ctecli_periodorefac" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_periodorefac"]} phx-click="toggle_column" phx-value-column="ctecli_periodorefac" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Periodo Refacturación</span>
             </label>
 
             <!-- Banco -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["cfgban_codigo_k"]} phx-click="toggle_column" phx-value-column="cfgban_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["cfgban_codigo_k"]} phx-click="toggle_column" phx-value-column="cfgban_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Banco</span>
             </label>
 
             <!-- Carga Específica -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_cargaespecifica"]} phx-click="toggle_column" phx-value-column="ctecli_cargaespecifica" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_cargaespecifica"]} phx-click="toggle_column" phx-value-column="ctecli_cargaespecifica" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Carga Específica</span>
             </label>
 
             <!-- Caducidad Mínima -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_caducidadmin"]} phx-click="toggle_column" phx-value-column="ctecli_caducidadmin" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_caducidadmin"]} phx-click="toggle_column" phx-value-column="ctecli_caducidadmin" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Caducidad Mínima</span>
             </label>
 
             <!-- Control Sanitario -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_ctlsanitario"]} phx-click="toggle_column" phx-value-column="ctecli_ctlsanitario" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_ctlsanitario"]} phx-click="toggle_column" phx-value-column="ctecli_ctlsanitario" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Control Sanitario</span>
             </label>
 
             <!-- Factura Tablero -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_factablero"]} phx-click="toggle_column" phx-value-column="ctecli_factablero" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_factablero"]} phx-click="toggle_column" phx-value-column="ctecli_factablero" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Factura Tablero</span>
             </label>
 
             <!-- Complemento -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_complemento"]} phx-click="toggle_column" phx-value-column="ctecli_complemento" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_complemento"]} phx-click="toggle_column" phx-value-column="ctecli_complemento" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Complemento</span>
             </label>
 
             <!-- Aplica Canje -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_aplicacanje"]} phx-click="toggle_column" phx-value-column="ctecli_aplicacanje" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_aplicacanje"]} phx-click="toggle_column" phx-value-column="ctecli_aplicacanje" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Aplica Canje</span>
             </label>
 
             <!-- Aplica Devolución -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_aplicadev"]} phx-click="toggle_column" phx-value-column="ctecli_aplicadev" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_aplicadev"]} phx-click="toggle_column" phx-value-column="ctecli_aplicadev" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Aplica Devolución</span>
             </label>
 
             <!-- Desglosa Kit -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_desglosakit"]} phx-click="toggle_column" phx-value-column="ctecli_desglosakit" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_desglosakit"]} phx-click="toggle_column" phx-value-column="ctecli_desglosakit" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Desglosa Kit</span>
             </label>
 
             <!-- Factura Grupo -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_facgrupo"]} phx-click="toggle_column" phx-value-column="ctecli_facgrupo" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_facgrupo"]} phx-click="toggle_column" phx-value-column="ctecli_facgrupo" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Factura Grupo</span>
             </label>
 
             <!-- Tipo Factura Descripción -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_tipofacdes"]} phx-click="toggle_column" phx-value-column="ctecli_tipofacdes" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_tipofacdes"]} phx-click="toggle_column" phx-value-column="ctecli_tipofacdes" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Tipo Factura Descripción</span>
             </label>
 
             <!-- Tipo Pago Cliente -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_tipopago"]} phx-click="toggle_column" phx-value-column="ctecli_tipopago" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_tipopago"]} phx-click="toggle_column" phx-value-column="ctecli_tipopago" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Tipo Pago Cliente</span>
             </label>
 
@@ -588,97 +588,97 @@
 
             <!-- Estado Máquina -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["s_maqedo"]} phx-click="toggle_column" phx-value-column="s_maqedo" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["s_maqedo"]} phx-click="toggle_column" phx-value-column="s_maqedo" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Estado Máquina</span>
             </label>
 
             <!-- Fecha Sistema -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["s_fecha"]} phx-click="toggle_column" phx-value-column="s_fecha" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["s_fecha"]} phx-click="toggle_column" phx-value-column="s_fecha" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Fecha Sistema</span>
             </label>
 
             <!-- Fecha Inserción -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["s_fi"]} phx-click="toggle_column" phx-value-column="s_fi" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["s_fi"]} phx-click="toggle_column" phx-value-column="s_fi" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Fecha Inserción</span>
             </label>
 
             <!-- GUID -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["s_guid"]} phx-click="toggle_column" phx-value-column="s_guid" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["s_guid"]} phx-click="toggle_column" phx-value-column="s_guid" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">GUID</span>
             </label>
 
             <!-- GUID Log -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["s_guidlog"]} phx-click="toggle_column" phx-value-column="s_guidlog" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["s_guidlog"]} phx-click="toggle_column" phx-value-column="s_guidlog" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">GUID Log</span>
             </label>
 
             <!-- Usuario -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["s_usuario"]} phx-click="toggle_column" phx-value-column="s_usuario" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["s_usuario"]} phx-click="toggle_column" phx-value-column="s_usuario" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Usuario</span>
             </label>
 
             <!-- Usuario DB -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["s_usuariodb"]} phx-click="toggle_column" phx-value-column="s_usuariodb" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["s_usuariodb"]} phx-click="toggle_column" phx-value-column="s_usuariodb" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Usuario DB</span>
             </label>
 
             <!-- GUID Notificación -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["s_guidnot"]} phx-click="toggle_column" phx-value-column="s_guidnot" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["s_guidnot"]} phx-click="toggle_column" phx-value-column="s_guidnot" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">GUID Notificación</span>
             </label>
 
             <!-- Dirección Adicional -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["facadd_codigo_k"]} phx-click="toggle_column" phx-value-column="facadd_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["facadd_codigo_k"]} phx-click="toggle_column" phx-value-column="facadd_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Dirección Adicional</span>
             </label>
 
             <!-- Receptor FE -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_fereceptor"]} phx-click="toggle_column" phx-value-column="ctecli_fereceptor" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_fereceptor"]} phx-click="toggle_column" phx-value-column="ctecli_fereceptor" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Receptor FE</span>
             </label>
 
             <!-- Portafolio -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctepor_codigo_k"]} phx-click="toggle_column" phx-value-column="ctepor_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctepor_codigo_k"]} phx-click="toggle_column" phx-value-column="ctepor_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Portafolio</span>
             </label>
 
             <!-- Tipo Factura Recurrente -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_tipodefacr"]} phx-click="toggle_column" phx-value-column="ctecli_tipodefacr" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_tipodefacr"]} phx-click="toggle_column" phx-value-column="ctecli_tipodefacr" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Tipo Factura Recurrente</span>
             </label>
 
             <!-- Concepto Dimensión -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["condim_codigo_k"]} phx-click="toggle_column" phx-value-column="condim_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["condim_codigo_k"]} phx-click="toggle_column" phx-value-column="condim_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Concepto Dimensión</span>
             </label>
 
             <!-- CXC Liquidación -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["ctecli_cxcliq"]} phx-click="toggle_column" phx-value-column="ctecli_cxcliq" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["ctecli_cxcliq"]} phx-click="toggle_column" phx-value-column="ctecli_cxcliq" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">CXC Liquidación</span>
             </label>
 
             <!-- Factura Comercial -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["faccom_codigo_k"]} phx-click="toggle_column" phx-value-column="faccom_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["faccom_codigo_k"]} phx-click="toggle_column" phx-value-column="faccom_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Factura Comercial</span>
             </label>
 
             <!-- Factura Adicional Servicio -->
             <label class="flex items-center gap-3 px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800 hover:border-slate-600 transition-all select-none">
-              <input type="checkbox" checked={@visible_columns["facads_codigo_k"]} phx-click="toggle_column" phx-value-column="facads_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-indigo-600 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-indigo-600 focus:outline-offset-2" />
+              <input type="checkbox" checked={@visible_columns["facads_codigo_k"]} phx-click="toggle_column" phx-value-column="facads_codigo_k" class="w-[18px] h-[18px] cursor-pointer accent-gray-800 border-2 border-gray-400 rounded transition-all focus:outline-2 focus:outline-gray-800 focus:outline-offset-2" />
               <span class="flex-1 text-[15px] text-slate-300">Factura Adicional Servicio</span>
             </label>
           </div>
@@ -697,7 +697,7 @@
         <%= if @loading do %>
           <div class="p-12 text-center">
             <div class="flex flex-col items-center gap-3">
-              <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-purple-600"></div>
+              <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gray-800"></div>
               <span class="font-medium text-gray-600">Cargando clientes...</span>
             </div>
           </div>
@@ -826,7 +826,7 @@
   <div class="border-b border-gray-200 last:border-b-0">
     <!-- VISTA COMPACTA: Una sola línea clickeable -->
     <div
-      class="flex items-center gap-3 px-4 py-2.5 hover:bg-gradient-to-r hover:from-purple-50/50 hover:to-transparent cursor-pointer transition-all duration-200"
+      class="flex items-center gap-3 px-4 py-2.5 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent cursor-pointer transition-all duration-200"
       phx-click="toggle_client_details"
       phx-value-codigo={cliente.codigo}
       phx-value-dir={cliente.ctedir_codigo_k}
@@ -850,7 +850,7 @@
                   <!-- UDN -->
                   <%= if @visible_columns["udn"] do %>
                     <div class="w-16 flex-shrink-0">
-                      <span class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-semibold">
+                      <span class="px-2 py-0.5 bg-gray-200 text-gray-800 rounded text-xs font-semibold">
                         <%= cliente.udn %>
                       </span>
                     </div>
@@ -898,7 +898,7 @@
                   <!-- PREVENTA -->
                   <%= if @visible_columns["preventa"] do %>
                     <div class="w-20 flex-shrink-0">
-                      <span class="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                      <span class="px-1.5 py-0.5 bg-gray-200 text-gray-800 rounded text-xs font-medium">
                         <%= cliente.preventa %>
                       </span>
                     </div>
@@ -969,7 +969,7 @@
 
                 <!-- VISTA EXPANDIDA -->
                 <div class={[
-                  "transition-all duration-300 ease-in-out overflow-hidden bg-gradient-to-r from-slate-50 to-purple-50/30",
+                  "transition-all duration-300 ease-in-out overflow-hidden bg-gradient-to-r from-slate-50 to-gray-50/30",
                   if(is_expanded, do: "max-h-96 opacity-100", else: "max-h-0 opacity-0")
                 ]}>
                   <div class="px-4 py-4 space-y-3">
@@ -980,7 +980,7 @@
                       <span class="font-semibold text-gray-700">Financiero:</span>
                       <div class="flex items-center gap-3 flex-wrap">
                         <span class="text-gray-800">
-                          Días Crédito: <span class="font-bold text-indigo-600"><%= cliente.diascredito %>d</span>
+                          Días Crédito: <span class="font-bold text-gray-800"><%= cliente.diascredito %>d</span>
                         </span>
                         <span class="text-gray-400">|</span>
                         <span class="text-gray-800">
@@ -988,7 +988,7 @@
                         </span>
                         <span class="text-gray-400">|</span>
                         <span class="text-gray-800">
-                          Lista: <span class="font-bold text-purple-600"><%= cliente.paquete_codigo %></span>
+                          Lista: <span class="font-bold text-gray-800"><%= cliente.paquete_codigo %></span>
                         </span>
                         <span class="text-gray-400">|</span>
                         <span class="text-gray-800">
@@ -1003,7 +1003,7 @@
                       <span class="font-semibold text-gray-700">Contacto:</span>
                       <div class="flex items-center gap-3 flex-wrap">
                         <%= if cliente.email_receptor do %>
-                          <a href={"mailto:#{cliente.email_receptor}"} class="text-blue-600 hover:underline font-medium">
+                          <a href={"mailto:#{cliente.email_receptor}"} class="text-gray-800 hover:underline font-medium">
                             <%= cliente.email_receptor %>
                           </a>
                         <% else %>
@@ -1058,7 +1058,7 @@
             <%= if Map.get(@meta, :has_previous_page?, false) do %>
               <a
                 href={build_pagination_path(%{"page" => Map.get(@meta, :previous_page, 1)}, @params)}
-                class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-sm hover:shadow-md"
+                class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-gray-800 to-black rounded-lg hover:from-gray-700 hover:to-gray-900 transition-all shadow-sm hover:shadow-md"
               >
                 Anterior
               </a>
@@ -1070,13 +1070,13 @@
             <div class="flex items-center gap-1">
               <%= for page <- get_visible_pages(Map.get(@meta, :current_page, 1), Map.get(@meta, :total_pages, 1), 3) do %>
                 <%= if page == Map.get(@meta, :current_page, 1) do %>
-                  <span class="min-w-[40px] h-10 flex items-center justify-center text-sm font-semibold bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg shadow-md">
+                  <span class="min-w-[40px] h-10 flex items-center justify-center text-sm font-semibold bg-gradient-to-r from-gray-800 to-black text-white rounded-lg shadow-md">
                     <%= page %>
                   </span>
                 <% else %>
                   <a
                     href={build_pagination_path(%{"page" => page}, @params)}
-                    class="min-w-[40px] h-10 flex items-center justify-center text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all"
+                    class="min-w-[40px] h-10 flex items-center justify-center text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 hover:text-gray-800 transition-all"
                   >
                     <%= page %>
                   </a>
@@ -1088,7 +1088,7 @@
             <%= if Map.get(@meta, :has_next_page?, false) do %>
               <a
                 href={build_pagination_path(%{"page" => Map.get(@meta, :next_page, 1)}, @params)}
-                class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all shadow-sm hover:shadow-md"
+                class="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-gray-800 to-black rounded-lg hover:from-gray-700 hover:to-gray-900 transition-all shadow-sm hover:shadow-md"
               >
                 Siguiente
               </a>

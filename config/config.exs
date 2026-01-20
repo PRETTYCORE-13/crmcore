@@ -29,8 +29,9 @@ config :prettycore, Prettycore.Repo,
   queue_target: 5_000,
   queue_interval: 1_000
 
+
 config :prettycore,
-  ecto_repos: [Prettycore.Repo],
+  ecto_repos: [Prettycore.Repo, Prettycore.PsqlRepo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint

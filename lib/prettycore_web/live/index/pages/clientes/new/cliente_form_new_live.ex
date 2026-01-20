@@ -199,7 +199,6 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
     @primary_key false
     embedded_schema do
       # Identificación (requeridos)
-      field(:ctecli_codigo_k, :string)
       field(:ctecli_razonsocial, :string)
       field(:ctecli_dencomercia, :string)
       field(:ctecli_rfc, :string, default: "XAXX010101000")
@@ -227,7 +226,6 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
       field(:ctecan_codigo_k, :string)
       field(:ctesca_codigo_k, :string)
       field(:ctereg_codigo_k, :string)
-      field(:systra_codigo_k, :string)
 
       # Catálogos opcionales con foreign keys
       field(:ctepaq_codigo_k, :string)
@@ -281,7 +279,6 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
       cliente
       |> cast(attrs, [
         # Identificación
-        :ctecli_codigo_k,
         :ctecli_razonsocial,
         :ctecli_dencomercia,
         :ctecli_rfc,
@@ -305,7 +302,6 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
         :ctecan_codigo_k,
         :ctesca_codigo_k,
         :ctereg_codigo_k,
-        :systra_codigo_k,
         # Catálogos opcionales
         :ctepaq_codigo_k,
         :facadd_codigo_k,
@@ -350,8 +346,9 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
       |> put_default_fechaalta()
       |> validate_required(
         [
-          # Campos obligatorios NOT NULL - validar solo al guardar
-          :ctecli_codigo_k
+          :ctetpo_codigo_k,
+          :ctecan_codigo_k,
+          :ctereg_codigo_k
         ],
         message: "Este campo es obligatorio"
       )
@@ -382,41 +379,12 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
     end
   end
 
-  # Función para generar código de cliente único
-  defp  do
-    # Generar código aleatorio de 7 caracteres
-    # 85% probabilidad de números, 15% de incluir una letra
-    codigo = if :rand.uniform(100) > 15 do
-      # Solo números (7 dígitos)
-      # Usar timestamp parcial + aleatorio para mayor unicidad
-      timestamp_part = System.system_time(:millisecond) |> rem(10000) |> Integer.to_string() |> String.pad_leading(4, "0")
-      random_part = :rand.uniform(1000) |> Integer.to_string() |> String.pad_leading(3, "0")
-      (timestamp_part <> random_part) |> String.slice(0..6)
-    else
-      # Con una letra en posición aleatoria (generalmente al inicio o final)
-      timestamp_part = System.system_time(:millisecond) |> rem(100000) |> Integer.to_string() |> String.pad_leading(5, "0")
-      random_digit = :rand.uniform(10) - 1 |> Integer.to_string()
-      letra = Enum.random(?A..?Z) |> List.to_string()
-
-      # 50% probabilidad de poner la letra al inicio o al final
-      if :rand.uniform(2) == 1 do
-        letra <> timestamp_part <> random_digit
-      else
-        timestamp_part <> random_digit <> letra
-      end
-      |> String.slice(0..6)
-    end
-
-    codigo
-  end
 
   @impl true
   def mount(_params, session, socket) do
     # Modo creación: nuevo cliente con código autogenerado
-    codigo_generado = generar_codigo_cliente()
 
     cliente = %ClienteForm{
-      ctecli_codigo_k: codigo_generado,
       ctecli_fechaalta: Date.utc_today(),
       direcciones: [%DireccionForm{ctedir_codigo_k: "1"}]
     }
@@ -441,15 +409,11 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
     metodos_pago = Catalogos.listar_metodos_pago()
     regimenes_fiscales = Catalogos.listar_regimenes_fiscales()
 
-    # Obtener user_email de la sesión o usar un valor por defecto temporal
-    user_email = session["user_email"] || "admin"
-
     {:ok,
      socket
      |> assign(:current_page, "clientes")
      |> assign(:sidebar_open, true)
      |> assign(:show_programacion_children, false)
-     |> assign(:current_user_email, user_email)
      |> assign(:current_path, current_path)
      |> assign(:form, form)
      |> assign(:page_title, page_title)
@@ -636,7 +600,9 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
 
       {:error, %Ecto.Changeset{} = changeset} ->
         IO.inspect(changeset)
-        {:noreply, assign(socket, :form, to_form(changeset))}
+        # Agregar action para que se muestren todos los errores de validación
+        changeset_with_action = Map.put(changeset, :action, :validate)
+        {:noreply, assign(socket, :form, to_form(changeset_with_action))}
     end
   end
 
@@ -646,21 +612,39 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
     current_form = socket.assigns.form
     params = current_form.params || %{}
 
-    # Obtener direcciones existentes
-    direcciones = Map.get(params, "direcciones", [])
+    # Obtener direcciones existentes (puede ser mapa o lista)
+    direcciones_raw = Map.get(params, "direcciones", %{})
 
-    # Calcular el siguiente código de dirección
-    next_codigo = (length(direcciones) + 1) |> to_string()
+    # Convertir a lista si es un mapa
+    direcciones_list =
+      case direcciones_raw do
+        dirs when is_map(dirs) -> Map.values(dirs)
+        dirs when is_list(dirs) -> dirs
+        _ -> []
+      end
+
+    # Calcular el siguiente índice y código de dirección
+    next_index = length(direcciones_list) |> to_string()
+    next_codigo = (length(direcciones_list) + 1) |> to_string()
 
     # Agregar nueva dirección
     new_direccion = %{
       "ctedir_codigo_k" => next_codigo,
       "ctedir_calle" => "",
       "ctedir_callenumext" => "",
-      "ctedir_cp" => ""
+      "ctedir_cp" => "",
+      "ctedir_tipofis" => "false",
+      "ctedir_tipoent" => "false"
     }
 
-    updated_direcciones = direcciones ++ [new_direccion]
+    # Convertir direcciones existentes a mapa con índices string
+    updated_direcciones =
+      direcciones_list
+      |> Enum.with_index()
+      |> Enum.map(fn {dir, idx} -> {to_string(idx), dir} end)
+      |> Map.new()
+      |> Map.put(next_index, new_direccion)
+
     updated_params = Map.put(params, "direcciones", updated_direcciones)
 
     # Crear nuevo changeset
@@ -678,15 +662,31 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
     current_form = socket.assigns.form
     params = current_form.params || %{}
 
-    # Obtener direcciones existentes
-    direcciones = Map.get(params, "direcciones", [])
+    # Obtener direcciones existentes (puede ser mapa o lista)
+    direcciones_raw = Map.get(params, "direcciones", %{})
+
+    # Convertir a lista si es un mapa
+    direcciones_list =
+      case direcciones_raw do
+        dirs when is_map(dirs) -> Map.values(dirs)
+        dirs when is_list(dirs) -> dirs
+        _ -> []
+      end
 
     # No permitir eliminar si solo hay una dirección
-    if length(direcciones) <= 1 do
+    if length(direcciones_list) <= 1 do
       {:noreply, put_flash(socket, :error, "Debe mantener al menos una dirección")}
     else
       # Eliminar la dirección en el índice especificado
-      updated_direcciones = List.delete_at(direcciones, index)
+      updated_list = List.delete_at(direcciones_list, index)
+
+      # Convertir de vuelta a mapa con índices string reordenados
+      updated_direcciones =
+        updated_list
+        |> Enum.with_index()
+        |> Enum.map(fn {dir, idx} -> {to_string(idx), dir} end)
+        |> Map.new()
+
       updated_params = Map.put(params, "direcciones", updated_direcciones)
 
       # Crear nuevo changeset

@@ -7,13 +7,12 @@ defmodule PrettycoreWeb.HerramientaSql do
 
   # Ruta: /admin/programacion/sql/:email
   @impl true
-  def mount(_params, session, socket) do
+  def mount(_params, _session, socket) do
     {:ok,
      socket
      |> assign(:current_page, "programacion_sql")
      |> assign(:show_programacion_children, true)
      |> assign(:sidebar_open, true)
-     |> assign(:current_user_email, session["user_email"])
      |> assign(:current_path, "/admin/programacion/sql")
      |> assign(:sql_query, "SELECT * FROM SYS_UDN;")
      |> assign(:columns, [])

@@ -244,6 +244,10 @@ defmodule Prettycore.Catalogos do
   @doc """
   Obtiene la lista de municipios para un estado específico
   """
+  def listar_municipios(estado_codigo) when is_integer(estado_codigo) do
+    listar_municipios(to_string(estado_codigo))
+  end
+
   def listar_municipios(estado_codigo) when is_binary(estado_codigo) do
     query = """
     SELECT MAPMUN_CODIGO_K as codigo, MAPMUN_DESCRIPCION as nombre
@@ -272,6 +276,11 @@ defmodule Prettycore.Catalogos do
   @doc """
   Obtiene la lista de localidades para un estado y municipio específicos
   """
+  def listar_localidades(estado_codigo, municipio_codigo)
+      when is_integer(estado_codigo) or is_integer(municipio_codigo) do
+    listar_localidades(to_string(estado_codigo), to_string(municipio_codigo))
+  end
+
   def listar_localidades(estado_codigo, municipio_codigo)
       when is_binary(estado_codigo) and is_binary(municipio_codigo) do
     query = """
