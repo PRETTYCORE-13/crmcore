@@ -175,10 +175,13 @@ defmodule PrettycoreWeb.Clientes do
       has_previous_page?: false
     }
 
+    # Obtener el token FROG de los assigns
+    frog_token = socket.assigns[:frog_token]
+
     # Cargar clientes con paginación usando Flop
     {clientes, meta, error} =
       try do
-        case Clientes.list_clientes_with_flop(params) do
+        case Clientes.list_clientes_with_flop(params, frog_token) do
           {:ok, {clientes, meta}} -> {clientes, meta, nil}
           {:error, _meta} -> {[], default_meta, "Error al cargar clientes"}
         end

@@ -3,7 +3,6 @@ defmodule Prettycore.CfgMetodoPago do
   Contexto para consultar métodos de pago desde CFG_METODOPAGO
   """
   import Ecto.Query
-  alias Prettycore.Repo
 
   @doc """
   Lista todos los métodos de pago ordenados por código

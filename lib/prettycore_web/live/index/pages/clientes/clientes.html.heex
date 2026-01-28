@@ -984,7 +984,13 @@
                         </span>
                         <span class="text-gray-400">|</span>
                         <span class="text-gray-800">
-                          Límite: <span class="font-bold text-emerald-600">$<%= if cliente.limite_credito, do: :erlang.float_to_binary(Decimal.to_float(cliente.limite_credito), decimals: 2), else: "0.00" %></span>
+                          Límite: <span class="font-bold text-emerald-600">$<%= cond do
+                            is_nil(cliente.limite_credito) -> "0.00"
+                            is_struct(cliente.limite_credito, Decimal) -> :erlang.float_to_binary(Decimal.to_float(cliente.limite_credito), decimals: 2)
+                            is_float(cliente.limite_credito) -> :erlang.float_to_binary(cliente.limite_credito, decimals: 2)
+                            is_integer(cliente.limite_credito) -> :erlang.float_to_binary(cliente.limite_credito / 1, decimals: 2)
+                            true -> to_string(cliente.limite_credito)
+                          end %></span>
                         </span>
                         <span class="text-gray-400">|</span>
                         <span class="text-gray-800">

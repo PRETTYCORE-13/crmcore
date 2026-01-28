@@ -19,9 +19,9 @@ config :prettycore, :tds,
 
   config :prettycore, PrettyCore.PsqlRepo,
   username: "postgres",
-  password: "postgres",
+  password: "PRETTYCORE13",
   hostname: "localhost",
-  database: "prettycore_test#{System.get_env("MIX_TEST_PARTITION")}",
+  database: "prettycore_test",
   pool: Ecto.Adapters.SQL.Sandbox,
   pool_size: System.schedulers_online() * 2
 

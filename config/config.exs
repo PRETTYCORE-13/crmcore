@@ -10,28 +10,10 @@ import Config
 # Load environment variables from .env file
 import_config "load_env.exs"
 
-config :prettycore, Prettycore.Repo,
-  hostname: System.get_env("DB_HOSTNAME", "localhost"),
-  port: String.to_integer(System.get_env("DB_PORT", "1433")),
-  username: System.get_env("DB_USERNAME"),
-  password: System.get_env("DB_PASSWORD"),
-  database: System.get_env("DB_DATABASE"),
-  pool_size: String.to_integer(System.get_env("DB_POOL_SIZE", "10")),
-  encrypt: System.get_env("DB_ENCRYPT", "false") == "true",
-  trust_server_certificate: System.get_env("DB_TRUST_SERVER_CERTIFICATE", "true") == "true",
-  # 30 segundos para queries complejas
-  timeout: 30_000,
-  # 30 segundos para conectar
-  connect_timeout: 30_000,
-  # 30 segundos antes de cerrar conexiones idle
-  idle_timeout: 30_000,
-  # Tiempo objetivo en cola
-  queue_target: 5_000,
-  queue_interval: 1_000
+config :prettycore, Prettycore.PsqlRepo,
 
 
-config :prettycore,
-  ecto_repos: [Prettycore.Repo, Prettycore.PsqlRepo],
+  ecto_repos: [Prettycore.PsqlRepo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configures the endpoint
@@ -101,7 +83,6 @@ config :logger, :default_formatter,
 
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
-config :flop, repo: Prettycore.Repo
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.

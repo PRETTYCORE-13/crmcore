@@ -12,7 +12,6 @@ defmodule Prettycore.DataCase do
 
   using do
     quote do
-      alias Prettycore.Repo
 
       import Ecto
       import Ecto.Changeset

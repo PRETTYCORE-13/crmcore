@@ -1,24 +1,14 @@
 defmodule Prettycore.Clientes do
   @moduledoc """
-  Contexto para gestión de clientes
-  """
-  import Ecto.Query, warn: false
-  alias Prettycore.Repo
+  Contexto para gestión de clientes usando API REST EN_RESTHELPER.
 
-  alias Prettycore.Clientes.{
-    Cliente,
-    Direccion,
-    PatronFrecuencia,
-    Canal,
-    Subcanal,
-    Cadena,
-    PaqueteServicio,
-    Regimen,
-    Estado,
-    Municipio,
-    Localidad,
-    Ruta
-  }
+  Este módulo consume datos desde la API REST en lugar de
+  consultas directas a SQL Server.
+
+  Base URL: http://ecore.ath.cx:1405/SP/EN_RESTHELPER/
+  """
+
+  alias Prettycore.Api.Client, as: Api
 
   # Función helper para convertir Latin-1 a UTF-8
   defp fix_encoding(nil), do: nil
@@ -58,178 +48,146 @@ defmodule Prettycore.Clientes do
       [%{...}, ...]
   """
   def list_clientes_completo(sysudn_codigo_k, vtarut_codigo_k_ini, vtarut_codigo_k_fin) do
-    query =
-      from(c in Cliente,
-        left_join: d in Direccion,
-        on: c.ctecli_codigo_k == d.ctecli_codigo_k,
-        left_join: pf in PatronFrecuencia,
-        on: d.ctepfr_codigo_k == pf.ctepfr_codigo_k,
-        left_join: can in Canal,
-        on: c.ctecan_codigo_k == can.ctecan_codigo_k,
-        left_join: sca in Subcanal,
-        on:
-          can.ctecan_codigo_k == sca.ctecan_codigo_k and c.ctesca_codigo_k == sca.ctesca_codigo_k,
-        left_join: cad in Cadena,
-        on: c.ctecad_codigo_k == cad.ctecad_codigo_k,
-        left_join: paq in PaqueteServicio,
-        on: c.ctepaq_codigo_k == paq.ctepaq_codigo_k,
-        left_join: reg in Regimen,
-        on: c.ctereg_codigo_k == reg.ctereg_codigo_k,
-        left_join: edo in Estado,
-        on: d.mapedo_codigo_k == edo.mapedo_codigo_k,
-        left_join: mun in Municipio,
-        on: d.mapedo_codigo_k == mun.mapedo_codigo_k and d.mapmun_codigo_k == mun.mapmun_codigo_k,
-        left_join: loc in Localidad,
-        on:
-          d.mapedo_codigo_k == loc.mapedo_codigo_k and
-            d.mapmun_codigo_k == loc.mapmun_codigo_k and
-            d.maploc_codigo_k == loc.maploc_codigo_k,
-        left_join: ruta in Ruta,
-        on: ruta.vtarut_codigo_k in [d.vtarut_codigo_k_pre, d.vtarut_codigo_k_aut],
-        where: c.s_maqedo == 10,
-        where:
-          (d.vtarut_codigo_k_pre >= ^vtarut_codigo_k_ini and
-             d.vtarut_codigo_k_pre <= ^vtarut_codigo_k_fin) or
-            (d.vtarut_codigo_k_ent >= ^vtarut_codigo_k_ini and
-               d.vtarut_codigo_k_ent <= ^vtarut_codigo_k_fin) or
-            (d.vtarut_codigo_k_aut >= ^vtarut_codigo_k_ini and
-               d.vtarut_codigo_k_aut <= ^vtarut_codigo_k_fin),
-        where: ruta.sysudn_codigo_k == ^sysudn_codigo_k,
-        distinct: true,
-        order_by: [asc: c.ctecli_codigo_k],
-        select: %{
-          # Estatus calculado
-          estatus:
-            fragment(
-              "CASE WHEN ? = 10 THEN '---ACTIVO---' WHEN ? = 30 THEN '---PROSPECTO---' ELSE '---BAJA---' END",
-              c.s_maqedo,
-              c.s_maqedo
-            ),
+    # Obtener clientes activos
+    case Api.get_filtered("CTE_CLIENTE", %{"S_MAQEDO" => "10"}) do
+      {:ok, clientes} ->
+        clientes
+        |> Enum.map(fn cliente ->
+          # Obtener direcciones del cliente
+          direcciones = get_direcciones_cliente(cliente["CTECLI_CODIGO_K"])
 
-          # Datos de ruta
-          udn: ruta.sysudn_codigo_k,
-          preventa: d.vtarut_codigo_k_pre,
-          entrega: d.vtarut_codigo_k_ent,
-          autoventa: d.vtarut_codigo_k_aut,
+          # Filtrar por rutas
+          direcciones_filtradas = Enum.filter(direcciones, fn dir ->
+            ruta_pre = dir["VTARUT_CODIGO_K_PRE"]
+            ruta_ent = dir["VTARUT_CODIGO_K_ENT"]
+            ruta_aut = dir["VTARUT_CODIGO_K_AUT"]
 
-          # Identificadores dirección
-          ctepfr_codigo_k: d.ctepfr_codigo_k,
-          ctedir_codigo_k: d.ctedir_codigo_k,
+            (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
+            (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
+            (ruta_aut >= vtarut_codigo_k_ini and ruta_aut <= vtarut_codigo_k_fin)
+          end)
 
-          # RFC
-          rfc: c.ctecli_rfc,
+          # Si tiene direcciones filtradas, incluir cliente
+          if Enum.any?(direcciones_filtradas) do
+            dir = List.first(direcciones_filtradas) || %{}
+            build_cliente_completo(cliente, dir, sysudn_codigo_k)
+          else
+            nil
+          end
+        end)
+        |> Enum.reject(&is_nil/1)
+        |> Enum.map(&fix_map_encoding/1)
 
-          # Catálogos concatenados (convertir a string, NULL si están vacíos)
-          frecuencia: fragment("NULLIF(CAST(CONCAT(?, '-', ?) AS VARCHAR(255)), '0')", pf.ctepfr_codigo_k, pf.ctepfr_descipcion),
-          canal: fragment("NULLIF(CAST(CONCAT(?, '-', ?) AS VARCHAR(255)), '0')", can.ctecan_codigo_k, can.ctecan_descripcion),
-          subcanal: fragment("NULLIF(CAST(CONCAT(?, '-', ?) AS VARCHAR(255)), '0')", sca.ctesca_codigo_k, sca.ctesca_descripcion),
-          cadena: fragment("NULLIF(CAST(CONCAT(?, '-', ?) AS VARCHAR(255)), '0')", cad.ctecad_codigo_k, cad.ctecad_dcomercial),
-          paquete_serv: fragment("NULLIF(CAST(CONCAT(?, '-', ?) AS VARCHAR(255)), '0')", paq.ctepaq_codigo_k, paq.ctepaq_descripcion),
-          regimen: fragment("NULLIF(CAST(CONCAT(?, '-', ?) AS VARCHAR(255)), '0')", reg.ctereg_codigo_k, reg.ctereg_descripcion),
-
-          # Ubicación concatenada (convertir a string, NULL si están vacíos)
-          estado: fragment("NULLIF(CAST(CONCAT(?, '-', ?) AS VARCHAR(255)), '0')", edo.mapedo_codigo_k, edo.mapedo_descripcion),
-          municipio: fragment("NULLIF(CAST(CONCAT(?, '-', ?) AS VARCHAR(255)), '0')", mun.mapmun_codigo_k, mun.mapmun_descripcion),
-          localidad: fragment("NULLIF(CAST(CONCAT(?, '-', ?) AS VARCHAR(255)), '0')", loc.maploc_codigo_k, loc.maploc_descripcion),
-
-          # Coordenadas (convertir a string ya que son latitud/longitud)
-          map_x: fragment("CAST(? AS VARCHAR(50))", d.map_x),
-          map_y: fragment("CAST(? AS VARCHAR(50))", d.map_y),
-
-          # Dirección física
-          ctedir_calle: d.ctedir_calle,
-          ctedir_colonia: d.ctedir_colonia,
-          ctedir_callenumext: d.ctedir_callenumext,
-          ctedir_callenumint: d.ctedir_callenumint,
-          ctedir_telefono: d.ctedir_telefono,
-          ctedir_responsable: d.ctedir_responsable,
-          ctedir_calleentre1: d.ctedir_calleentre1,
-          ctedir_calleentre2: d.ctedir_calleentre2,
-          ctedir_cp: d.ctedir_cp,
-
-          # Todos los campos del cliente
-          ctecli_codigo_k: c.ctecli_codigo_k,
-          ctecli_razonsocial: c.ctecli_razonsocial,
-          ctecli_dencomercia: c.ctecli_dencomercia,
-          ctecli_fechaalta: c.ctecli_fechaalta,
-          ctecli_fechabaja: c.ctecli_fechabaja,
-          ctecli_causabaja: c.ctecli_causabaja,
-          ctecli_edocred: c.ctecli_edocred,
-          ctecli_diascredito: c.ctecli_diascredito,
-          ctecli_limitecredi: c.ctecli_limitecredi,
-          ctecli_tipodefact: c.ctecli_tipodefact,
-          ctecli_tipofacdes: c.ctecli_tipofacdes,
-          ctecli_tipopago: c.ctecli_tipopago,
-          ctecli_creditoobs: c.ctecli_creditoobs,
-          ctetpo_codigo_k: c.ctetpo_codigo_k,
-          ctesca_codigo_k: c.ctesca_codigo_k,
-          ctepaq_codigo_k: c.ctepaq_codigo_k,
-          ctereg_codigo_k: c.ctereg_codigo_k,
-          ctecad_codigo_k: c.ctecad_codigo_k,
-          ctecli_generico: c.ctecli_generico,
-          cfgmon_codigo_k: c.cfgmon_codigo_k,
-          ctecli_observaciones: c.ctecli_observaciones,
-          systra_codigo_k: c.systra_codigo_k,
-          facadd_codigo_k: c.facadd_codigo_k,
-          ctecli_fereceptor: c.ctecli_fereceptor,
-          ctecli_fereceptormail: c.ctecli_fereceptormail,
-          ctepor_codigo_k: c.ctepor_codigo_k,
-          ctecli_tipodefacr: c.ctecli_tipodefacr,
-          condim_codigo_k: c.condim_codigo_k,
-          ctecli_cxcliq: c.ctecli_cxcliq,
-          ctecli_nocta: c.ctecli_nocta,
-          ctecli_dscantimp: c.ctecli_dscantimp,
-          ctecli_desglosaieps: c.ctecli_desglosaieps,
-          ctecli_periodorefac: c.ctecli_periodorefac,
-          ctecli_contacto: c.ctecli_contacto,
-          cfgban_codigo_k: c.cfgban_codigo_k,
-          ctecli_cargaespecifica: c.ctecli_cargaespecifica,
-          ctecli_caducidadmin: c.ctecli_caducidadmin,
-          ctecli_ctlsanitario: c.ctecli_ctlsanitario,
-          ctecli_formapago: c.ctecli_formapago,
-          ctecli_metodopago: c.ctecli_metodopago,
-          ctecli_regtrib: c.ctecli_regtrib,
-          ctecli_pais: c.ctecli_pais,
-          ctecli_factablero: c.ctecli_factablero,
-          sat_uso_cfdi_k: c.sat_uso_cfdi_k,
-          ctecli_complemento: c.ctecli_complemento,
-          ctecli_aplicacanje: c.ctecli_aplicacanje,
-          ctecli_aplicadev: c.ctecli_aplicadev,
-          ctecli_desglosakit: c.ctecli_desglosakit,
-          faccom_codigo_k: c.faccom_codigo_k,
-          ctecli_facgrupo: c.ctecli_facgrupo,
-          facads_codigo_k: c.facads_codigo_k,
-          s_maqedo: c.s_maqedo,
-          s_fecha: c.s_fecha,
-          s_fi: c.s_fi,
-          s_guid: c.s_guid,
-          s_guidlog: c.s_guidlog,
-          s_usuario: c.s_usuario,
-          s_usuariodb: c.s_usuariodb,
-          s_guidnot: c.s_guidnot
-        }
-      )
-
-    query
-    |> Repo.all()
-    |> Enum.map(&fix_concat_types/1)
+      {:error, _} ->
+        []
+    end
   end
 
-  # Convierte valores enteros a strings en campos concatenados que SQL Server puede retornar como enteros
-  defp fix_concat_types(cliente) do
+  defp get_direcciones_cliente(cliente_codigo, token \\ nil) do
+    case Api.get_direcciones_cliente(cliente_codigo, token) do
+      {:ok, direcciones} -> direcciones
+      {:error, _} -> []
+    end
+  end
+
+  defp build_cliente_completo(cliente, dir, sysudn_codigo_k) do
     %{
-      cliente
-      | frecuencia: safe_to_string(cliente.frecuencia),
-        canal: safe_to_string(cliente.canal),
-        subcanal: safe_to_string(cliente.subcanal),
-        cadena: safe_to_string(cliente.cadena),
-        paquete_serv: safe_to_string(cliente.paquete_serv),
-        regimen: safe_to_string(cliente.regimen),
-        estado: safe_to_string(cliente.estado),
-        municipio: safe_to_string(cliente.municipio),
-        localidad: safe_to_string(cliente.localidad),
-        map_x: safe_to_string(cliente.map_x),
-        map_y: safe_to_string(cliente.map_y)
+      # Estatus calculado
+      estatus: case cliente["S_MAQEDO"] do
+        10 -> "---ACTIVO---"
+        30 -> "---PROSPECTO---"
+        _ -> "---BAJA---"
+      end,
+
+      # Datos de ruta
+      udn: sysudn_codigo_k,
+      preventa: dir["VTARUT_CODIGO_K_PRE"],
+      entrega: dir["VTARUT_CODIGO_K_ENT"],
+      autoventa: dir["VTARUT_CODIGO_K_AUT"],
+
+      # Identificadores dirección
+      ctepfr_codigo_k: dir["CTEPFR_CODIGO_K"],
+      ctedir_codigo_k: dir["CTEDIR_CODIGO_K"],
+
+      # RFC
+      rfc: cliente["CTECLI_RFC"],
+
+      # Coordenadas
+      map_x: safe_to_string(dir["MAP_X"]),
+      map_y: safe_to_string(dir["MAP_Y"]),
+
+      # Dirección física
+      ctedir_calle: dir["CTEDIR_CALLE"],
+      ctedir_colonia: dir["CTEDIR_COLONIA"],
+      ctedir_callenumext: dir["CTEDIR_CALLENUMEXT"],
+      ctedir_callenumint: dir["CTEDIR_CALLENUMINT"],
+      ctedir_telefono: dir["CTEDIR_TELEFONO"],
+      ctedir_responsable: dir["CTEDIR_RESPONSABLE"],
+      ctedir_calleentre1: dir["CTEDIR_CALLEENTRE1"],
+      ctedir_calleentre2: dir["CTEDIR_CALLEENTRE2"],
+      ctedir_cp: dir["CTEDIR_CP"],
+
+      # Todos los campos del cliente
+      ctecli_codigo_k: cliente["CTECLI_CODIGO_K"],
+      ctecli_razonsocial: cliente["CTECLI_RAZONSOCIAL"],
+      ctecli_dencomercia: cliente["CTECLI_DENCOMERCIA"],
+      ctecli_fechaalta: cliente["CTECLI_FECHAALTA"],
+      ctecli_fechabaja: cliente["CTECLI_FECHABAJA"],
+      ctecli_causabaja: cliente["CTECLI_CAUSABAJA"],
+      ctecli_edocred: cliente["CTECLI_EDOCRED"],
+      ctecli_diascredito: cliente["CTECLI_DIASCREDITO"],
+      ctecli_limitecredi: cliente["CTECLI_LIMITECREDI"],
+      ctecli_tipodefact: cliente["CTECLI_TIPODEFACT"],
+      ctecli_tipofacdes: cliente["CTECLI_TIPOFACDES"],
+      ctecli_tipopago: cliente["CTECLI_TIPOPAGO"],
+      ctecli_creditoobs: cliente["CTECLI_CREDITOOBS"],
+      ctetpo_codigo_k: cliente["CTETPO_CODIGO_K"],
+      ctesca_codigo_k: cliente["CTESCA_CODIGO_K"],
+      ctepaq_codigo_k: cliente["CTEPAQ_CODIGO_K"],
+      ctereg_codigo_k: cliente["CTEREG_CODIGO_K"],
+      ctecad_codigo_k: cliente["CTECAD_CODIGO_K"],
+      ctecan_codigo_k: cliente["CTECAN_CODIGO_K"],
+      ctecli_generico: cliente["CTECLI_GENERICO"],
+      cfgmon_codigo_k: cliente["CFGMON_CODIGO_K"],
+      ctecli_observaciones: cliente["CTECLI_OBSERVACIONES"],
+      systra_codigo_k: cliente["SYSTRA_CODIGO_K"],
+      facadd_codigo_k: cliente["FACADD_CODIGO_K"],
+      ctecli_fereceptor: cliente["CTECLI_FERECEPTOR"],
+      ctecli_fereceptormail: cliente["CTECLI_FERECEPTORMAIL"],
+      ctepor_codigo_k: cliente["CTEPOR_CODIGO_K"],
+      ctecli_tipodefacr: cliente["CTECLI_TIPODEFACR"],
+      condim_codigo_k: cliente["CONDIM_CODIGO_K"],
+      ctecli_cxcliq: cliente["CTECLI_CXCLIQ"],
+      ctecli_nocta: cliente["CTECLI_NOCTA"],
+      ctecli_dscantimp: cliente["CTECLI_DSCANTIMP"],
+      ctecli_desglosaieps: cliente["CTECLI_DESGLOSAIEPS"],
+      ctecli_periodorefac: cliente["CTECLI_PERIODOREFAC"],
+      ctecli_contacto: cliente["CTECLI_CONTACTO"],
+      cfgban_codigo_k: cliente["CFGBAN_CODIGO_K"],
+      ctecli_cargaespecifica: cliente["CTECLI_CARGAESPECIFICA"],
+      ctecli_caducidadmin: cliente["CTECLI_CADUCIDADMIN"],
+      ctecli_ctlsanitario: cliente["CTECLI_CTLSANITARIO"],
+      ctecli_formapago: cliente["CTECLI_FORMAPAGO"],
+      ctecli_metodopago: cliente["CTECLI_METODOPAGO"],
+      ctecli_regtrib: cliente["CTECLI_REGTRIB"],
+      ctecli_pais: cliente["CTECLI_PAIS"],
+      ctecli_factablero: cliente["CTECLI_FACTABLERO"],
+      sat_uso_cfdi_k: cliente["SAT_USO_CFDI_K"],
+      ctecli_complemento: cliente["CTECLI_COMPLEMENTO"],
+      ctecli_aplicacanje: cliente["CTECLI_APLICACANJE"],
+      ctecli_aplicadev: cliente["CTECLI_APLICADEV"],
+      ctecli_desglosakit: cliente["CTECLI_DESGLOSAKIT"],
+      faccom_codigo_k: cliente["FACCOM_CODIGO_K"],
+      ctecli_facgrupo: cliente["CTECLI_FACGRUPO"],
+      facads_codigo_k: cliente["FACADS_CODIGO_K"],
+      s_maqedo: cliente["S_MAQEDO"],
+      s_fecha: cliente["S_FECHA"],
+      s_fi: cliente["S_FI"],
+      s_guid: cliente["S_GUID"],
+      s_guidlog: cliente["S_GUIDLOG"],
+      s_usuario: cliente["S_USUARIO"],
+      s_usuariodb: cliente["S_USUARIODB"],
+      s_guidnot: cliente["S_GUIDNOT"]
     }
   end
 
@@ -244,43 +202,56 @@ defmodule Prettycore.Clientes do
   Lista clientes resumidos (solo info básica para tabla)
   """
   def list_clientes_resumen(sysudn_codigo_k, vtarut_codigo_k_ini, vtarut_codigo_k_fin) do
-    query =
-      from(c in Cliente,
-        left_join: d in Direccion,
-        on: c.ctecli_codigo_k == d.ctecli_codigo_k,
-        left_join: ruta in Ruta,
-        on: ruta.vtarut_codigo_k in [d.vtarut_codigo_k_pre, d.vtarut_codigo_k_aut],
-        left_join: edo in Estado,
-        on: d.mapedo_codigo_k == edo.mapedo_codigo_k,
-        where: c.s_maqedo == 10,
-        where:
-          (d.vtarut_codigo_k_pre >= ^vtarut_codigo_k_ini and
-             d.vtarut_codigo_k_pre <= ^vtarut_codigo_k_fin) or
-            (d.vtarut_codigo_k_ent >= ^vtarut_codigo_k_ini and
-               d.vtarut_codigo_k_ent <= ^vtarut_codigo_k_fin) or
-            (d.vtarut_codigo_k_aut >= ^vtarut_codigo_k_ini and
-               d.vtarut_codigo_k_aut <= ^vtarut_codigo_k_fin),
-        where: ruta.sysudn_codigo_k == ^sysudn_codigo_k,
-        distinct: true,
-        order_by: [asc: c.ctecli_codigo_k],
-        select: %{
-          codigo: c.ctecli_codigo_k,
-          razon_social: c.ctecli_razonsocial,
-          nombre_comercial: c.ctecli_dencomercia,
-          rfc: c.ctecli_rfc,
-          telefono: d.ctedir_telefono,
-          estado: edo.mapedo_descripcion,
-          colonia: d.ctedir_colonia,
-          calle: d.ctedir_calle,
-          preventa: d.vtarut_codigo_k_pre,
-          entrega: d.vtarut_codigo_k_ent,
-          autoventa: d.vtarut_codigo_k_aut
-        }
-      )
+    case Api.get_filtered("CTE_CLIENTE", %{"S_MAQEDO" => "10"}) do
+      {:ok, clientes} ->
+        clientes
+        |> Enum.map(fn cliente ->
+          direcciones = get_direcciones_cliente(cliente["CTECLI_CODIGO_K"])
 
-    query
-    |> Repo.all()
-    |> Enum.map(&fix_map_encoding/1)
+          direcciones_filtradas = Enum.filter(direcciones, fn dir ->
+            ruta_pre = dir["VTARUT_CODIGO_K_PRE"] || ""
+            ruta_ent = dir["VTARUT_CODIGO_K_ENT"] || ""
+            ruta_aut = dir["VTARUT_CODIGO_K_AUT"] || ""
+
+            (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
+            (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
+            (ruta_aut >= vtarut_codigo_k_ini and ruta_aut <= vtarut_codigo_k_fin)
+          end)
+
+          if Enum.any?(direcciones_filtradas) do
+            dir = List.first(direcciones_filtradas) || %{}
+            %{
+              codigo: cliente["CTECLI_CODIGO_K"],
+              razon_social: cliente["CTECLI_RAZONSOCIAL"],
+              nombre_comercial: cliente["CTECLI_DENCOMERCIA"],
+              rfc: cliente["CTECLI_RFC"],
+              telefono: dir["CTEDIR_TELEFONO"],
+              estado: get_estado_nombre(dir["MAPEDO_CODIGO_K"]),
+              colonia: dir["CTEDIR_COLONIA"],
+              calle: dir["CTEDIR_CALLE"],
+              preventa: dir["VTARUT_CODIGO_K_PRE"],
+              entrega: dir["VTARUT_CODIGO_K_ENT"],
+              autoventa: dir["VTARUT_CODIGO_K_AUT"]
+            }
+          else
+            nil
+          end
+        end)
+        |> Enum.reject(&is_nil/1)
+        |> Enum.map(&fix_map_encoding/1)
+
+      {:error, _} ->
+        []
+    end
+  end
+
+  defp get_estado_nombre(estado_codigo, token \\ nil)
+  defp get_estado_nombre(nil, _token), do: nil
+  defp get_estado_nombre(estado_codigo, token) do
+    case Api.get_filtered("MAP_ESTADO", %{"MAPEDO_CODIGO_K" => estado_codigo}, token) do
+      {:ok, [estado | _]} -> estado["MAPEDO_DESCRIPCION"]
+      _ -> nil
+    end
   end
 
   @doc """
@@ -292,151 +263,128 @@ defmodule Prettycore.Clientes do
   - estatus: Estado del cliente (A/I)
   - search: Búsqueda por código, razón social o RFC
   """
-  def list_clientes_with_flop(params \\ %{}) do
-    # Valores por defecto - manejar tanto nil como string vacío
+  def list_clientes_with_flop(params \\ %{}, token \\ nil) do
     sysudn_codigo_k = get_param_or_default(params["sysudn"], "100")
     vtarut_codigo_k_ini = get_param_or_default(params["ruta_desde"], "001")
     vtarut_codigo_k_fin = get_param_or_default(params["ruta_hasta"], "99999")
+    search_term = params["search"]
+    page = String.to_integer(params["page"] || "1")
+    page_size = String.to_integer(params["page_size"] || "20")
 
-    base_query =
-      from(c in Cliente,
-        left_join: d in Direccion,
-        on: c.ctecli_codigo_k == d.ctecli_codigo_k,
-        left_join: ruta in Ruta,
-        on: ruta.vtarut_codigo_k in [d.vtarut_codigo_k_pre, d.vtarut_codigo_k_aut],
-        left_join: edo in Estado,
-        on: d.mapedo_codigo_k == edo.mapedo_codigo_k,
-        where: c.s_maqedo == 10,
-        where:
-          (d.vtarut_codigo_k_pre >= ^vtarut_codigo_k_ini and
-             d.vtarut_codigo_k_pre <= ^vtarut_codigo_k_fin) or
-            (d.vtarut_codigo_k_ent >= ^vtarut_codigo_k_ini and
-               d.vtarut_codigo_k_ent <= ^vtarut_codigo_k_fin) or
-            (d.vtarut_codigo_k_aut >= ^vtarut_codigo_k_ini and
-               d.vtarut_codigo_k_aut <= ^vtarut_codigo_k_fin),
-        where: ruta.sysudn_codigo_k == ^sysudn_codigo_k,
-        distinct: true,
-        order_by: [asc: c.ctecli_codigo_k],
-        select: %{
-          # Campos principales para mostrar en tabla
-          udn: ruta.sysudn_codigo_k,
-          preventa: d.vtarut_codigo_k_pre,
-          entrega: d.vtarut_codigo_k_ent,
-          autoventa: d.vtarut_codigo_k_aut,
-          ctedir_codigo_k: d.ctedir_codigo_k,
-          rfc: c.ctecli_rfc,
-          codigo: c.ctecli_codigo_k,
-          razon_social: c.ctecli_razonsocial,
-          diascredito: c.ctecli_diascredito,
-          limite_credito: c.ctecli_limitecredi,
-          paquete_codigo: c.ctepaq_codigo_k,
-          frecuencia_codigo: d.ctepfr_codigo_k,
-          email_receptor: c.ctecli_fereceptormail,
-          forma_pago: c.ctecli_formapago,
-          metodo_pago: c.ctecli_metodopago,
-          estatus: fragment(
-            "CASE WHEN ? = 10 THEN 'A' WHEN ? = 30 THEN 'P' ELSE 'B' END",
-            c.s_maqedo, c.s_maqedo
-          ),
+    # Obtener TODO en solo 3 llamadas (en lugar de N+1)
+    with {:ok, clientes} <- Api.get_all("CTE_CLIENTE", token),
+         {:ok, todas_direcciones} <- Api.get_all("CTE_DIRECCION", token),
+         {:ok, todos_estados} <- Api.get_all("MAP_ESTADO", token) do
 
-          # Campos adicionales (visibles al seleccionar)
-          nombre_comercial: c.ctecli_dencomercia,
-          telefono: d.ctedir_telefono,
-          estado: edo.mapedo_descripcion,
-          colonia: d.ctedir_colonia,
-          calle: d.ctedir_calle,
-          map_x: fragment("CAST(? AS VARCHAR(50))", d.map_x),
-          map_y: fragment("CAST(? AS VARCHAR(50))", d.map_y)
-        }
-      )
+      # Indexar direcciones por código de cliente para búsqueda rápida
+      direcciones_por_cliente = Enum.group_by(todas_direcciones, & &1["CTECLI_CODIGO_K"])
 
-    # Aplicar filtro de búsqueda si existe
-    # NOTA: No podemos filtrar por aliases del select, necesitamos usar los campos originales
-    filtered_query =
-      case params["search"] do
-        nil ->
-          base_query
+      # Indexar estados por código para búsqueda rápida
+      estados_por_codigo = Map.new(todos_estados, fn e ->
+        {e["MAPEDO_CODIGO_K"], e["MAPEDO_DESCRIPCION"]}
+      end)
 
-        "" ->
-          base_query
+      # Filtrar solo clientes activos y procesar
+      clientes_procesados = clientes
+      |> Enum.filter(fn c -> c["S_MAQEDO"] == 10 || c["S_MAQEDO"] == "10" end)
+      |> Enum.map(fn cliente ->
+        direcciones = Map.get(direcciones_por_cliente, cliente["CTECLI_CODIGO_K"], [])
 
-        search ->
-          search_term = "%#{String.trim(search)}%"
+        direcciones_filtradas = Enum.filter(direcciones, fn dir ->
+          ruta_pre = dir["VTARUT_CODIGO_K_PRE"] || ""
+          ruta_ent = dir["VTARUT_CODIGO_K_ENT"] || ""
+          ruta_aut = dir["VTARUT_CODIGO_K_AUT"] || ""
 
-          from(c in Cliente,
-            left_join: d in Direccion,
-            on: c.ctecli_codigo_k == d.ctecli_codigo_k,
-            left_join: ruta in Ruta,
-            on: ruta.vtarut_codigo_k in [d.vtarut_codigo_k_pre, d.vtarut_codigo_k_aut],
-            left_join: edo in Estado,
-            on: d.mapedo_codigo_k == edo.mapedo_codigo_k,
-            where: c.s_maqedo == 10,
-            where:
-              (d.vtarut_codigo_k_pre >= ^vtarut_codigo_k_ini and
-                 d.vtarut_codigo_k_pre <= ^vtarut_codigo_k_fin) or
-                (d.vtarut_codigo_k_ent >= ^vtarut_codigo_k_ini and
-                   d.vtarut_codigo_k_ent <= ^vtarut_codigo_k_fin) or
-                (d.vtarut_codigo_k_aut >= ^vtarut_codigo_k_ini and
-                   d.vtarut_codigo_k_aut <= ^vtarut_codigo_k_fin),
-            where: ruta.sysudn_codigo_k == ^sysudn_codigo_k,
-            where:
-              ilike(c.ctecli_codigo_k, ^search_term) or
-                ilike(c.ctecli_razonsocial, ^search_term) or
-                ilike(c.ctecli_rfc, ^search_term) or
-                ilike(c.ctecli_dencomercia, ^search_term) or
-                ilike(d.ctedir_colonia, ^search_term),
-            distinct: true,
-            order_by: [asc: c.ctecli_codigo_k],
-            select: %{
-              udn: ruta.sysudn_codigo_k,
-              preventa: d.vtarut_codigo_k_pre,
-              entrega: d.vtarut_codigo_k_ent,
-              autoventa: d.vtarut_codigo_k_aut,
-              ctedir_codigo_k: d.ctedir_codigo_k,
-              rfc: c.ctecli_rfc,
-              codigo: c.ctecli_codigo_k,
-              razon_social: c.ctecli_razonsocial,
-              diascredito: c.ctecli_diascredito,
-              limite_credito: c.ctecli_limitecredi,
-              paquete_codigo: c.ctepaq_codigo_k,
-              frecuencia_codigo: d.ctepfr_codigo_k,
-              email_receptor: c.ctecli_fereceptormail,
-              forma_pago: c.ctecli_formapago,
-              metodo_pago: c.ctecli_metodopago,
-              estatus:
-                fragment(
-                  "CASE WHEN ? = 10 THEN 'A' WHEN ? = 30 THEN 'P' ELSE 'B' END",
-                  c.s_maqedo,
-                  c.s_maqedo
-                ),
-              nombre_comercial: c.ctecli_dencomercia,
-              telefono: d.ctedir_telefono,
-              estado: edo.mapedo_descripcion,
-              colonia: d.ctedir_colonia,
-              calle: d.ctedir_calle,
-              map_x: fragment("CAST(? AS VARCHAR(50))", d.map_x),
-              map_y: fragment("CAST(? AS VARCHAR(50))", d.map_y)
-            }
-          )
+          (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
+          (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
+          (ruta_aut >= vtarut_codigo_k_ini and ruta_aut <= vtarut_codigo_k_fin)
+        end)
+
+        if Enum.any?(direcciones_filtradas) do
+          dir = List.first(direcciones_filtradas) || %{}
+          build_cliente_flop(cliente, dir, sysudn_codigo_k, estados_por_codigo)
+        else
+          nil
+        end
+      end)
+      |> Enum.reject(&is_nil/1)
+
+      # Aplicar búsqueda si existe
+      clientes_filtrados = if search_term && search_term != "" do
+        search_lower = String.downcase(search_term)
+        Enum.filter(clientes_procesados, fn c ->
+          String.contains?(String.downcase(c.codigo || ""), search_lower) or
+          String.contains?(String.downcase(c.razon_social || ""), search_lower) or
+          String.contains?(String.downcase(c.rfc || ""), search_lower) or
+          String.contains?(String.downcase(c.nombre_comercial || ""), search_lower) or
+          String.contains?(String.downcase(c.colonia || ""), search_lower)
+        end)
+      else
+        clientes_procesados
       end
 
-    # Configurar Flop con 20 registros por página
-    flop_params = Map.merge(%{"page_size" => "20"}, params)
+      # Aplicar paginación manual
+      total_count = length(clientes_filtrados)
+      total_pages = ceil(total_count / page_size)
+      offset = (page - 1) * page_size
 
-    case Flop.validate_and_run(filtered_query, flop_params, for: Cliente) do
-      {:ok, {clientes, meta}} ->
-        clientes_fixed = clientes
-        |> Enum.map(&fix_map_encoding/1)
-        |> Enum.map(&fix_types/1)
-        {:ok, {clientes_fixed, meta}}
+      clientes_paginados = clientes_filtrados
+      |> Enum.drop(offset)
+      |> Enum.take(page_size)
+      |> Enum.map(&fix_map_encoding/1)
+      |> Enum.map(&fix_types/1)
 
-      {:error, meta} ->
-        {:error, meta}
+      # Crear meta de paginación compatible con Flop
+      meta = %Flop.Meta{
+        current_page: page,
+        page_size: page_size,
+        total_count: total_count,
+        total_pages: total_pages,
+        has_previous_page?: page > 1,
+        has_next_page?: page < total_pages,
+        flop: %Flop{page: page, page_size: page_size}
+      }
+
+      {:ok, {clientes_paginados, meta}}
+    else
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
+  defp build_cliente_flop(cliente, dir, sysudn_codigo_k, estados_por_codigo) do
+    %{
+      udn: sysudn_codigo_k,
+      preventa: dir["VTARUT_CODIGO_K_PRE"],
+      entrega: dir["VTARUT_CODIGO_K_ENT"],
+      autoventa: dir["VTARUT_CODIGO_K_AUT"],
+      ctedir_codigo_k: dir["CTEDIR_CODIGO_K"],
+      rfc: cliente["CTECLI_RFC"],
+      codigo: cliente["CTECLI_CODIGO_K"],
+      razon_social: cliente["CTECLI_RAZONSOCIAL"],
+      diascredito: cliente["CTECLI_DIASCREDITO"],
+      limite_credito: cliente["CTECLI_LIMITECREDI"],
+      paquete_codigo: cliente["CTEPAQ_CODIGO_K"],
+      frecuencia_codigo: dir["CTEPFR_CODIGO_K"],
+      email_receptor: cliente["CTECLI_FERECEPTORMAIL"],
+      forma_pago: cliente["CTECLI_FORMAPAGO"],
+      metodo_pago: cliente["CTECLI_METODOPAGO"],
+      estatus: case cliente["S_MAQEDO"] do
+        10 -> "A"
+        30 -> "P"
+        _ -> "B"
+      end,
+      nombre_comercial: cliente["CTECLI_DENCOMERCIA"],
+      telefono: dir["CTEDIR_TELEFONO"],
+      estado: Map.get(estados_por_codigo, dir["MAPEDO_CODIGO_K"]),
+      colonia: dir["CTEDIR_COLONIA"],
+      calle: dir["CTEDIR_CALLE"],
+      map_x: safe_to_string(dir["MAP_X"]),
+      map_y: safe_to_string(dir["MAP_Y"])
+    }
+  end
+
   # Helper para obtener parámetro o usar valor por defecto
-  # Maneja tanto nil como string vacío
   defp get_param_or_default(nil, default), do: default
   defp get_param_or_default("", default), do: default
   defp get_param_or_default(value, _default) when is_binary(value), do: value
@@ -451,91 +399,162 @@ defmodule Prettycore.Clientes do
       iex> get_cliente_by_codigo("0002")
       {:ok, %{cliente: %{...}, direcciones: [...]}}
   """
-  def get_cliente_by_codigo(codigo) do
-    # Buscar cliente - seleccionar solo campos reales (no virtuales)
-    cliente_query =
-      from(c in Cliente,
-        where: c.ctecli_codigo_k == ^codigo,
-        select: %{
-          ctecli_codigo_k: c.ctecli_codigo_k,
-          ctecli_razonsocial: c.ctecli_razonsocial,
-          ctecli_dencomercia: c.ctecli_dencomercia,
-          ctecli_rfc: c.ctecli_rfc,
-          ctecli_fechaalta: c.ctecli_fechaalta,
-          ctecli_fechabaja: c.ctecli_fechabaja,
-          ctecli_causabaja: c.ctecli_causabaja,
-          ctecli_edocred: c.ctecli_edocred,
-          ctecli_diascredito: c.ctecli_diascredito,
-          ctecli_limitecredi: c.ctecli_limitecredi,
-          ctecli_tipodefact: c.ctecli_tipodefact,
-          ctecli_tipofacdes: c.ctecli_tipofacdes,
-          ctecli_tipopago: c.ctecli_tipopago,
-          ctecli_creditoobs: c.ctecli_creditoobs,
-          ctetpo_codigo_k: c.ctetpo_codigo_k,
-          ctesca_codigo_k: c.ctesca_codigo_k,
-          ctepaq_codigo_k: c.ctepaq_codigo_k,
-          ctereg_codigo_k: c.ctereg_codigo_k,
-          ctecad_codigo_k: c.ctecad_codigo_k,
-          ctecan_codigo_k: c.ctecan_codigo_k,
-          ctecli_generico: c.ctecli_generico,
-          cfgmon_codigo_k: c.cfgmon_codigo_k,
-          ctecli_observaciones: c.ctecli_observaciones,
-          systra_codigo_k: c.systra_codigo_k,
-          facadd_codigo_k: c.facadd_codigo_k,
-          ctecli_fereceptor: c.ctecli_fereceptor,
-          ctecli_fereceptormail: c.ctecli_fereceptormail,
-          ctepor_codigo_k: c.ctepor_codigo_k,
-          ctecli_tipodefacr: c.ctecli_tipodefacr,
-          condim_codigo_k: c.condim_codigo_k,
-          ctecli_cxcliq: c.ctecli_cxcliq,
-          ctecli_nocta: c.ctecli_nocta,
-          ctecli_dscantimp: c.ctecli_dscantimp,
-          ctecli_desglosaieps: c.ctecli_desglosaieps,
-          ctecli_periodorefac: c.ctecli_periodorefac,
-          ctecli_contacto: c.ctecli_contacto,
-          cfgban_codigo_k: c.cfgban_codigo_k,
-          ctecli_cargaespecifica: c.ctecli_cargaespecifica,
-          ctecli_caducidadmin: c.ctecli_caducidadmin,
-          ctecli_ctlsanitario: c.ctecli_ctlsanitario,
-          ctecli_formapago: c.ctecli_formapago,
-          ctecli_metodopago: c.ctecli_metodopago,
-          ctecli_regtrib: c.ctecli_regtrib,
-          ctecli_pais: c.ctecli_pais,
-          ctecli_factablero: c.ctecli_factablero,
-          sat_uso_cfdi_k: c.sat_uso_cfdi_k,
-          ctecli_complemento: c.ctecli_complemento,
-          ctecli_aplicacanje: c.ctecli_aplicacanje,
-          ctecli_aplicadev: c.ctecli_aplicadev,
-          ctecli_desglosakit: c.ctecli_desglosakit,
-          faccom_codigo_k: c.faccom_codigo_k,
-          ctecli_facgrupo: c.ctecli_facgrupo,
-          facads_codigo_k: c.facads_codigo_k,
-          s_maqedo: c.s_maqedo,
-          s_fecha: c.s_fecha,
-          s_fi: c.s_fi,
-          s_guid: c.s_guid,
-          s_guidlog: c.s_guidlog,
-          s_usuario: c.s_usuario,
-          s_usuariodb: c.s_usuariodb,
-          s_guidnot: c.s_guidnot
-        }
-      )
+  def get_cliente_by_codigo(codigo, token \\ nil) do
+    alias Prettycore.Api.Cache
+    # La API no soporta filtros: traer todo y filtrar en memoria (con cache)
+    with {:ok, todos_clientes} <- Cache.fetch({:all_clientes, token}, fn -> Api.get_all("CTE_CLIENTE", token) end),
+         {:ok, todas_direcciones} <- Cache.fetch({:all_direcciones, token}, fn -> Api.get_all("CTE_DIRECCION", token) end) do
 
-    case Repo.one(cliente_query) do
-      nil ->
-        {:error, :not_found}
+      # Buscar el cliente por código
+      cliente = Enum.find(todos_clientes, fn c -> c["CTECLI_CODIGO_K"] == codigo end)
 
-      cliente ->
-        # Buscar direcciones del cliente
-        direcciones_query =
-          from(d in Direccion,
-            where: d.ctecli_codigo_k == ^codigo,
-            select: d
-          )
+      case cliente do
+        nil ->
+          {:error, :not_found}
 
-        direcciones = Repo.all(direcciones_query)
+        cliente ->
+          # Filtrar solo las direcciones de este cliente
+          dirs = todas_direcciones
+            |> Enum.filter(fn d -> d["CTECLI_CODIGO_K"] == codigo end)
+            |> Enum.map(&normalize_direccion/1)
 
-        {:ok, %{cliente: cliente, direcciones: direcciones}}
+          cliente_normalizado = normalize_cliente(cliente)
+
+          {:ok, %{cliente: cliente_normalizado, direcciones: dirs}}
+      end
+    else
+      {:error, reason} ->
+        {:error, reason}
     end
+  end
+
+  # Normaliza campos del cliente de API (claves string) a átomos
+  defp normalize_cliente(cliente) do
+    %{
+      ctecli_codigo_k: cliente["CTECLI_CODIGO_K"],
+      ctecli_razonsocial: cliente["CTECLI_RAZONSOCIAL"],
+      ctecli_dencomercia: cliente["CTECLI_DENCOMERCIA"],
+      ctecli_rfc: cliente["CTECLI_RFC"],
+      ctecli_fechaalta: cliente["CTECLI_FECHAALTA"],
+      ctecli_fechabaja: cliente["CTECLI_FECHABAJA"],
+      ctecli_causabaja: cliente["CTECLI_CAUSABAJA"],
+      ctecli_edocred: cliente["CTECLI_EDOCRED"],
+      ctecli_diascredito: cliente["CTECLI_DIASCREDITO"],
+      ctecli_limitecredi: cliente["CTECLI_LIMITECREDI"],
+      ctecli_tipodefact: cliente["CTECLI_TIPODEFACT"],
+      ctecli_tipofacdes: cliente["CTECLI_TIPOFACDES"],
+      ctecli_tipopago: cliente["CTECLI_TIPOPAGO"],
+      ctecli_creditoobs: cliente["CTECLI_CREDITOOBS"],
+      ctetpo_codigo_k: cliente["CTETPO_CODIGO_K"],
+      ctesca_codigo_k: cliente["CTESCA_CODIGO_K"],
+      ctepaq_codigo_k: cliente["CTEPAQ_CODIGO_K"],
+      ctereg_codigo_k: cliente["CTEREG_CODIGO_K"],
+      ctecad_codigo_k: cliente["CTECAD_CODIGO_K"],
+      ctecan_codigo_k: cliente["CTECAN_CODIGO_K"],
+      ctecli_generico: cliente["CTECLI_GENERICO"],
+      cfgmon_codigo_k: cliente["CFGMON_CODIGO_K"],
+      ctecli_observaciones: cliente["CTECLI_OBSERVACIONES"],
+      systra_codigo_k: cliente["SYSTRA_CODIGO_K"],
+      facadd_codigo_k: cliente["FACADD_CODIGO_K"],
+      ctecli_fereceptor: cliente["CTECLI_FERECEPTOR"],
+      ctecli_fereceptormail: cliente["CTECLI_FERECEPTORMAIL"],
+      ctepor_codigo_k: cliente["CTEPOR_CODIGO_K"],
+      ctecli_tipodefacr: cliente["CTECLI_TIPODEFACR"],
+      condim_codigo_k: cliente["CONDIM_CODIGO_K"],
+      ctecli_cxcliq: cliente["CTECLI_CXCLIQ"],
+      ctecli_nocta: cliente["CTECLI_NOCTA"],
+      ctecli_dscantimp: cliente["CTECLI_DSCANTIMP"],
+      ctecli_desglosaieps: cliente["CTECLI_DESGLOSAIEPS"],
+      ctecli_periodorefac: cliente["CTECLI_PERIODOREFAC"],
+      ctecli_contacto: cliente["CTECLI_CONTACTO"],
+      cfgban_codigo_k: cliente["CFGBAN_CODIGO_K"],
+      ctecli_cargaespecifica: cliente["CTECLI_CARGAESPECIFICA"],
+      ctecli_caducidadmin: cliente["CTECLI_CADUCIDADMIN"],
+      ctecli_ctlsanitario: cliente["CTECLI_CTLSANITARIO"],
+      ctecli_formapago: cliente["CTECLI_FORMAPAGO"],
+      ctecli_metodopago: cliente["CTECLI_METODOPAGO"],
+      ctecli_regtrib: cliente["CTECLI_REGTRIB"],
+      ctecli_pais: cliente["CTECLI_PAIS"],
+      ctecli_factablero: cliente["CTECLI_FACTABLERO"],
+      sat_uso_cfdi_k: cliente["SAT_USO_CFDI_K"],
+      ctecli_complemento: cliente["CTECLI_COMPLEMENTO"],
+      ctecli_aplicacanje: cliente["CTECLI_APLICACANJE"],
+      ctecli_aplicadev: cliente["CTECLI_APLICADEV"],
+      ctecli_desglosakit: cliente["CTECLI_DESGLOSAKIT"],
+      faccom_codigo_k: cliente["FACCOM_CODIGO_K"],
+      ctecli_facgrupo: cliente["CTECLI_FACGRUPO"],
+      facads_codigo_k: cliente["FACADS_CODIGO_K"],
+      s_maqedo: cliente["S_MAQEDO"],
+      s_fecha: cliente["S_FECHA"],
+      s_fi: cliente["S_FI"],
+      s_guid: cliente["S_GUID"],
+      s_guidlog: cliente["S_GUIDLOG"],
+      s_usuario: cliente["S_USUARIO"],
+      s_usuariodb: cliente["S_USUARIODB"],
+      s_guidnot: cliente["S_GUIDNOT"]
+    }
+  end
+
+  # Normaliza campos de dirección de API
+  defp normalize_direccion(dir) do
+    %{
+      ctecli_codigo_k: dir["CTECLI_CODIGO_K"],
+      ctedir_codigo_k: dir["CTEDIR_CODIGO_K"],
+      ctedir_tipofis: dir["CTEDIR_TIPOFIS"],
+      ctedir_tipoent: dir["CTEDIR_TIPOENT"],
+      ctedir_responsable: dir["CTEDIR_RESPONSABLE"],
+      ctedir_telefono: dir["CTEDIR_TELEFONO"],
+      ctedir_calle: dir["CTEDIR_CALLE"],
+      ctedir_callenumext: dir["CTEDIR_CALLENUMEXT"],
+      ctedir_callenumint: dir["CTEDIR_CALLENUMINT"],
+      ctedir_colonia: dir["CTEDIR_COLONIA"],
+      ctedir_calleentre1: dir["CTEDIR_CALLEENTRE1"],
+      ctedir_calleentre2: dir["CTEDIR_CALLEENTRE2"],
+      ctedir_cp: dir["CTEDIR_CP"],
+      mapedo_codigo_k: dir["MAPEDO_CODIGO_K"],
+      mapmun_codigo_k: dir["MAPMUN_CODIGO_K"],
+      maploc_codigo_k: dir["MAPLOC_CODIGO_K"],
+      map_x: dir["MAP_X"],
+      map_y: dir["MAP_Y"],
+      vtarut_codigo_k_pre: dir["VTARUT_CODIGO_K_PRE"],
+      vtarut_codigo_k_ent: dir["VTARUT_CODIGO_K_ENT"],
+      vtarut_codigo_k_aut: dir["VTARUT_CODIGO_K_AUT"],
+      vtarut_codigo_k_cob: dir["VTARUT_CODIGO_K_COB"],
+      vtarut_codigo_k_simpre: dir["VTARUT_CODIGO_K_SIMPRE"],
+      vtarut_codigo_k_siment: dir["VTARUT_CODIGO_K_SIMENT"],
+      vtarut_codigo_k_simcob: dir["VTARUT_CODIGO_K_SIMCOB"],
+      vtarut_codigo_k_simaut: dir["VTARUT_CODIGO_K_SIMAUT"],
+      vtarut_codigo_k_sup: dir["VTARUT_CODIGO_K_SUP"],
+      ctedir_celular: dir["CTEDIR_CELULAR"],
+      ctedir_mail: dir["CTEDIR_MAIL"],
+      ctedir_observaciones: dir["CTEDIR_OBSERVACIONES"],
+      ctepfr_codigo_k: dir["CTEPFR_CODIGO_K"],
+      cteclu_codigo_k: dir["CTECLU_CODIGO_K"],
+      ctezni_codigo_k: dir["CTEZNI_CODIGO_K"],
+      ctecor_codigo_k: dir["CTECOR_CODIGO_K"],
+      condim_codigo_k: dir["CONDIM_CODIGO_K"],
+      ctepaq_codigo_k: dir["CTEPAQ_CODIGO_K"],
+      ctevie_codigo_k: dir["CTEVIE_CODIGO_K"],
+      ctesvi_codigo_k: dir["CTESVI_CODIGO_K"],
+      satcp_codigo_k: dir["SATCP_CODIGO_K"],
+      satcol_codigo_k: dir["SATCOL_CODIGO_K"],
+      c_estado_k: dir["C_ESTADO_K"],
+      c_municipio_k: dir["C_MUNICIPIO_K"],
+      c_localidad_k: dir["C_LOCALIDAD_K"],
+      cfgest_codigo_k: dir["CFGEST_CODIGO_K"],
+      ctedir_ivafrontera: dir["CTEDIR_IVAFRONTERA"],
+      ctedir_secuencia: dir["CTEDIR_SECUENCIA"],
+      ctedir_secuenciaent: dir["CTEDIR_SECUENCIAENT"],
+      ctedir_reqgeo: dir["CTEDIR_REQGEO"],
+      ctedir_distancia: dir["CTEDIR_DISTANCIA"],
+      ctedir_novalidavencimiento: dir["CTEDIR_NOVALIDAVENCIMIENTO"],
+      ctedir_edocred: dir["CTEDIR_EDOCRED"],
+      ctedir_diascredito: dir["CTEDIR_DIASCREDITO"],
+      ctedir_limitecredi: dir["CTEDIR_LIMITECREDI"],
+      ctedir_tipopago: dir["CTEDIR_TIPOPAGO"],
+      ctedir_tipodefacr: dir["CTEDIR_TIPODEFACR"],
+      s_maqedo: dir["S_MAQEDO"],
+      ctedir_creditoobs: dir["CTEDIR_CREDITOOBS"]
+    }
   end
 end

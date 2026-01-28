@@ -17,15 +17,16 @@ config :prettycore, :tds,
 
 
   # Configuración de PostgreSQL para autenticación (Render)
+
 config :prettycore, Prettycore.PsqlRepo,
-username: "postgres",
-  password: "postgres",
-  hostname: "localhost",
+  hostname: System.get_env("DB_HOSTNAME_PSQL", "localhost"),
+  port: String.to_integer(System.get_env("DB_PORT_PSQL", "5432")),
+  username: System.get_env("DB_USERNAME_PSQL", "postgres"),
+  password: System.get_env("DB_PASSWORD_PSQL", "postgres"),
   database: "prettycore_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10,
-  ssl: [verify: :verify_none]
+  pool_size: 10
 
 
 # For development, we disable any cache and enable

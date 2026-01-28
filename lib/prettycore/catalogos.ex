@@ -1,481 +1,334 @@
 defmodule Prettycore.Catalogos do
   @moduledoc """
-  Contexto para cargar catálogos desde la base de datos
+  Contexto para cargar catálogos desde la API REST EN_RESTHELPER
   para usar en los formularios de clientes.
 
-  **Nota sobre encoding**: Este módulo usa `EncodingHelper` para convertir
-  datos Latin-1 de columnas VARCHAR a UTF-8, evitando errores de
-  `Jason.EncodeError` en LiveView con caracteres como "ó", "ñ", "á".
+  **Nota**: Este módulo consume datos desde la API REST en lugar de
+  consultas directas a SQL Server.
 
-  **TODO**: Migrar columnas VARCHAR a NVARCHAR en SQL Server para eliminar
-  la necesidad de conversión manual. Ver ENCODING_ISSUE_PROPOSAL.md
+  Base URL: http://ecore.ath.cx:1405/SP/EN_RESTHELPER/
   """
 
-  alias Prettycore.Repo
+  alias Prettycore.Api.Client, as: Api
+  alias Prettycore.Api.Cache
   alias Prettycore.EncodingHelper
 
-  @doc """
-  Obtiene la lista de tipos de cliente
-  """
-  def listar_tipos_cliente do
-    query = """
-    SELECT CTETPO_CODIGO_K as codigo, CTETPO_DESCRIPCION as nombre
-    FROM CTE_TIPO
-    ORDER BY CTETPO_DESCRIPCION
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_tipos_cliente(token \\ nil) do
+    Cache.fetch({:tipos_cliente, token}, fn ->
+      case Api.get_tipos_cliente(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row -> {row["CTETPO_DESCRIPCION"], row["CTETPO_CODIGO_K"]} end)
+          |> Enum.sort_by(fn {nombre, _} -> nombre end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de canales
-  """
-  def listar_canales do
-    query = """
-    SELECT DISTINCT CTECAN_CODIGO_K as codigo
-    FROM CTE_SUBCANAL
-    ORDER BY CTECAN_CODIGO_K
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        Enum.map(rows, fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          codigo = row_map["codigo"]
-          {codigo, codigo}
-        end)
-
-      {:error, _} ->
-        []
-    end
+  def listar_canales(token \\ nil) do
+    Cache.fetch({:canales, token}, fn ->
+      case Api.get_canales(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row -> codigo = row["CTECAN_CODIGO_K"]; {codigo, codigo} end)
+          |> Enum.uniq()
+          |> Enum.sort()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de subcanales para un canal específico
-  """
-  def listar_subcanales(canal_codigo) when is_binary(canal_codigo) do
-    query = """
-    SELECT CTESCA_CODIGO_K as codigo, CTESCA_DESCRIPCION as nombre
-    FROM CTE_SUBCANAL
-    WHERE CTECAN_CODIGO_K = @1
-    ORDER BY CTESCA_DESCRIPCION
-    """
+  def listar_subcanales(canal_codigo, token \\ nil)
 
-    case Repo.query(query, [canal_codigo]) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
+  def listar_subcanales(canal_codigo, token) when is_binary(canal_codigo) do
+    # Traer TODOS los subcanales una vez y filtrar en memoria
+    all_subcanales = Cache.fetch({:all_subcanales, token}, fn ->
+      case Api.get_all("CTE_SUBCANAL", token) do
+        {:ok, rows} -> rows
+        {:error, _} -> []
+      end
+    end)
 
-      {:error, _} ->
-        []
-    end
+    all_subcanales
+    |> Enum.filter(fn row -> row["CTECAN_CODIGO_K"] == canal_codigo end)
+    |> Enum.map(fn row -> {row["CTESCA_DESCRIPCION"], row["CTESCA_CODIGO_K"]} end)
+    |> Enum.sort_by(fn {nombre, _} -> nombre end)
+    |> EncodingHelper.convert_catalog_list()
   end
 
-  def listar_subcanales(_), do: []
+  def listar_subcanales(_, _), do: []
 
-  @doc """
-  Obtiene la lista de regímenes
-  """
-  def listar_regimenes do
-    query = """
-    SELECT CTEREG_CODIGO_K as codigo, CTEREG_DESCRIPCION as nombre
-    FROM CTE_REGIMEN
-    ORDER BY CTEREG_DESCRIPCION
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_regimenes(token \\ nil) do
+    Cache.fetch({:regimenes, token}, fn ->
+      case Api.get_regimenes(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row -> {row["CTEREG_DESCRIPCION"], row["CTEREG_CODIGO_K"]} end)
+          |> Enum.sort_by(fn {nombre, _} -> nombre end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de cadenas
-  """
-  def listar_cadenas do
-    query = """
-    SELECT CTECAD_CODIGO_K as codigo, CTECAD_DCOMERCIAL as nombre
-    FROM CTE_CADENA
-    ORDER BY CTECAD_DCOMERCIAL
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_cadenas(token \\ nil) do
+    Cache.fetch({:cadenas, token}, fn ->
+      case Api.get_cadenas(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row -> {row["CTECAD_DCOMERCIAL"], row["CTECAD_CODIGO_K"]} end)
+          |> Enum.sort_by(fn {nombre, _} -> nombre end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de paquetes de servicio
-  """
-  def listar_paquetes_servicio do
-    query = """
-    SELECT CTEPAQ_CODIGO_K as codigo, CTEPAQ_DESCRIPCION as nombre
-    FROM CTE_PAQUETESERV
-    ORDER BY CTEPAQ_DESCRIPCION
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_paquetes_servicio(token \\ nil) do
+    Cache.fetch({:paquetes_servicio, token}, fn ->
+      case Api.get_paquetes_servicio(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row -> {row["CTEPAQ_DESCRIPCION"], row["CTEPAQ_CODIGO_K"]} end)
+          |> Enum.sort_by(fn {nombre, _} -> nombre end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de transacciones
-  """
-  def listar_transacciones do
-    query = """
-    SELECT SYSTRA_CODIGO_K as codigo, SYSTRA_DESCRIPCION as nombre
-    FROM SYS_TRANSAC
-    WHERE SYSTRA_TIPO = 'F'
-    ORDER BY SYSTRA_DESCRIPCION
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_transacciones(token \\ nil) do
+    Cache.fetch({:transacciones, token}, fn ->
+      # Traer todas y filtrar por tipo "F" en memoria
+      case Api.get_all("SYS_TRANSAC", token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.filter(fn row -> row["SYSTRA_TIPO"] == "F" end)
+          |> Enum.map(fn row -> {row["SYSTRA_DESCRIPCION"], row["SYSTRA_CODIGO_K"]} end)
+          |> Enum.sort_by(fn {nombre, _} -> nombre end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de monedas
-  """
-  def listar_monedas do
-    query = """
-    SELECT CFGMON_CODIGO_K as codigo, CFGMON_DESCRIPCION as nombre
-    FROM CFG_MONEDA
-    ORDER BY CFGMON_CODIGO_K
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_monedas(token \\ nil) do
+    Cache.fetch({:monedas, token}, fn ->
+      case Api.get_monedas(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row -> {row["CFGMON_DESCRIPCION"], row["CFGMON_CODIGO_K"]} end)
+          |> Enum.sort_by(fn {_, codigo} -> codigo end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de estados (para direcciones)
-  """
-  def listar_estados do
-    query = """
-    SELECT MAPEDO_CODIGO_K as codigo, MAPEDO_DESCRIPCION as nombre
-    FROM MAP_ESTADO
-    ORDER BY MAPEDO_DESCRIPCION
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], to_string(row_map["codigo"])}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_estados(token \\ nil) do
+    Cache.fetch({:estados, token}, fn ->
+      case Api.get_estados(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row -> {row["MAPEDO_DESCRIPCION"], to_string(row["MAPEDO_CODIGO_K"])} end)
+          |> Enum.sort_by(fn {nombre, _} -> nombre end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de municipios para un estado específico
-  """
-  def listar_municipios(estado_codigo) when is_integer(estado_codigo) do
-    listar_municipios(to_string(estado_codigo))
+  def listar_municipios(estado_codigo, token \\ nil)
+
+  def listar_municipios(estado_codigo, token) when is_integer(estado_codigo) do
+    listar_municipios(to_string(estado_codigo), token)
   end
 
-  def listar_municipios(estado_codigo) when is_binary(estado_codigo) do
-    query = """
-    SELECT MAPMUN_CODIGO_K as codigo, MAPMUN_DESCRIPCION as nombre
-    FROM MAP_MUNICIPIO
-    WHERE MAPEDO_CODIGO_K = @1
-    ORDER BY MAPMUN_DESCRIPCION
-    """
+  def listar_municipios(estado_codigo, token) when is_binary(estado_codigo) do
+    # Traer TODOS los municipios una vez y filtrar en memoria
+    all_municipios = Cache.fetch({:all_municipios, token}, fn ->
+      case Api.get_all("MAP_MUNICIPIO", token) do
+        {:ok, rows} -> rows
+        {:error, _} -> []
+      end
+    end)
 
-    case Repo.query(query, [estado_codigo]) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], to_string(row_map["codigo"])}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+    all_municipios
+    |> Enum.filter(fn row -> to_string(row["MAPEDO_CODIGO_K"]) == estado_codigo end)
+    |> Enum.map(fn row -> {row["MAPMUN_DESCRIPCION"], to_string(row["MAPMUN_CODIGO_K"])} end)
+    |> Enum.sort_by(fn {nombre, _} -> nombre end)
+    |> EncodingHelper.convert_catalog_list()
   end
 
-  def listar_municipios(_), do: []
+  def listar_municipios(_, _), do: []
 
-  @doc """
-  Obtiene la lista de localidades para un estado y municipio específicos
-  """
-  def listar_localidades(estado_codigo, municipio_codigo)
+  def listar_localidades(estado_codigo, municipio_codigo, token \\ nil)
+
+  def listar_localidades(estado_codigo, municipio_codigo, token)
       when is_integer(estado_codigo) or is_integer(municipio_codigo) do
-    listar_localidades(to_string(estado_codigo), to_string(municipio_codigo))
+    listar_localidades(to_string(estado_codigo), to_string(municipio_codigo), token)
   end
 
-  def listar_localidades(estado_codigo, municipio_codigo)
+  def listar_localidades(estado_codigo, municipio_codigo, token)
       when is_binary(estado_codigo) and is_binary(municipio_codigo) do
-    query = """
-    SELECT MAPLOC_CODIGO_K as codigo, MAPLOC_DESCRIPCION as nombre
-    FROM MAP_LOCALIDAD
-    WHERE MAPEDO_CODIGO_K = @1 AND MAPMUN_CODIGO_K = @2
-    ORDER BY MAPLOC_DESCRIPCION
-    """
+    # Traer TODAS las localidades una vez y filtrar en memoria
+    all_localidades = Cache.fetch({:all_localidades, token}, fn ->
+      case Api.get_all("MAP_LOCALIDAD", token) do
+        {:ok, rows} -> rows
+        {:error, _} -> []
+      end
+    end)
 
-    case Repo.query(query, [estado_codigo, municipio_codigo]) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], to_string(row_map["codigo"])}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+    all_localidades
+    |> Enum.filter(fn row ->
+      to_string(row["MAPEDO_CODIGO_K"]) == estado_codigo &&
+      to_string(row["MAPMUN_CODIGO_K"]) == municipio_codigo
+    end)
+    |> Enum.map(fn row -> {row["MAPLOC_DESCRIPCION"], to_string(row["MAPLOC_CODIGO_K"])} end)
+    |> Enum.sort_by(fn {nombre, _} -> nombre end)
+    |> EncodingHelper.convert_catalog_list()
   end
 
-  def listar_localidades(_, _), do: []
+  def listar_localidades(_, _, _), do: []
 
-  @doc """
-  Obtiene la lista de rutas
-  """
-  def listar_rutas do
-    query = """
-    SELECT VTARUT_CODIGO_K as codigo, VTARUT_DESCRIPCION as nombre
-    FROM VTA_RUTA
-    ORDER BY VTARUT_DESCRIPCION
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {row_map["nombre"], row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_rutas(token \\ nil) do
+    Cache.fetch({:rutas, token}, fn ->
+      case Api.get_rutas(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row -> {row["VTARUT_DESCRIPCION"], row["VTARUT_CODIGO_K"]} end)
+          |> Enum.sort_by(fn {nombre, _} -> nombre end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de usos de CFDI SAT
-  """
-  def listar_usos_cfdi do
-    query = """
-    SELECT SAT_USO_CFDI_K as codigo, SATUSO_CFDI_DESCRIPCION as nombre
-    FROM CFG_USOCFDISAT
-    ORDER BY SAT_USO_CFDI_K
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {" #{row_map["codigo"]} - #{row_map["nombre"]}", row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_usos_cfdi(token \\ nil) do
+    Cache.fetch({:usos_cfdi, token}, fn ->
+      case Api.get_usos_cfdi(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row ->
+            codigo = row["SAT_USO_CFDI_K"]
+            nombre = row["SATUSO_CFDI_DESCRIPCION"]
+            {" #{codigo} - #{nombre}", codigo}
+          end)
+          |> Enum.sort_by(fn {_, codigo} -> codigo end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de formas de pago SAT
-  """
-  def listar_formas_pago do
-    query = """
-    SELECT CTECLI_FORMAPAGO as codigo, SATFP_DESCRIPCION as nombre
-    FROM CFG_FORMAPAGO_SAT
-    ORDER BY CTECLI_FORMAPAGO
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {"#{row_map["codigo"]} - #{row_map["nombre"]}", row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_formas_pago(token \\ nil) do
+    Cache.fetch({:formas_pago, token}, fn ->
+      case Api.get_formas_pago(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row ->
+            codigo = row["CTECLI_FORMAPAGO"]
+            nombre = row["SATFP_DESCRIPCION"]
+            {"#{codigo} - #{nombre}", codigo}
+          end)
+          |> Enum.sort_by(fn {_, codigo} -> codigo end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de métodos de pago SAT
-  """
-  def listar_metodos_pago do
-    query = """
-    SELECT
-      CFGMTP_CODIGO_K as codigo,
-      CFGMTP_DESCRIPCION as descripcion
-    FROM
-      CFG_METODOPAGO
-    ORDER BY CFGMTP_CODIGO_K
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {"#{row_map["codigo"]} - #{row_map["descripcion"]}", row_map["codigo"]}
-        end)
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_metodos_pago(token \\ nil) do
+    Cache.fetch({:metodos_pago, token}, fn ->
+      case Api.get_metodos_pago(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row ->
+            codigo = row["CFGMTP_CODIGO_K"]
+            descripcion = row["CFGMTP_DESCRIPCION"]
+            {"#{codigo} - #{descripcion}", codigo}
+          end)
+          |> Enum.sort_by(fn {_, codigo} -> codigo end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Obtiene la lista de regímenes fiscales SAT
-  """
-  def listar_regimenes_fiscales do
-    query = """
-    SELECT CFGREG_CODIGO_K as codigo, CFGREG_DESCRIPCION as nombre
-    FROM CFG_REGIMENFISCAL_SAT
-    ORDER BY SATREG_CODIGO_K
-    """
-
-    case Repo.query(query) do
-      {:ok, %{rows: rows, columns: columns}} ->
-        rows
-        |> Enum.map(fn row ->
-          row_map = Enum.zip(columns, row) |> Enum.into(%{})
-          {"#{row_map["codigo"]} - #{row_map["nombre"]}", row_map["codigo"]}
-        end)
-        # Convert Latin-1 to UTF-8
-        |> EncodingHelper.convert_catalog_list()
-
-      {:error, _} ->
-        []
-    end
+  def listar_regimenes_fiscales(token \\ nil) do
+    Cache.fetch({:regimenes_fiscales, token}, fn ->
+      case Api.get_regimenes_fiscales(token) do
+        {:ok, rows} ->
+          rows
+          |> Enum.map(fn row ->
+            codigo = row["CFGREG_CODIGO_K"]
+            nombre = row["CFGREG_DESCRIPCION"]
+            {"#{codigo} - #{nombre}", codigo}
+          end)
+          |> Enum.sort_by(fn {_, codigo} -> codigo end)
+          |> EncodingHelper.convert_catalog_list()
+        {:error, _} -> []
+      end
+    end)
   end
 
-  @doc """
-  Busca localidad por código postal y retorna datos de ubicación
-  """
-  def buscar_por_cp(codigo_postal) when is_binary(codigo_postal) do
-    query = """
-    SELECT TOP 1
-      e.MAPEDO_CODIGO_K as estado_codigo,
-      e.MAPEDO_DESCRIPCION as estado_nombre,
-      m.MAPMUN_CODIGO_K as municipio_codigo,
-      m.MAPMUN_DESCRIPCION as municipio_nombre,
-      l.MAPLOC_CODIGO_K as localidad_codigo,
-      l.MAPLOC_DESCRIPCION as localidad_nombre
-    FROM MAP_LOCALIDAD l
-    INNER JOIN MAP_ESTADO e ON l.MAPEDO_CODIGO_K = e.MAPEDO_CODIGO_K
-    INNER JOIN MAP_MUNICIPIO m ON l.MAPEDO_CODIGO_K = m.MAPEDO_CODIGO_K
-      AND l.MAPMUN_CODIGO_K = m.MAPMUN_CODIGO_K
-    WHERE l.MAPLOC_CP_K = @1
-    """
+  def buscar_por_cp(codigo_postal, token \\ nil)
 
-    case Repo.query(query, [codigo_postal]) do
-      {:ok, %{rows: [row], columns: columns}} ->
-        row_map = Enum.zip(columns, row) |> Enum.into(%{})
+  def buscar_por_cp(codigo_postal, token) when is_binary(codigo_postal) do
+    Cache.fetch({:cp, codigo_postal, token}, fn ->
+      # Usar datos cacheados y filtrar en memoria
+      all_localidades = Cache.fetch({:all_localidades, token}, fn ->
+        case Api.get_all("MAP_LOCALIDAD", token) do
+          {:ok, rows} -> rows
+          {:error, _} -> []
+        end
+      end)
 
-        # Convert Latin-1 names to UTF-8
-        result =
+      # Buscar localidad por CP
+      case Enum.find(all_localidades, fn loc -> loc["MAPLOC_CP_K"] == codigo_postal end) do
+        nil ->
+          {:error, :not_found}
+
+        localidad ->
+          estado_codigo = to_string(localidad["MAPEDO_CODIGO_K"])
+          municipio_codigo = to_string(localidad["MAPMUN_CODIGO_K"])
+
+          # Buscar estado en cache
+          all_estados = Cache.fetch({:all_estados_raw, token}, fn ->
+            case Api.get_all("MAP_ESTADO", token) do
+              {:ok, rows} -> rows
+              {:error, _} -> []
+            end
+          end)
+
+          # Buscar municipio en cache
+          all_municipios = Cache.fetch({:all_municipios, token}, fn ->
+            case Api.get_all("MAP_MUNICIPIO", token) do
+              {:ok, rows} -> rows
+              {:error, _} -> []
+            end
+          end)
+
+          estado = Enum.find(all_estados, fn e -> to_string(e["MAPEDO_CODIGO_K"]) == estado_codigo end) || %{}
+          municipio = Enum.find(all_municipios, fn m ->
+            to_string(m["MAPEDO_CODIGO_K"]) == estado_codigo &&
+            to_string(m["MAPMUN_CODIGO_K"]) == municipio_codigo
+          end) || %{}
+
           %{
-            estado_codigo: to_string(row_map["estado_codigo"]),
-            estado_nombre: row_map["estado_nombre"],
-            municipio_codigo: to_string(row_map["municipio_codigo"]),
-            municipio_nombre: row_map["municipio_nombre"],
-            localidad_codigo: to_string(row_map["localidad_codigo"]),
-            localidad_nombre: row_map["localidad_nombre"]
+            estado_codigo: estado_codigo,
+            estado_nombre: estado["MAPEDO_DESCRIPCION"],
+            municipio_codigo: municipio_codigo,
+            municipio_nombre: municipio["MAPMUN_DESCRIPCION"],
+            localidad_codigo: to_string(localidad["MAPLOC_CODIGO_K"]),
+            localidad_nombre: localidad["MAPLOC_DESCRIPCION"]
           }
-          # Convert all name fields to UTF-8
           |> EncodingHelper.convert_map()
-
-        {:ok, result}
-
-      _ ->
-        {:error, :not_found}
-    end
+          |> then(&{:ok, &1})
+      end
+    end)
   end
 
-  def buscar_por_cp(_), do: {:error, :invalid_cp}
+  def buscar_por_cp(_, _), do: {:error, :invalid_cp}
 end

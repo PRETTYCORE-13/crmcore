@@ -55,6 +55,7 @@ defmodule PrettycoreWeb.Router do
   ## Rutas para descarga de Excel (protegidas pero no LiveView)
   scope "/admin", PrettycoreWeb do
     pipe_through :browser
+    live "/users", Users.UsersCreateLive
 
     get "/clientes/export/excel", ClientesExcelController, :download
   end
@@ -72,4 +73,20 @@ defmodule PrettycoreWeb.Router do
     get "/sys_udn", SysUdnController, :index
     get "/sys_udn/codigos", SysUdnController, :codigos
   end
-end
+
+  # Development-only routes for debugging and monitoring.
+  # Only available when dev_routes configuration is enabled.
+    # If you want to use the LiveDashboard in production, you should put
+    # it behind authentication and allow only admins to access it.
+    # If your application does not have an admins-only section yet,
+    # you can use Plug.BasicAuth to set up some basic authentication
+    # as long as you are also using SSL (which you should anyway).
+    import Phoenix.LiveDashboard.Router
+
+    scope "/dev" do
+      pipe_through :browser
+
+      live_dashboard "/dashboard", metrics: EecWeb.Telemetry
+      forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+  end

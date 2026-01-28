@@ -2,7 +2,6 @@ defmodule Prettycore.ClientesTest do
   use ExUnit.Case, async: false
 
   alias Prettycore.Clientes
-  alias Prettycore.Repo
 
   @moduletag :database
 

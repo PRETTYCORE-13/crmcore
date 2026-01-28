@@ -3,7 +3,6 @@ defmodule PrettycoreWeb.WorkOrderLive do
 
   alias Prettycore.Workorders
   alias Prettycore.WorkorderApi
-  alias Prettycore.Repo
   alias Prettycore.Auth.User
   import Ecto.Query, only: [from: 2]
 

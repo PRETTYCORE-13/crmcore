@@ -4,7 +4,6 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
   alias Prettycore.ClientesApi
   alias Prettycore.Clientes
   alias Prettycore.Auth.User
-  alias Prettycore.Repo
   alias Prettycore.Catalogos
   import Ecto.Query
 
@@ -385,9 +384,10 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
   def mount(params, session, socket) do
     # Modo edición: obtener cliente_id de los parámetros
     cliente_id = Map.get(params, "id")
+    frog_token = socket.assigns[:frog_token]
 
     # Cargar cliente existente desde la BD
-    {cliente, page_title, current_path} = case Clientes.get_cliente_by_codigo(cliente_id) do
+    {cliente, page_title, current_path} = case Clientes.get_cliente_by_codigo(cliente_id, frog_token) do
       {:ok, %{cliente: cliente_db, direcciones: direcciones_db}} ->
         # Convertir direcciones de la BD al formato del formulario
         # Traer TODOS los campos tal como están en la BD (sin valores por defecto)
@@ -463,7 +463,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
           ctecli_razonsocial: cliente_db.ctecli_razonsocial,
           ctecli_dencomercia: cliente_db.ctecli_dencomercia,
           ctecli_rfc: cliente_db.ctecli_rfc,
-          ctecli_fechaalta: if(cliente_db.ctecli_fechaalta, do: NaiveDateTime.to_date(cliente_db.ctecli_fechaalta), else: nil),
+          ctecli_fechaalta: parse_date_field(cliente_db.ctecli_fechaalta),
           ctecli_edocred: cliente_db.ctecli_edocred,
           ctecli_diascredito: cliente_db.ctecli_diascredito,
           ctecli_limitecredi: cliente_db.ctecli_limitecredi,
@@ -524,24 +524,25 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
 
     form = to_form(ClienteForm.changeset(cliente, %{}))
 
-    # Cargar catálogos desde la base de datos
-    tipos_cliente = Catalogos.listar_tipos_cliente()
-    cadenas = Catalogos.listar_cadenas()
-    canales = Catalogos.listar_canales()
-    regimenes = Catalogos.listar_regimenes()
-    paquetes_servicio = Catalogos.listar_paquetes_servicio()
-    transacciones = Catalogos.listar_transacciones()
-    monedas = Catalogos.listar_monedas()
-    estados = Catalogos.listar_estados()
-    rutas = Catalogos.listar_rutas()
-    usos_cfdi = Catalogos.listar_usos_cfdi()
-    formas_pago = Catalogos.listar_formas_pago()
-    metodos_pago = Catalogos.listar_metodos_pago()
-    regimenes_fiscales = Catalogos.listar_regimenes_fiscales()
+    # Cargar catálogos desde la API (con token)
+    t = frog_token
+    tipos_cliente = Catalogos.listar_tipos_cliente(t)
+    cadenas = Catalogos.listar_cadenas(t)
+    canales = Catalogos.listar_canales(t)
+    regimenes = Catalogos.listar_regimenes(t)
+    paquetes_servicio = Catalogos.listar_paquetes_servicio(t)
+    transacciones = Catalogos.listar_transacciones(t)
+    monedas = Catalogos.listar_monedas(t)
+    estados = Catalogos.listar_estados(t)
+    rutas = Catalogos.listar_rutas(t)
+    usos_cfdi = Catalogos.listar_usos_cfdi(t)
+    formas_pago = Catalogos.listar_formas_pago(t)
+    metodos_pago = Catalogos.listar_metodos_pago(t)
+    regimenes_fiscales = Catalogos.listar_regimenes_fiscales(t)
 
     # Cargar subcanales si el cliente tiene un canal seleccionado
     subcanales = if cliente.ctecan_codigo_k do
-      Catalogos.listar_subcanales(cliente.ctecan_codigo_k)
+      Catalogos.listar_subcanales(cliente.ctecan_codigo_k, t)
     else
       []
     end
@@ -551,13 +552,13 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
       primera_dir = Enum.at(cliente.direcciones, 0)
 
       municipios = if primera_dir.mapedo_codigo_k do
-        Catalogos.listar_municipios(primera_dir.mapedo_codigo_k)
+        Catalogos.listar_municipios(primera_dir.mapedo_codigo_k, t)
       else
         []
       end
 
       localidades = if primera_dir.mapedo_codigo_k && primera_dir.mapmun_codigo_k do
-        Catalogos.listar_localidades(primera_dir.mapedo_codigo_k, primera_dir.mapmun_codigo_k)
+        Catalogos.listar_localidades(primera_dir.mapedo_codigo_k, primera_dir.mapmun_codigo_k, t)
       else
         []
       end
@@ -633,9 +634,9 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
         IO.inspect(estado_codigo, label: "Estado seleccionado (validate)")
         IO.inspect(target, label: "Target path")
 
+        tk = socket.assigns[:frog_token]
         if estado_codigo && estado_codigo != "" do
-          municipios = Catalogos.listar_municipios(estado_codigo)
-          IO.inspect(length(municipios), label: "Municipios cargados (validate)")
+          municipios = Catalogos.listar_municipios(estado_codigo, tk)
           {:noreply, socket_with_form |> assign(:municipios, municipios) |> assign(:localidades, [])}
         else
           {:noreply, socket_with_form |> assign(:municipios, []) |> assign(:localidades, [])}
@@ -645,11 +646,10 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
         # Municipio changed, load localidades
         estado_codigo = Map.get(params, "mapedo_codigo_k")
         municipio_codigo = Map.get(params, "mapmun_codigo_k")
-        IO.inspect({estado_codigo, municipio_codigo}, label: "Estado y Municipio (validate)")
+        tk = socket.assigns[:frog_token]
 
         if estado_codigo && municipio_codigo && estado_codigo != "" && municipio_codigo != "" do
-          localidades = Catalogos.listar_localidades(estado_codigo, municipio_codigo)
-          IO.inspect(length(localidades), label: "Localidades cargadas (validate)")
+          localidades = Catalogos.listar_localidades(estado_codigo, municipio_codigo, tk)
           {:noreply, assign(socket_with_form, :localidades, localidades)}
         else
           {:noreply, assign(socket_with_form, :localidades, [])}
@@ -657,23 +657,23 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
 
       # Nested direcciones (para formularios con múltiples direcciones)
       ["cliente_form", "direcciones", direccion_index, "mapedo_codigo_k"] ->
-        # Estado changed, load municipios
         estado_codigo = get_in(params, ["direcciones", direccion_index, "mapedo_codigo_k"])
+        tk = socket.assigns[:frog_token]
 
         if estado_codigo && estado_codigo != "" do
-          municipios = Catalogos.listar_municipios(estado_codigo)
+          municipios = Catalogos.listar_municipios(estado_codigo, tk)
           {:noreply, socket_with_form |> assign(:municipios, municipios) |> assign(:localidades, [])}
         else
           {:noreply, socket_with_form |> assign(:municipios, []) |> assign(:localidades, [])}
         end
 
       ["cliente_form", "direcciones", direccion_index, "mapmun_codigo_k"] ->
-        # Municipio changed, load localidades
         estado_codigo = get_in(params, ["direcciones", direccion_index, "mapedo_codigo_k"])
         municipio_codigo = get_in(params, ["direcciones", direccion_index, "mapmun_codigo_k"])
+        tk = socket.assigns[:frog_token]
 
         if estado_codigo && municipio_codigo && estado_codigo != "" && municipio_codigo != "" do
-          localidades = Catalogos.listar_localidades(estado_codigo, municipio_codigo)
+          localidades = Catalogos.listar_localidades(estado_codigo, municipio_codigo, tk)
           {:noreply, assign(socket_with_form, :localidades, localidades)}
         else
           {:noreply, assign(socket_with_form, :localidades, [])}
@@ -829,7 +829,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
     canal_codigo = get_in(params, ["ctecan_codigo_k"])
 
     if canal_codigo && canal_codigo != "" do
-      subcanales = Catalogos.listar_subcanales(canal_codigo)
+      subcanales = Catalogos.listar_subcanales(canal_codigo, socket.assigns[:frog_token])
       {:noreply, assign(socket, :subcanales, subcanales)}
     else
       {:noreply, assign(socket, :subcanales, [])}
@@ -878,12 +878,13 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
   @impl true
   def handle_event("cp_blur", %{"codigo_postal" => cp, "direccion_index" => index_str}, socket) do
     if String.match?(cp, ~r/^\d{5}$/) do
-      case Catalogos.buscar_por_cp(cp) do
+      tk = socket.assigns[:frog_token]
+      case Catalogos.buscar_por_cp(cp, tk) do
         {:ok, ubicacion} ->
-          municipios = Catalogos.listar_municipios(ubicacion.estado_codigo)
+          municipios = Catalogos.listar_municipios(ubicacion.estado_codigo, tk)
 
           localidades =
-            Catalogos.listar_localidades(ubicacion.estado_codigo, ubicacion.municipio_codigo)
+            Catalogos.listar_localidades(ubicacion.estado_codigo, ubicacion.municipio_codigo, tk)
 
           current_form = socket.assigns.form
           params = current_form.params || %{}
@@ -977,4 +978,19 @@ true -> "Error HTTP #{status}"
   defp convert_ivafrontera("G"), do: "G"
   defp convert_ivafrontera("F"), do: "F"
   defp convert_ivafrontera(_), do: "G"
+
+  defp parse_date_field(nil), do: nil
+  defp parse_date_field(%NaiveDateTime{} = ndt), do: NaiveDateTime.to_date(ndt)
+  defp parse_date_field(%Date{} = d), do: d
+  defp parse_date_field(s) when is_binary(s) do
+    case NaiveDateTime.from_iso8601(s) do
+      {:ok, ndt} -> NaiveDateTime.to_date(ndt)
+      _ ->
+        case Date.from_iso8601(s) do
+          {:ok, d} -> d
+          _ -> nil
+        end
+    end
+  end
+  defp parse_date_field(_), do: nil
 end

@@ -1,19 +1,34 @@
 defmodule Prettycore.Workorders do
-  @moduledoc false
-  alias Prettycore.Repo
-  alias Prettycore.Workorders.WorkorderEnc
-  import Ecto.Query, warn: false
+  @moduledoc """
+  Contexto para gestión de Work Orders usando API REST EN_RESTHELPER.
+
+  Este módulo consume datos desde la API REST en lugar de
+  consultas directas a SQL Server.
+
+  Base URL: http://ecore.ath.cx:1405/SP/EN_RESTHELPER/
+  """
+
+  alias Prettycore.Api.Client, as: Api
 
   ## Encabezados (órdenes)
 
+  @doc """
+  Lista todas las work orders.
+  """
   def list_enc do
-    WorkorderEnc
-    |> preload([:tipo])
-    |> Repo.all()
+    case Api.get_workorders() do
+      {:ok, workorders} ->
+        workorders
+        |> Enum.map(&normalize_workorder/1)
+        |> load_tipos()
+
+      {:error, _} ->
+        []
+    end
   end
 
   @doc """
-  Lists workorder headers with optional filters applied at the database level.
+  Lists workorder headers with optional filters applied.
 
   ## Options
     * `:estado` - Filter by estado value (e.g., "por_aceptar" for estado == 100, "todas" for all)
@@ -24,128 +39,175 @@ defmodule Prettycore.Workorders do
 
   ## Examples
       iex> list_enc_filtered(%{estado: "por_aceptar"})
-      [%WorkorderEnc{}, ...]
+      [%{...}, ...]
 
       iex> list_enc_filtered(%{sysudn: "100", fecha_desde: "2025-01-01"})
-      [%WorkorderEnc{}, ...]
+      [%{...}, ...]
   """
   def list_enc_filtered(filters \\ %{}) do
-    WorkorderEnc
-    |> apply_estado_filter(filters[:estado])
-    |> apply_sysudn_filter(filters[:sysudn])
-    |> apply_usuario_filter(filters[:usuario])
-    |> apply_fecha_desde_filter(filters[:fecha_desde])
-    |> apply_fecha_hasta_filter(filters[:fecha_hasta])
-    |> preload([:tipo])
-    |> Repo.all()
+    # Construir filtros para la API
+    api_filters = build_api_filters(filters)
+
+    case Api.get_filtered("XEN_WOKORDERENC", api_filters) do
+      {:ok, workorders} ->
+        workorders
+        |> Enum.map(&normalize_workorder/1)
+        |> filter_by_estado(filters[:estado])
+        |> filter_by_fecha_desde(filters[:fecha_desde])
+        |> filter_by_fecha_hasta(filters[:fecha_hasta])
+        |> load_tipos()
+
+      {:error, _} ->
+        []
+    end
   end
 
-  @spec list_enc_with_flop() :: {:error, Flop.Meta.t()} | {:ok, {list(), Flop.Meta.t()}}
   @doc """
-  Lists workorder headers with Flop for pagination, filtering and sorting.
+  Lists workorder headers with Flop-compatible pagination.
 
   ## Parameters
     * `flop_params` - Flop parameters including pagination, filters and sorting
 
   ## Examples
       iex> list_enc_with_flop(%{page: 1, page_size: 20})
-      {:ok, {[%WorkorderEnc{}, ...], %Flop.Meta{}}}
+      {:ok, {[%{...}, ...], %Flop.Meta{}}}
   """
   def list_enc_with_flop(flop_params \\ %{}) do
-    # Add default order_by if not provided (required by SQL Server with OFFSET)
-    flop_params =
-      if Map.has_key?(flop_params, "order_by") || Map.has_key?(flop_params, :order_by) do
-        flop_params
-      else
-        # Use string keys to match the rest of the params
-        # Order by folio descending (from highest to lowest)
-        Map.put(flop_params, "order_by", ["folio"])
-        |> Map.put("order_directions", ["desc"])
-      end
+    page = String.to_integer(flop_params["page"] || "1")
+    page_size = String.to_integer(flop_params["page_size"] || "20")
 
-    WorkorderEnc
-    |> preload([:tipo])
-    |> apply_custom_filters(flop_params)
-    |> Flop.validate_and_run(flop_params, for: WorkorderEnc)
+    # Obtener filtros
+    filters = %{
+      estado: flop_params["estado"] || flop_params[:estado],
+      sysudn: flop_params["sysudn"] || flop_params[:sysudn],
+      usuario: flop_params["usuario"] || flop_params[:usuario],
+      fecha_desde: flop_params["fecha_desde"] || flop_params[:fecha_desde],
+      fecha_hasta: flop_params["fecha_hasta"] || flop_params[:fecha_hasta]
+    }
+
+    # Obtener todos los workorders filtrados
+    workorders = list_enc_filtered(filters)
+
+    # Aplicar paginación manual
+    total_count = length(workorders)
+    total_pages = max(ceil(total_count / page_size), 1)
+    offset = (page - 1) * page_size
+
+    workorders_paginados = workorders
+    |> Enum.sort_by(& &1.folio, :desc)
+    |> Enum.drop(offset)
+    |> Enum.take(page_size)
+
+    # Crear meta de paginación compatible con Flop
+    meta = %Flop.Meta{
+      current_page: page,
+      page_size: page_size,
+      total_count: total_count,
+      total_pages: total_pages,
+      has_previous_page?: page > 1,
+      has_next_page?: page < total_pages,
+      flop: %Flop{page: page, page_size: page_size}
+    }
+
+    {:ok, {workorders_paginados, meta}}
   end
 
-  # Apply custom filters that aren't handled by Flop's standard filters
-  defp apply_custom_filters(query, params) do
-    query
-    |> apply_estado_filter(params["estado"] || params[:estado])
-    |> apply_fecha_desde_filter(params["fecha_desde"] || params[:fecha_desde])
-    |> apply_fecha_hasta_filter(params["fecha_hasta"] || params[:fecha_hasta])
-  end
+  ## Detalle (imágenes)
 
-  # Filter by estado
-  defp apply_estado_filter(query, nil), do: query
-  defp apply_estado_filter(query, ""), do: query
-  defp apply_estado_filter(query, "todas"), do: query
+  @doc """
+  Lista los detalles de una work order (imágenes).
+  """
+  def list_det(sysudn, systra, serie, folio) do
+    filters = %{
+      "SYSUDN_CODIGO_K" => sysudn,
+      "SYSTRA_CODIGO_K" => systra,
+      "WOKE_SERIE_K" => serie,
+      "WOKE_FOLIO_K" => folio
+    }
 
-  defp apply_estado_filter(query, "por_aceptar") do
-    from(w in query, where: w.estado == 100)
-  end
+    case Api.get_filtered("XEN_WOKORDERDET", filters) do
+      {:ok, detalles} ->
+        Enum.map(detalles, fn det ->
+          %{
+            concepto: det["WOKD_RENGLON_K"],
+            descripcion: nil,
+            image_url: det["WOKD_IMAGEN"]
+          }
+        end)
 
-  defp apply_estado_filter(query, estado) when is_integer(estado) do
-    from(w in query, where: w.estado == ^estado)
-  end
-
-  defp apply_estado_filter(query, estado) when is_binary(estado) do
-    case Integer.parse(estado) do
-      {int_estado, ""} -> apply_estado_filter(query, int_estado)
-      _ -> query
+      {:error, error} ->
+        IO.inspect(error, label: "error list_det")
+        []
     end
   end
 
-  # Filter by sysudn
-  defp apply_sysudn_filter(query, nil), do: query
-  defp apply_sysudn_filter(query, ""), do: query
+  ## Private functions
 
-  defp apply_sysudn_filter(query, sysudn) do
-    from(w in query, where: w.sysudn == ^sysudn)
+  defp build_api_filters(filters) do
+    filters
+    |> Enum.reduce(%{}, fn
+      {:sysudn, value}, acc when is_binary(value) and value != "" ->
+        Map.put(acc, "SYSUDN_CODIGO_K", value)
+
+      {:usuario, value}, acc when is_binary(value) and value != "" ->
+        Map.put(acc, "SYSUSR_CODIGO_K", value)
+
+      _, acc ->
+        acc
+    end)
   end
 
-  # Filter by usuario
-  defp apply_usuario_filter(query, nil), do: query
-  defp apply_usuario_filter(query, ""), do: query
+  defp filter_by_estado(workorders, nil), do: workorders
+  defp filter_by_estado(workorders, ""), do: workorders
+  defp filter_by_estado(workorders, "todas"), do: workorders
 
-  defp apply_usuario_filter(query, usuario) do
-    from(w in query, where: w.usuario == ^usuario)
+  defp filter_by_estado(workorders, "por_aceptar") do
+    Enum.filter(workorders, fn wo -> wo.estado == 100 end)
   end
 
-  # Filter by fecha_desde (from date)
-  defp apply_fecha_desde_filter(query, nil), do: query
-  defp apply_fecha_desde_filter(query, ""), do: query
+  defp filter_by_estado(workorders, estado) when is_integer(estado) do
+    Enum.filter(workorders, fn wo -> wo.estado == estado end)
+  end
 
-  defp apply_fecha_desde_filter(query, fecha_desde) do
+  defp filter_by_estado(workorders, estado) when is_binary(estado) do
+    case Integer.parse(estado) do
+      {int_estado, ""} -> filter_by_estado(workorders, int_estado)
+      _ -> workorders
+    end
+  end
+
+  defp filter_by_fecha_desde(workorders, nil), do: workorders
+  defp filter_by_fecha_desde(workorders, ""), do: workorders
+
+  defp filter_by_fecha_desde(workorders, fecha_desde) do
     date = parse_date(fecha_desde)
 
     if date do
-      # Convert Date to NaiveDateTime for comparison (start of day)
       naive_datetime = NaiveDateTime.new!(date, ~T[00:00:00])
-      from(w in query, where: w.fecha >= ^naive_datetime)
+      Enum.filter(workorders, fn wo ->
+        wo.fecha && NaiveDateTime.compare(wo.fecha, naive_datetime) in [:gt, :eq]
+      end)
     else
-      query
+      workorders
     end
   end
 
-  # Filter by fecha_hasta (to date)
-  defp apply_fecha_hasta_filter(query, nil), do: query
-  defp apply_fecha_hasta_filter(query, ""), do: query
+  defp filter_by_fecha_hasta(workorders, nil), do: workorders
+  defp filter_by_fecha_hasta(workorders, ""), do: workorders
 
-  defp apply_fecha_hasta_filter(query, fecha_hasta) do
+  defp filter_by_fecha_hasta(workorders, fecha_hasta) do
     date = parse_date(fecha_hasta)
 
     if date do
-      # Convert Date to NaiveDateTime for comparison (end of day)
       naive_datetime = NaiveDateTime.new!(date, ~T[23:59:59])
-      from(w in query, where: w.fecha <= ^naive_datetime)
+      Enum.filter(workorders, fn wo ->
+        wo.fecha && NaiveDateTime.compare(wo.fecha, naive_datetime) in [:lt, :eq]
+      end)
     else
-      query
+      workorders
     end
   end
 
-  # Helper to parse date from various formats
   defp parse_date(%Date{} = date), do: date
   defp parse_date(%NaiveDateTime{} = naive_dt), do: NaiveDateTime.to_date(naive_dt)
   defp parse_date(%DateTime{} = dt), do: DateTime.to_date(dt)
@@ -159,49 +221,51 @@ defmodule Prettycore.Workorders do
 
   defp parse_date(_), do: nil
 
-  ## Detalle (imágenes)
-
-  def list_det(sysudn, systra, serie, folio) do
-    sql = """
-    SELECT
-      SYSUDN_CODIGO_K,
-      SYSTRA_CODIGO_K,
-      WOKE_SERIE_K,
-      WOKE_FOLIO_K,
-      WOKD_RENGLON_K AS CONCEPTO,
-      WOKD_IMAGEN    AS IMAGE_URL
-    FROM XEN_WOKORDERDET
-    WHERE SYSUDN_CODIGO_K = @1
-      AND SYSTRA_CODIGO_K = @2
-      AND WOKE_SERIE_K    = @3
-      AND WOKE_FOLIO_K    = @4
-    """
-
-    params = [sysudn, systra, serie, folio]
-
-    case Repo.query(sql, params) do
-      {:ok, %{columns: cols, rows: rows}} ->
-        Enum.map(rows, fn row ->
-          row_map = to_map(cols, row)
-
-          %{
-            concepto: row_map["CONCEPTO"],
-            descripcion: nil,
-            image_url: row_map["IMAGE_URL"]
-          }
-        end)
-
-      {:error, error} ->
-        IO.inspect(error, label: "error list_det")
-        []
-    end
+  defp normalize_workorder(wo) do
+    %{
+      sysudn: wo["SYSUDN_CODIGO_K"],
+      systra: wo["SYSTRA_CODIGO_K"],
+      serie: wo["WOKE_SERIE_K"],
+      folio: wo["WOKE_FOLIO_K"],
+      fecha: parse_datetime(wo["WOKE_FECHA"]),
+      estado: wo["WOKE_ESTADO"],
+      usuario: wo["SYSUSR_CODIGO_K"],
+      xenwot_codigo_k: wo["XENWOT_CODIGO_K"],
+      descripcion: wo["WOKE_DESCRIPCION"],
+      observaciones: wo["WOKE_OBSERVACIONES"],
+      tipo: nil  # Se carga después
+    }
   end
 
-  ## Helper
+  defp parse_datetime(nil), do: nil
+  defp parse_datetime(datetime_string) when is_binary(datetime_string) do
+    case NaiveDateTime.from_iso8601(datetime_string) do
+      {:ok, dt} -> dt
+      {:error, _} -> nil
+    end
+  end
+  defp parse_datetime(%NaiveDateTime{} = dt), do: dt
+  defp parse_datetime(_), do: nil
 
-  defp to_map(cols, row) do
-    cols
-    |> Enum.zip(row)
-    |> Enum.into(%{})
+  defp load_tipos(workorders) do
+    # Obtener todos los tipos de workorder
+    tipos_map = case Api.get_workorder_tipos() do
+      {:ok, tipos} ->
+        Enum.into(tipos, %{}, fn tipo ->
+          {tipo["XENWOT_CODIGO_K"], %{
+            codigo: tipo["XENWOT_CODIGO_K"],
+            descripcion: tipo["XENWOT_DESCRIPCION"]
+          }}
+        end)
+
+      {:error, _} ->
+        %{}
+    end
+
+    # Asignar tipo a cada workorder
+    Enum.map(workorders, fn wo ->
+      tipo = Map.get(tipos_map, wo.xenwot_codigo_k)
+      %{wo | tipo: tipo}
+    end)
   end
 end

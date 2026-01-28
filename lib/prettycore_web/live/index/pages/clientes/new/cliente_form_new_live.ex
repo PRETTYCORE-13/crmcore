@@ -3,7 +3,6 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
 
   alias Prettycore.ClientesApi
   alias Prettycore.Auth.User
-  alias Prettycore.Repo
   alias Prettycore.Catalogos
   import Ecto.Query
 

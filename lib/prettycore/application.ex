@@ -8,15 +8,13 @@ defmodule Prettycore.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      PrettycoreWeb.Telemetry,
+     # PrettycoreWeb.Telemetry,
       {DNSCluster, query: Application.get_env(:prettycore, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Prettycore.PubSub},
-      # Start a worker by calling: Prettycore.Worker.start_link(arg)
-      # {Prettycore.Worker, arg},
+      # Cache ETS para API REST
+      Prettycore.Api.Cache,
       # Start to serve requests, typically the last entry
       PrettycoreWeb.Endpoint,
-      # SQL Server para datos principales
-      Prettycore.Repo,
       # PostgreSQL para autenticación
       Prettycore.PsqlRepo
     ]

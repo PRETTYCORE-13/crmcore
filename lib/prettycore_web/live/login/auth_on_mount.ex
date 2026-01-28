@@ -2,7 +2,6 @@ defmodule PrettycoreWeb.AuthOnMount do
   import Phoenix.LiveView, only: [redirect: 2]
   import Phoenix.Component, only: [assign: 3]
   import Ecto.Query
-  alias Prettycore.Repo
 
   @impl true
   def on_mount(:ensure_authenticated, params, session, socket) do
@@ -23,12 +22,15 @@ defmodule PrettycoreWeb.AuthOnMount do
       true ->
         # Obtener el logo de la empresa
         company_logo = get_company_logo()
+        # Obtener token FROG de la sesión
+        frog_token = session["frog_token"]
 
         {:cont,
          socket
          |> assign(:current_user_id, user_id)
          |> assign(:current_user_email, email_from_session)
-         |> assign(:company_logo, company_logo)}
+         |> assign(:company_logo, company_logo)
+         |> assign(:frog_token, frog_token)}
     end
   end
 

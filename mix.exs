@@ -38,9 +38,6 @@ defmodule Prettycore.MixProject do
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.13"},
 
-      # Conector SQL Server
-      {:tds, "~> 2.3"},
-
       # Conector PostgreSQL (para auth)
       {:postgrex, ">= 0.0.0"},
 
@@ -73,6 +70,9 @@ defmodule Prettycore.MixProject do
 
       # Excel export
       {:elixlsx, "~> 0.6.0"},
+
+      # Password hashing seguro (puro Elixir, no requiere compilador C)
+      {:pbkdf2_elixir, "~> 2.0"},
 
       # Test
       {:lazy_html, ">= 0.1.0", only: :test}

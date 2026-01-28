@@ -33,7 +33,10 @@
       "Bash(new \")",
       "Bash(git mv:*)",
       "Bash(timeout 180 mix test:*)",
-      "Bash(mix ecto.migrate:*)"
+      "Bash(mix ecto.migrate:*)",
+      "Bash(mix deps.clean:*)",
+      "Bash(mix ecto.gen.migration:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

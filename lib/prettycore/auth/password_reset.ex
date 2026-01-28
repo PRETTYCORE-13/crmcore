@@ -1,7 +1,6 @@
 defmodule Prettycore.Auth.PasswordReset do
   require Logger
   alias Prettycore.Emails.PasswordReset, as: PasswordResetEmail
-  alias Prettycore.Repo
   alias Prettycore.Auth.PasswordResetUser, as: User
   alias Prettycore.Auth.Encryptor, as: Crypto
   alias Prettycore.Auth.Desencryptor
