@@ -3,9 +3,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
 
   alias Prettycore.ClientesApi
   alias Prettycore.Clientes
-  alias Prettycore.Auth.User
   alias Prettycore.Catalogos
-  import Ecto.Query
 
   # Esquema embedded para Dirección
   defmodule DireccionForm do
@@ -704,56 +702,41 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
 
     case validate_and_extract(changeset) do
       {:ok, cliente_data} ->
-        # Get user password for API authentication
-        sysusr_codigo = socket.assigns[:current_user_email]
+        # Usar frog_token de la sesión para autenticación API
+        frog_token = socket.assigns[:frog_token]
 
-        if is_nil(sysusr_codigo) do
+        if is_nil(frog_token) do
           {:noreply,
            socket
            |> put_flash(:error, "Sesión no válida. Por favor inicie sesión nuevamente.")
            |> assign(:form, to_form(changeset))}
         else
-          password_query =
-            from(u in User,
-              where: u.sysusr_codigo_k == ^sysusr_codigo,
-              select: u.sysusr_password
-            )
+          # Actualizar cliente existente usando el token de la API
+          case ClientesApi.editar_cliente(cliente_data, frog_token) do
+            {:ok, _response} ->
+              IO.puts("Cliente actualizado exitosamente")
 
-          case Repo.one(password_query) do
-            nil ->
               {:noreply,
                socket
-               |> put_flash(:error, "No se pudo autenticar. Intente de nuevo.")
+               |> put_flash(:info, "Cliente actualizado exitosamente")
+               |> push_event("navigate-after-flash", %{to: "/admin/clientes", delay: 3000})}
+
+            {:error, {:http_error, status, body}} ->
+              error_msg = extract_error_message(body, status)
+              IO.puts("Error al actualizar cliente: #{error_msg}")
+
+              {:noreply,
+               socket
+               |> put_flash(:error, "Error al actualizar cliente: #{error_msg}")
                |> assign(:form, to_form(changeset))}
 
-            password ->
-              # Actualizar cliente existente
-              case ClientesApi.editar_cliente(cliente_data, password) do
-                {:ok, _response} ->
-                  IO.puts("Cliente actualizado exitosamente")
+            {:error, reason} ->
+              IO.inspect("Error al actualizar cliente")
 
-                  {:noreply,
-                   socket
-                   |> put_flash(:info, "Cliente actualizado exitosamente")
-                   |> push_event("navigate-after-flash", %{to: "/admin/clientes", delay: 3000})}
-
-                {:error, {:http_error, status, body}} ->
-                  error_msg = extract_error_message(body, status)
-                  IO.puts("Error al actualizar cliente: #{error_msg}")
-
-                  {:noreply,
-                   socket
-                   |> put_flash(:error, "Error al actualizar cliente: #{error_msg}")
-                   |> assign(:form, to_form(changeset))}
-
-                {:error, reason} ->
-                  IO.inspect("Error al actualizar cliente")
-
-                  {:noreply,
-                   socket
-                   |> put_flash(:error, "Error de conexión: #{inspect(reason)}")
-                   |> assign(:form, to_form(changeset))}
-              end
+              {:noreply,
+               socket
+               |> put_flash(:error, "Error de conexión: #{inspect(reason)}")
+               |> assign(:form, to_form(changeset))}
           end
         end
 
