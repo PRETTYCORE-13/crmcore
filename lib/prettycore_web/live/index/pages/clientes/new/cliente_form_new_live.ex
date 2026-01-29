@@ -2,9 +2,8 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
   use PrettycoreWeb, :live_view_admin
 
   alias Prettycore.ClientesApi
-  alias Prettycore.Auth.User
+  alias Prettycore.Clientes
   alias Prettycore.Catalogos
-  import Ecto.Query
 
   # Esquema embedded para Dirección
   defmodule DireccionForm do
@@ -174,10 +173,27 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
         )
         |> validate_length(:ctedir_cp, min: 5, max: 5, message: "El CP debe tener 5 dígitos")
         |> validate_format(:ctedir_cp, ~r/^\d{5}$/, message: "El CP debe contener solo números")
+        |> validate_rutas()
       else
         changeset
       end
     end
+
+    # Validar que tenga al menos una ruta (preventa o autoventa/entrega)
+    defp validate_rutas(changeset) do
+      ruta_pre = get_field(changeset, :vtarut_codigo_k_pre)
+      ruta_ent = get_field(changeset, :vtarut_codigo_k_ent)
+
+      if is_nil_or_empty?(ruta_pre) and is_nil_or_empty?(ruta_ent) do
+        add_error(changeset, :vtarut_codigo_k_pre, "Debe seleccionar ruta de preventa o entrega")
+      else
+        changeset
+      end
+    end
+
+    defp is_nil_or_empty?(nil), do: true
+    defp is_nil_or_empty?(""), do: true
+    defp is_nil_or_empty?(_), do: false
 
     defp direccion_tiene_datos?(changeset) do
       # Verificar si alguno de los campos clave tiene valor
@@ -197,6 +213,9 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
 
     @primary_key false
     embedded_schema do
+      # Código del cliente (autogenerado por la API si es vacío)
+      field(:ctecli_codigo_k, :string)
+
       # Identificación (requeridos)
       field(:ctecli_razonsocial, :string)
       field(:ctecli_dencomercia, :string)
@@ -277,6 +296,8 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
     def changeset(cliente, attrs) do
       cliente
       |> cast(attrs, [
+        # Código (autogenerado si vacío)
+        :ctecli_codigo_k,
         # Identificación
         :ctecli_razonsocial,
         :ctecli_dencomercia,
@@ -341,13 +362,24 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
         :ctecli_cxcliq,
         :s_maqedo
       ])
-      |> cast_embed(:direcciones, required: false)
+      |> cast_embed(:direcciones, required: true)
       |> put_default_fechaalta()
       |> validate_required(
         [
+          # Datos básicos obligatorios
+          :ctecli_razonsocial,
+          :ctecli_dencomercia,
+          :ctecli_rfc,
+          # Clasificación obligatoria
           :ctetpo_codigo_k,
           :ctecan_codigo_k,
-          :ctereg_codigo_k
+          :ctesca_codigo_k,
+          :ctereg_codigo_k,
+          # Facturación obligatoria
+          :ctecli_formapago,
+          :ctecli_metodopago,
+          :sat_uso_cfdi_k,
+          :cfgreg_codigo_k
         ],
         message: "Este campo es obligatorio"
       )
@@ -381,8 +413,10 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
 
   @impl true
   def mount(_params, session, socket) do
-    # Modo creación: nuevo cliente con código autogenerado
+    # Obtener frog_token de la sesión
+    frog_token = session["frog_token"]
 
+    # Modo creación: nuevo cliente con código autogenerado
     cliente = %ClienteForm{
       ctecli_fechaalta: Date.utc_today(),
       direcciones: [%DireccionForm{ctedir_codigo_k: "1"}]
@@ -393,23 +427,25 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
 
     form = to_form(ClienteForm.changeset(cliente, %{}))
 
-    # Cargar catálogos desde la base de datos
-    tipos_cliente = Catalogos.listar_tipos_cliente()
-    cadenas = Catalogos.listar_cadenas()
-    canales = Catalogos.listar_canales()
-    regimenes = Catalogos.listar_regimenes()
-    paquetes_servicio = Catalogos.listar_paquetes_servicio()
-    transacciones = Catalogos.listar_transacciones()
-    monedas = Catalogos.listar_monedas()
-    estados = Catalogos.listar_estados()
-    rutas = Catalogos.listar_rutas()
-    usos_cfdi = Catalogos.listar_usos_cfdi()
-    formas_pago = Catalogos.listar_formas_pago()
-    metodos_pago = Catalogos.listar_metodos_pago()
-    regimenes_fiscales = Catalogos.listar_regimenes_fiscales()
+    # Cargar catálogos desde la API (con token)
+    t = frog_token
+    tipos_cliente = Catalogos.listar_tipos_cliente(t)
+    cadenas = Catalogos.listar_cadenas(t)
+    canales = Catalogos.listar_canales(t)
+    regimenes = Catalogos.listar_regimenes(t)
+    paquetes_servicio = Catalogos.listar_paquetes_servicio(t)
+    transacciones = Catalogos.listar_transacciones(t)
+    monedas = Catalogos.listar_monedas(t)
+    estados = Catalogos.listar_estados(t)
+    rutas = Catalogos.listar_rutas(t)
+    usos_cfdi = Catalogos.listar_usos_cfdi(t)
+    formas_pago = Catalogos.listar_formas_pago(t)
+    metodos_pago = Catalogos.listar_metodos_pago(t)
+    regimenes_fiscales = Catalogos.listar_regimenes_fiscales(t)
 
     {:ok,
      socket
+     |> assign(:frog_token, frog_token)
      |> assign(:current_page, "clientes")
      |> assign(:sidebar_open, true)
      |> assign(:show_programacion_children, false)
@@ -471,12 +507,10 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
       ["cliente_form", "mapedo_codigo_k"] ->
         # Estado changed, load municipios
         estado_codigo = Map.get(params, "mapedo_codigo_k")
-        IO.inspect(estado_codigo, label: "Estado seleccionado (validate)")
-        IO.inspect(target, label: "Target path")
+        tk = socket.assigns[:frog_token]
 
         if estado_codigo && estado_codigo != "" do
-          municipios = Catalogos.listar_municipios(estado_codigo)
-          IO.inspect(length(municipios), label: "Municipios cargados (validate)")
+          municipios = Catalogos.listar_municipios(estado_codigo, tk)
           {:noreply, socket_with_form |> assign(:municipios, municipios) |> assign(:localidades, [])}
         else
           {:noreply, socket_with_form |> assign(:municipios, []) |> assign(:localidades, [])}
@@ -486,11 +520,10 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
         # Municipio changed, load localidades
         estado_codigo = Map.get(params, "mapedo_codigo_k")
         municipio_codigo = Map.get(params, "mapmun_codigo_k")
-        IO.inspect({estado_codigo, municipio_codigo}, label: "Estado y Municipio (validate)")
+        tk = socket.assigns[:frog_token]
 
         if estado_codigo && municipio_codigo && estado_codigo != "" && municipio_codigo != "" do
-          localidades = Catalogos.listar_localidades(estado_codigo, municipio_codigo)
-          IO.inspect(length(localidades), label: "Localidades cargadas (validate)")
+          localidades = Catalogos.listar_localidades(estado_codigo, municipio_codigo, tk)
           {:noreply, assign(socket_with_form, :localidades, localidades)}
         else
           {:noreply, assign(socket_with_form, :localidades, [])}
@@ -498,23 +531,23 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
 
       # Nested direcciones (para formularios con múltiples direcciones)
       ["cliente_form", "direcciones", direccion_index, "mapedo_codigo_k"] ->
-        # Estado changed, load municipios
         estado_codigo = get_in(params, ["direcciones", direccion_index, "mapedo_codigo_k"])
+        tk = socket.assigns[:frog_token]
 
         if estado_codigo && estado_codigo != "" do
-          municipios = Catalogos.listar_municipios(estado_codigo)
+          municipios = Catalogos.listar_municipios(estado_codigo, tk)
           {:noreply, socket_with_form |> assign(:municipios, municipios) |> assign(:localidades, [])}
         else
           {:noreply, socket_with_form |> assign(:municipios, []) |> assign(:localidades, [])}
         end
 
       ["cliente_form", "direcciones", direccion_index, "mapmun_codigo_k"] ->
-        # Municipio changed, load localidades
         estado_codigo = get_in(params, ["direcciones", direccion_index, "mapedo_codigo_k"])
         municipio_codigo = get_in(params, ["direcciones", direccion_index, "mapmun_codigo_k"])
+        tk = socket.assigns[:frog_token]
 
         if estado_codigo && municipio_codigo && estado_codigo != "" && municipio_codigo != "" do
-          localidades = Catalogos.listar_localidades(estado_codigo, municipio_codigo)
+          localidades = Catalogos.listar_localidades(estado_codigo, municipio_codigo, tk)
           {:noreply, assign(socket_with_form, :localidades, localidades)}
         else
           {:noreply, assign(socket_with_form, :localidades, [])}
@@ -540,69 +573,116 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
   def handle_event("save", %{"cliente_form" => params}, socket) do
     changeset = ClienteForm.changeset(%ClienteForm{}, params)
 
-    IO.inspect("nuevo", label: "MODO")
+    IO.inspect("crear", label: "MODO")
 
     case validate_and_extract(changeset) do
       {:ok, cliente_data} ->
-        # Get user password for API authentication
-        sysusr_codigo = socket.assigns[:current_user_email]
+        # Usar frog_token de la sesión para autenticación API
+        frog_token = socket.assigns[:frog_token]
 
-        if is_nil(sysusr_codigo) do
+        if is_nil(frog_token) do
           {:noreply,
            socket
            |> put_flash(:error, "Sesión no válida. Por favor inicie sesión nuevamente.")
            |> assign(:form, to_form(changeset))}
         else
-          password_query =
-            from(u in User,
-              where: u.sysusr_codigo_k == ^sysusr_codigo,
-              select: u.sysusr_password
-            )
+          # Crear nuevo cliente usando el token de la API
+          case ClientesApi.crear_cliente(cliente_data, frog_token) do
+            {:ok, _response} ->
+              IO.puts("Cliente creado exitosamente")
 
-          case Repo.one(password_query) do
-            nil ->
               {:noreply,
                socket
-               |> put_flash(:error, "No se pudo autenticar. Intente de nuevo.")
+               |> put_flash(:info, "Cliente creado exitosamente")
+               |> push_event("navigate-after-flash", %{to: "/admin/clientes", delay: 3000})}
+
+            {:error, {:http_error, status, body}} ->
+              error_msg = extract_error_message(body, status)
+              IO.puts("Error al crear cliente: #{error_msg}")
+
+              {:noreply,
+               socket
+               |> put_flash(:error, "Error al crear cliente: #{error_msg}")
                |> assign(:form, to_form(changeset))}
 
-            password ->
-              # Crear nuevo cliente
-              case ClientesApi.crear_cliente(cliente_data, password) do
-                {:ok, _response} ->
-                  IO.puts("Cliente creado exitosamente")
+            {:error, reason} ->
+              IO.inspect("Error al crear cliente")
 
-                  {:noreply,
-                   socket
-                   |> put_flash(:info, "Cliente creado exitosamente")
-                   |> push_event("navigate-after-flash", %{to: "/admin/clientes", delay: 3000})}
-
-                {:error, {:http_error, status, body}} ->
-                  error_msg = extract_error_message(body, status)
-                  IO.puts("Error al crear cliente: #{error_msg}")
-
-                  {:noreply,
-                   socket
-                   |> put_flash(:error, "Error al crear cliente: #{error_msg}")
-                   |> assign(:form, to_form(changeset))}
-
-                {:error, reason} ->
-                  IO.inspect("Error al crear cliente")
-
-                  {:noreply,
-                   socket
-                   |> put_flash(:error, "Error de conexión: #{inspect(reason)}")
-                   |> assign(:form, to_form(changeset))}
-              end
+              {:noreply,
+               socket
+               |> put_flash(:error, "Error de conexión: #{inspect(reason)}")
+               |> assign(:form, to_form(changeset))}
           end
         end
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        IO.inspect(changeset)
-        # Agregar action para que se muestren todos los errores de validación
+        # Extraer campos faltantes y crear mensaje amigable
+        missing_fields = extract_missing_fields(changeset)
+        error_message = "Para continuar te hace falta: #{missing_fields}"
+
         changeset_with_action = Map.put(changeset, :action, :validate)
-        {:noreply, assign(socket, :form, to_form(changeset_with_action))}
+        {:noreply,
+         socket
+         |> put_flash(:error, error_message)
+         |> assign(:form, to_form(changeset_with_action))}
     end
+  end
+
+  defp extract_missing_fields(changeset) do
+    field_names = %{
+      ctecli_codigo_k: "Código de cliente",
+      ctecli_razonsocial: "Razón social",
+      ctecli_dencomercia: "Denominación comercial",
+      ctecli_rfc: "RFC",
+      ctecli_fechaalta: "Fecha de alta",
+      ctetpo_codigo_k: "Tipo de cliente",
+      ctecan_codigo_k: "Canal",
+      ctesca_codigo_k: "Subcanal",
+      ctereg_codigo_k: "Régimen",
+      ctepaq_codigo_k: "Paquete de servicio",
+      cfgmon_codigo_k: "Moneda",
+      ctecli_formapago: "Forma de pago",
+      ctecli_metodopago: "Método de pago",
+      sat_uso_cfdi_k: "Uso de CFDI",
+      cfgreg_codigo_k: "Régimen fiscal",
+      direcciones: "Direcciones",
+      ctedir_codigo_k: "Código de dirección",
+      ctedir_calle: "Calle",
+      ctedir_callenumext: "Número exterior",
+      ctedir_cp: "Código postal",
+      mapedo_codigo_k: "Estado",
+      mapmun_codigo_k: "Municipio",
+      maploc_codigo_k: "Localidad",
+      vtarut_codigo_k_pre: "Ruta de preventa o entrega",
+      vtarut_codigo_k_ent: "Ruta de entrega"
+    }
+
+    # Errores del nivel principal
+    main_errors = Enum.map(changeset.errors, fn {field, _} -> field end)
+
+    # Errores de direcciones embebidas
+    direcciones_errors =
+      case Map.get(changeset.changes, :direcciones, []) do
+        direcciones when is_list(direcciones) ->
+          Enum.flat_map(direcciones, fn dir_changeset ->
+            case dir_changeset do
+              %Ecto.Changeset{errors: errors} ->
+                Enum.map(errors, fn {field, _} -> field end)
+              _ ->
+                []
+            end
+          end)
+        _ ->
+          []
+      end
+
+    # Combinar todos los errores
+    all_errors = main_errors ++ direcciones_errors
+
+    all_errors
+    |> Enum.map(fn field -> Map.get(field_names, field, Atom.to_string(field)) end)
+    |> Enum.uniq()
+    |> Enum.join(", ")
   end
 
   @impl true
@@ -704,7 +784,7 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
     canal_codigo = get_in(params, ["ctecan_codigo_k"])
 
     if canal_codigo && canal_codigo != "" do
-      subcanales = Catalogos.listar_subcanales(canal_codigo)
+      subcanales = Catalogos.listar_subcanales(canal_codigo, socket.assigns[:frog_token])
       {:noreply, assign(socket, :subcanales, subcanales)}
     else
       {:noreply, assign(socket, :subcanales, [])}
@@ -736,12 +816,13 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
   @impl true
   def handle_event("cp_blur", %{"codigo_postal" => cp, "direccion_index" => index_str}, socket) do
     if String.match?(cp, ~r/^\d{5}$/) do
-      case Catalogos.buscar_por_cp(cp) do
+      tk = socket.assigns[:frog_token]
+      case Catalogos.buscar_por_cp(cp, tk) do
         {:ok, ubicacion} ->
-          municipios = Catalogos.listar_municipios(ubicacion.estado_codigo)
+          municipios = Catalogos.listar_municipios(ubicacion.estado_codigo, tk)
 
           localidades =
-            Catalogos.listar_localidades(ubicacion.estado_codigo, ubicacion.municipio_codigo)
+            Catalogos.listar_localidades(ubicacion.estado_codigo, ubicacion.municipio_codigo, tk)
 
           current_form = socket.assigns.form
           params = current_form.params || %{}
@@ -815,13 +896,48 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
     end
   end
 
-  defp extract_error_message(body, status) when is_list(body) do
-[error] = body
-cond do
-Map.has_key?(error, "Respuesta") -> error["Respuesta"]
-true -> "Error HTTP #{status}"
+  defp extract_error_message(body, _status) when is_list(body) do
+    case body do
+      [error | _] when is_map(error) ->
+        case Map.get(error, "Respuesta") do
+          nil -> "Error del servidor"
+          respuesta -> parse_api_error(respuesta)
+        end
+      _ -> "Error del servidor"
     end
   end
 
   defp extract_error_message(_body, status), do: "Error HTTP #{status}"
+
+  # Parsea el mensaje de error de la API para mostrar solo la parte amigable
+  defp parse_api_error(respuesta) when is_binary(respuesta) do
+    cond do
+      # Extraer mensaje después de PreConditionsException:
+      String.contains?(respuesta, "PreConditionsException:") ->
+        respuesta
+        |> String.split("PreConditionsException:")
+        |> List.last()
+        |> String.split("\r\n")
+        |> List.first()
+        |> String.trim()
+
+      # Extraer mensaje después de Exception:
+      String.contains?(respuesta, "Exception:") ->
+        respuesta
+        |> String.split("Exception:")
+        |> List.last()
+        |> String.split("\r\n")
+        |> List.first()
+        |> String.trim()
+
+      # Si no hay patrón conocido, tomar la primera línea
+      true ->
+        respuesta
+        |> String.split("\r\n")
+        |> List.first()
+        |> String.trim()
+    end
+  end
+
+  defp parse_api_error(_), do: "Error del servidor"
 end

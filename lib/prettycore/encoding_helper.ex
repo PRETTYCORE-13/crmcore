@@ -63,37 +63,33 @@ defmodule Prettycore.EncodingHelper do
   def latin1_to_utf8(""), do: ""
 
   def latin1_to_utf8(binary) when is_binary(binary) do
-    # Try to convert from Latin-1 to UTF-8
-    case :unicode.characters_to_binary(binary, :latin1, :utf8) do
-      utf8_string when is_binary(utf8_string) ->
-        # Check if conversion actually changed anything
-        if utf8_string == binary do
-          # String was already UTF-8 or ASCII
-          binary
-        else
-          # Successfully converted from Latin-1 to UTF-8
+    # PRIMERO: Si ya es UTF-8 válido, no convertir (evita doble conversión)
+    if String.valid?(binary) do
+      binary
+    else
+      # Solo convertir si NO es UTF-8 válido (probablemente Latin-1)
+      case :unicode.characters_to_binary(binary, :latin1, :utf8) do
+        utf8_string when is_binary(utf8_string) ->
           utf8_string
-        end
 
-      {:error, good, bad} ->
-        # Conversion failed - string might be mixed encoding or already UTF-8
-        Logger.debug("""
-        EncodingHelper: Failed to convert string from Latin-1 to UTF-8
-        Good part: #{inspect(good)}
-        Bad part: #{inspect(bad)}
-        Returning original string.
-        """)
-        binary
+        {:error, good, bad} ->
+          Logger.debug("""
+          EncodingHelper: Failed to convert string from Latin-1 to UTF-8
+          Good part: #{inspect(good)}
+          Bad part: #{inspect(bad)}
+          Returning original string.
+          """)
+          binary
 
-      {:incomplete, good, bad} ->
-        # Incomplete sequence
-        Logger.debug("""
-        EncodingHelper: Incomplete Latin-1 sequence
-        Good part: #{inspect(good)}
-        Bad part: #{inspect(bad)}
-        Returning original string.
-        """)
-        binary
+        {:incomplete, good, bad} ->
+          Logger.debug("""
+          EncodingHelper: Incomplete Latin-1 sequence
+          Good part: #{inspect(good)}
+          Bad part: #{inspect(bad)}
+          Returning original string.
+          """)
+          binary
+      end
     end
   end
 

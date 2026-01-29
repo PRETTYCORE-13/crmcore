@@ -25,55 +25,52 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/prettycore"
 import topbar from "../vendor/topbar"
 
-// Cargar Leaflet una sola vez globalmente
-let leafletLoaded = false;
-let leafletLoadingPromise = null;
+// ============================================================
+// Google Maps API - Configuración
+// ============================================================
+// IMPORTANTE: Reemplaza 'TU_API_KEY_AQUI' con tu API Key de Google Maps
+// Obtén una en: https://console.cloud.google.com/apis/credentials
+const GOOGLE_MAPS_API_KEY = 'AIzaSyD2BkDEODkzEI37G4wOR3rBgLTkKikGUig';
 
-function loadLeaflet() {
-  if (leafletLoaded && window.L) {
+let googleMapsLoaded = false;
+let googleMapsLoadingPromise = null;
+
+function loadGoogleMaps() {
+  if (googleMapsLoaded && window.google && window.google.maps) {
     return Promise.resolve();
   }
 
-  if (leafletLoadingPromise) {
-    return leafletLoadingPromise;
+  if (googleMapsLoadingPromise) {
+    return googleMapsLoadingPromise;
   }
 
-  leafletLoadingPromise = new Promise((resolve, reject) => {
-    // Cargar CSS
-    if (!document.getElementById('leaflet-css')) {
-      const link = document.createElement('link');
-      link.id = 'leaflet-css';
-      link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      link.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-      link.crossOrigin = '';
-      document.head.appendChild(link);
+  googleMapsLoadingPromise = new Promise((resolve, reject) => {
+    if (window.google && window.google.maps) {
+      googleMapsLoaded = true;
+      resolve();
+      return;
     }
 
-    // Cargar JS
-    if (!window.L) {
-      const script = document.createElement('script');
-      script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
-      script.crossOrigin = '';
-      script.onload = () => {
-        leafletLoaded = true;
-        resolve();
-      };
-      script.onerror = () => {
-        reject(new Error('Error al cargar Leaflet'));
-      };
-      document.head.appendChild(script);
-    } else {
-      leafletLoaded = true;
+    // Callback global para cuando Google Maps termine de cargar
+    window.initGoogleMapsCallback = () => {
+      googleMapsLoaded = true;
       resolve();
-    }
+    };
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&callback=initGoogleMapsCallback&loading=async`;
+    script.async = true;
+    script.defer = true;
+    script.onerror = () => {
+      reject(new Error('Error al cargar Google Maps'));
+    };
+    document.head.appendChild(script);
   });
 
-  return leafletLoadingPromise;
+  return googleMapsLoadingPromise;
 }
 
-// Hook para Mapa Interactivo con Leaflet
+// Hook para Mapa Interactivo con Google Maps
 const LocationMap = {
   mounted() {
     this.initializeMap();
@@ -81,21 +78,20 @@ const LocationMap = {
 
   async initializeMap() {
     try {
-      await loadLeaflet();
-
-      // Esperar un tick para asegurar que el DOM esté listo
+      await loadGoogleMaps();
       requestAnimationFrame(() => {
         this.initMap();
       });
     } catch (error) {
-      console.error('Error cargando Leaflet:', error);
+      console.error('Error cargando Google Maps:', error);
       this.showError();
     }
   },
 
   initMap() {
-    if (!window.L) {
-      console.error('Leaflet no está disponible');
+    if (!window.google || !window.google.maps) {
+      console.error('Google Maps no está disponible');
+      this.showError();
       return;
     }
 
@@ -103,62 +99,50 @@ const LocationMap = {
     const lng = parseFloat(this.el.dataset.lng) || -99.1332;
 
     try {
-      // Limpiar mapa existente si hay uno
-      if (this.map) {
-        this.map.remove();
-      }
-
-      // Inicializar mapa
-      this.map = L.map(this.el, {
-        center: [lat, lng],
-        zoom: 13,
-        zoomControl: true,
-        attributionControl: true,
-        preferCanvas: true // Mejor rendimiento
+      // Inicializar mapa de Google
+      this.map = new google.maps.Map(this.el, {
+        center: { lat, lng },
+        zoom: 15,
+        mapTypeId: 'roadmap',
+        mapTypeControl: true,
+        streetViewControl: false,
+        fullscreenControl: true,
+        zoomControl: true
       });
 
-      // Agregar capa de tiles con configuración optimizada
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-        maxZoom: 19,
-        minZoom: 3,
-        updateWhenZooming: false,
-        updateWhenIdle: true,
-        keepBuffer: 2
-      }).addTo(this.map);
-
-      // Agregar marcador
-      this.marker = L.marker([lat, lng], {
+      // Agregar marcador arrastrable
+      this.marker = new google.maps.Marker({
+        position: { lat, lng },
+        map: this.map,
         draggable: true,
-        title: 'Arrastre para mover'
-      }).addTo(this.map);
+        title: 'Arrastre para mover la ubicación'
+      });
 
-      // Ajustar tamaño inmediatamente
-      this.map.invalidateSize();
-
-      // Eventos del marcador
-      this.marker.on('dragend', (e) => {
-        const position = e.target.getLatLng();
-        this.updateCoordinates(position.lat, position.lng);
+      // Evento cuando se arrastra el marcador
+      this.marker.addListener('dragend', () => {
+        const position = this.marker.getPosition();
+        this.updateCoordinates(position.lat(), position.lng());
       });
 
       // Evento de clic en el mapa
-      this.map.on('click', (e) => {
-        const { lat, lng } = e.latlng;
-        this.marker.setLatLng([lat, lng]);
+      this.map.addListener('click', (e) => {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        this.marker.setPosition({ lat, lng });
         this.updateCoordinates(lat, lng);
       });
 
     } catch (error) {
-      console.error('Error al inicializar el mapa:', error);
+      console.error('Error al inicializar Google Maps:', error);
       this.showError();
     }
   },
 
   showError() {
     this.el.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column;">
-        <p style="color: #dc2626; margin-bottom: 8px;">Error al cargar el mapa</p>
+      <div style="display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; background: #f3f4f6; border-radius: 8px;">
+        <p style="color: #dc2626; margin-bottom: 8px;">Error al cargar Google Maps</p>
+        <p style="color: #6b7280; font-size: 12px; margin-bottom: 12px;">Verifica tu API Key</p>
         <button onclick="location.reload()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
           Recargar página
         </button>
@@ -178,24 +162,21 @@ const LocationMap = {
   },
 
   updated() {
-    if (!this.map) return;
+    if (!this.map || !this.marker) return;
 
     const lat = parseFloat(this.el.dataset.lat) || 19.4326;
     const lng = parseFloat(this.el.dataset.lng) || -99.1332;
 
-    if (this.marker) {
-      this.marker.setLatLng([lat, lng]);
-      this.map.setView([lat, lng]);
-      this.map.invalidateSize();
-    }
+    this.marker.setPosition({ lat, lng });
+    this.map.setCenter({ lat, lng });
   },
 
   destroyed() {
-    if (this.map) {
-      this.map.remove();
-      this.map = null;
+    if (this.marker) {
+      this.marker.setMap(null);
       this.marker = null;
     }
+    this.map = null;
   }
 };
 

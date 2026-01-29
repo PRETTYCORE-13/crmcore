@@ -47,20 +47,36 @@ defmodule Prettycore.Clientes do
       iex> list_clientes_completo("100", "001", "999")
       [%{...}, ...]
   """
-  def list_clientes_completo(sysudn_codigo_k, vtarut_codigo_k_ini, vtarut_codigo_k_fin) do
-    # Obtener clientes activos
-    case Api.get_filtered("CTE_CLIENTE", %{"S_MAQEDO" => "10"}) do
-      {:ok, clientes} ->
+  def list_clientes_completo(sysudn_codigo_k, vtarut_codigo_k_ini, vtarut_codigo_k_fin, token \\ nil) do
+    # Obtener clientes activos y TODAS las direcciones en paralelo (2 llamadas en lugar de cientos)
+    clientes_task = Task.async(fn ->
+      Api.get_filtered("CTE_CLIENTE", %{"S_MAQEDO" => "10"}, token)
+    end)
+
+    direcciones_task = Task.async(fn ->
+      Api.get_all("CTE_DIRECCION", token)
+    end)
+
+    # Esperar ambas tareas
+    clientes_result = Task.await(clientes_task, 60_000)
+    direcciones_result = Task.await(direcciones_task, 60_000)
+
+    case {clientes_result, direcciones_result} do
+      {{:ok, clientes}, {:ok, todas_direcciones}} ->
+        # Agrupar direcciones por código de cliente para acceso rápido
+        direcciones_por_cliente = Enum.group_by(todas_direcciones, & &1["CTECLI_CODIGO_K"])
+
         clientes
         |> Enum.map(fn cliente ->
-          # Obtener direcciones del cliente
-          direcciones = get_direcciones_cliente(cliente["CTECLI_CODIGO_K"])
+          codigo_cliente = cliente["CTECLI_CODIGO_K"]
+          # Obtener direcciones de este cliente del mapa (sin llamada API)
+          direcciones = Map.get(direcciones_por_cliente, codigo_cliente, [])
 
           # Filtrar por rutas
           direcciones_filtradas = Enum.filter(direcciones, fn dir ->
-            ruta_pre = dir["VTARUT_CODIGO_K_PRE"]
-            ruta_ent = dir["VTARUT_CODIGO_K_ENT"]
-            ruta_aut = dir["VTARUT_CODIGO_K_AUT"]
+            ruta_pre = dir["VTARUT_CODIGO_K_PRE"] || ""
+            ruta_ent = dir["VTARUT_CODIGO_K_ENT"] || ""
+            ruta_aut = dir["VTARUT_CODIGO_K_AUT"] || ""
 
             (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
             (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
@@ -78,11 +94,12 @@ defmodule Prettycore.Clientes do
         |> Enum.reject(&is_nil/1)
         |> Enum.map(&fix_map_encoding/1)
 
-      {:error, _} ->
+      _ ->
         []
     end
   end
 
+  # Helper para obtener direcciones de un cliente individual (usado en list_clientes_resumen)
   defp get_direcciones_cliente(cliente_codigo, token \\ nil) do
     case Api.get_direcciones_cliente(cliente_codigo, token) do
       {:ok, direcciones} -> direcciones

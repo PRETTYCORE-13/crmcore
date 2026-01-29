@@ -8,15 +8,10 @@ defmodule PrettycoreWeb.SessionController do
   def create(conn, %{"username" => user, "password" => pass}) do
     case Auth.authenticate(user, pass) do
       {:ok, user_struct} ->
-        # Tomamos id y email de la estructura si existen,
-        # y usamos el username como fallback.
-        user_id =
-          user_struct
-          |> Map.get(:id, user)
-
-        email =
-          user_struct
-          |> Map.get(:email, user)
+        # Tomamos id, email y username de la estructura
+        user_id = Map.get(user_struct, :id, user)
+        email = Map.get(user_struct, :email, user)
+        username = Map.get(user_struct, :username, user)
 
         # Obtener token FROG si el usuario tiene usuario_frog configurado
         frog_token = get_frog_token(user_struct)
@@ -24,9 +19,9 @@ defmodule PrettycoreWeb.SessionController do
         conn
         |> put_session(:user_id, user_id)
         |> put_session(:user_email, email)
+        |> put_session(:user_name, username)
         |> put_session(:frog_token, frog_token)
         |> configure_session(renew: true)
-        # Redirige a /admin/platform/<email>
         |> redirect(to: ~p"/admin/platform")
 
       {:error, :invalid_credentials} ->

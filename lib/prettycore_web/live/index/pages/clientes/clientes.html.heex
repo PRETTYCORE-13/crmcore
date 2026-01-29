@@ -41,7 +41,7 @@
         </div>
 
         <!-- BARRA DE BÚSQUEDA Y FILTROS -->
-        <.form for={@filter_form} phx-change="set_filter" class="flex items-center gap-3 flex-wrap">
+        <.form for={@filter_form} phx-change="set_filter" phx-submit="filter_submit" class="flex items-center gap-3 flex-wrap">
           <!-- Búsqueda Principal -->
           <div class="flex-1 min-w-[300px]">
             <div class="relative">

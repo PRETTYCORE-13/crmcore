@@ -173,10 +173,27 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
         )
         |> validate_length(:ctedir_cp, min: 5, max: 5, message: "El CP debe tener 5 dígitos")
         |> validate_format(:ctedir_cp, ~r/^\d{5}$/, message: "El CP debe contener solo números")
+        |> validate_rutas()
       else
         changeset
       end
     end
+
+    # Validar que tenga al menos una ruta (preventa o autoventa/entrega)
+    defp validate_rutas(changeset) do
+      ruta_pre = get_field(changeset, :vtarut_codigo_k_pre)
+      ruta_ent = get_field(changeset, :vtarut_codigo_k_ent)
+
+      if is_nil_or_empty?(ruta_pre) and is_nil_or_empty?(ruta_ent) do
+        add_error(changeset, :vtarut_codigo_k_pre, "Debe seleccionar ruta de preventa o entrega")
+      else
+        changeset
+      end
+    end
+
+    defp is_nil_or_empty?(nil), do: true
+    defp is_nil_or_empty?(""), do: true
+    defp is_nil_or_empty?(_), do: false
 
     defp direccion_tiene_datos?(changeset) do
       # Verificar si alguno de los campos clave tiene valor
@@ -741,9 +758,13 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
         end
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        IO.inspect(changeset)
+        missing_fields = extract_missing_fields(changeset)
+        error_message = "Para continuar te hace falta: #{missing_fields}"
         changeset_with_action = Map.put(changeset, :action, :validate)
-        {:noreply, assign(socket, :form, to_form(changeset_with_action))}
+        {:noreply,
+         socket
+         |> put_flash(:error, error_message)
+         |> assign(:form, to_form(changeset_with_action))}
     end
   end
 
@@ -942,15 +963,50 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
     end
   end
 
-  defp extract_error_message(body, status) when is_list(body) do
-[error] = body
-cond do
-Map.has_key?(error, "Respuesta") -> error["Respuesta"]
-true -> "Error HTTP #{status}"
+  defp extract_error_message(body, _status) when is_list(body) do
+    case body do
+      [error | _] when is_map(error) ->
+        case Map.get(error, "Respuesta") do
+          nil -> "Error del servidor"
+          respuesta -> parse_api_error(respuesta)
+        end
+      _ -> "Error del servidor"
     end
   end
 
   defp extract_error_message(_body, status), do: "Error HTTP #{status}"
+
+  # Parsea el mensaje de error de la API para mostrar solo la parte amigable
+  defp parse_api_error(respuesta) when is_binary(respuesta) do
+    cond do
+      # Extraer mensaje después de PreConditionsException:
+      String.contains?(respuesta, "PreConditionsException:") ->
+        respuesta
+        |> String.split("PreConditionsException:")
+        |> List.last()
+        |> String.split("\r\n")
+        |> List.first()
+        |> String.trim()
+
+      # Extraer mensaje después de Exception:
+      String.contains?(respuesta, "Exception:") ->
+        respuesta
+        |> String.split("Exception:")
+        |> List.last()
+        |> String.split("\r\n")
+        |> List.first()
+        |> String.trim()
+
+      # Si no hay patrón conocido, tomar la primera línea
+      true ->
+        respuesta
+        |> String.split("\r\n")
+        |> List.first()
+        |> String.trim()
+    end
+  end
+
+  defp parse_api_error(_), do: "Error del servidor"
 
   # Convierte el valor de IVA frontera de la BD al formato del select
   # BD: 0 = General, 1 = Frontera | Select: "G" = General, "F" = Frontera
@@ -976,4 +1032,61 @@ true -> "Error HTTP #{status}"
     end
   end
   defp parse_date_field(_), do: nil
+
+  # Extrae los nombres legibles de los campos faltantes del changeset
+  defp extract_missing_fields(changeset) do
+    field_names = %{
+      ctecli_codigo_k: "Codigo de cliente",
+      ctecli_razonsocial: "Razon social",
+      ctecli_dencomercia: "Denominacion comercial",
+      ctecli_rfc: "RFC",
+      ctecli_fechaalta: "Fecha de alta",
+      ctetpo_codigo_k: "Tipo de cliente",
+      ctecan_codigo_k: "Canal",
+      ctesca_codigo_k: "Subcanal",
+      ctereg_codigo_k: "Regimen",
+      ctepaq_codigo_k: "Paquete de servicio",
+      ctecli_formapago: "Forma de pago",
+      ctecli_metodopago: "Metodo de pago",
+      sat_uso_cfdi_k: "Uso CFDI",
+      cfgreg_codigo_k: "Regimen fiscal",
+      direcciones: "Direcciones",
+      ctedir_codigo_k: "Codigo de direccion",
+      ctedir_calle: "Calle",
+      ctedir_callenumext: "Numero exterior",
+      ctedir_cp: "Codigo postal",
+      mapedo_codigo_k: "Estado",
+      mapmun_codigo_k: "Municipio",
+      maploc_codigo_k: "Localidad",
+      vtarut_codigo_k_pre: "Ruta de preventa o entrega",
+      vtarut_codigo_k_ent: "Ruta de entrega"
+    }
+
+    # Errores del nivel principal
+    main_errors = Enum.map(changeset.errors, fn {field, _} -> field end)
+
+    # Errores de direcciones embebidas
+    direcciones_errors =
+      case Map.get(changeset.changes, :direcciones, []) do
+        direcciones when is_list(direcciones) ->
+          Enum.flat_map(direcciones, fn dir_changeset ->
+            case dir_changeset do
+              %Ecto.Changeset{errors: errors} ->
+                Enum.map(errors, fn {field, _} -> field end)
+              _ ->
+                []
+            end
+          end)
+        _ ->
+          []
+      end
+
+    # Combinar todos los errores
+    all_errors = main_errors ++ direcciones_errors
+
+    all_errors
+    |> Enum.map(fn field -> Map.get(field_names, field, Atom.to_string(field)) end)
+    |> Enum.uniq()
+    |> Enum.join(", ")
+  end
 end

@@ -36,7 +36,7 @@ defmodule Prettycore.TdsClient do
   end
 
   def query!(sql, params \\ []) do
-    {:ok, %TDS.Result{rows: rows}} = query(sql, params)
+    {:ok, %{rows: rows}} = query(sql, params)
     rows
   end
 end

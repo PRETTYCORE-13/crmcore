@@ -17,12 +17,13 @@ defmodule Prettycore.ClientesExcel do
   ## Retorna
     * Binario con el contenido del archivo Excel
   """
-  def generar_excel(sysudn_codigo_k, vtarut_codigo_k_ini, vtarut_codigo_k_fin, visible_columns \\ %{}) do
-    # Obtener TODOS los datos completos
+  def generar_excel(sysudn_codigo_k, vtarut_codigo_k_ini, vtarut_codigo_k_fin, visible_columns \\ %{}, token \\ nil) do
+    # Obtener TODOS los datos completos usando el token de autenticación
     clientes = Prettycore.Clientes.list_clientes_completo(
       sysudn_codigo_k,
       vtarut_codigo_k_ini,
-      vtarut_codigo_k_fin
+      vtarut_codigo_k_fin,
+      token
     )
 
     # Determinar qué columnas exportar (solo las seleccionadas como visibles)

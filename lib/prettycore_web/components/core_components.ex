@@ -77,28 +77,27 @@ defmodule PrettycoreWeb.CoreComponents do
           <p :if={@title} class="font-bold text-base mb-1">{@title}</p>
           <p class="text-base font-semibold">{msg}</p>
         </div>
-        <button type="button" class="group flex-shrink-0 cursor-pointer hover:scale-110 transition-transform" aria-label={gettext("close")}>
-          <.icon name="hero-x-mark" class={[
-            "size-6 transition-colors",
-            @kind == :info && "text-green-600 group-hover:text-green-800",
-            @kind == :error && "text-red-600 group-hover:text-red-800"
-          ]} />
+        <button type="button" class={[
+          "flex-shrink-0 cursor-pointer rounded-full p-3 transition-all hover:scale-110",
+          @kind == :info && "bg-green-600 hover:bg-green-700",
+          @kind == :error && "bg-red-600 hover:bg-red-700"
+        ]} aria-label={gettext("close")}>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="white" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       </div>
     </div>
     """
   end
 
-  defp show_flash(js \\ %JS{}, id, kind) do
+  defp show_flash(js \\ %JS{}, id, _kind) do
+    # Solo mostrar el flash - NO ocultar automáticamente
+    # El usuario debe cerrar manualmente haciendo clic en la X
     js
     |> JS.show(
       to: "##{id}",
-      transition: {"ease-out duration-400", "opacity-0 scale-75", "opacity-100 scale-100"}
-    )
-    |> JS.hide(
-      to: "##{id}",
-      time: 6000,
-      transition: {"ease-in duration-600", "opacity-100 scale-100", "opacity-0 scale-90"}
+      transition: {"ease-out duration-300", "opacity-0 scale-90", "opacity-100 scale-100"}
     )
   end
 

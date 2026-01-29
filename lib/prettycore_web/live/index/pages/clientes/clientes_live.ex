@@ -209,6 +209,11 @@ defmodule PrettycoreWeb.Clientes do
     {:noreply, update(socket, :filters_open, &(not &1))}
   end
 
+  # Prevenir submit del formulario de filtros al presionar Enter
+  def handle_event("filter_submit", _params, socket) do
+    {:noreply, socket}
+  end
+
   ## Handle event para aplicar filtros
   def handle_event("set_filter", %{"filter_params" => filter_params}, socket) do
     # Construir los nuevos params con los filtros

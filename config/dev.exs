@@ -26,7 +26,8 @@ config :prettycore, Prettycore.PsqlRepo,
   database: "prettycore_dev",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  pool_size: 10,
+  parameters: [client_encoding: "UTF8"]
 
 
 # For development, we disable any cache and enable

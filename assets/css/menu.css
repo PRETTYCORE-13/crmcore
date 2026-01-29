@@ -63,6 +63,10 @@
   object-fit: contain;
 }
 
+.pc-company-logo-bordered {
+  border: 2px solid #1e1e1e;
+}
+
 /* Texto del logo solo visible cuando está abierto */
 .pc-platform-logo-text {
   display: flex;
@@ -376,6 +380,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+.pc-user-avatar img {
+  border: 2px solid #1e1e1e;
+  border-radius: 999px;
 }
 
 /* Información del usuario */

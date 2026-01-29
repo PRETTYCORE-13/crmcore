@@ -12,15 +12,19 @@ defmodule PrettycoreWeb.ClientesExcelController do
     ruta_desde = get_param_or_default(params["ruta_desde"], "001")
     ruta_hasta = get_param_or_default(params["ruta_hasta"], "99999")
 
+    # Obtener el token de la sesión para autenticación con la API
+    frog_token = get_session(conn, :frog_token)
+
     # Parsear columnas visibles desde los params
     visible_columns = parse_visible_columns(params)
 
-    # Generar el archivo Excel
+    # Generar el archivo Excel con el token
     excel_binary = ClientesExcel.generar_excel(
       sysudn,
       ruta_desde,
       ruta_hasta,
-      visible_columns
+      visible_columns,
+      frog_token
     )
 
     # Generar nombre de archivo con timestamp

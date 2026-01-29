@@ -79,8 +79,9 @@ defmodule PrettycoreWeb.HerramientaSql do
          )}
 
       true ->
+        # Nota: Esta funcionalidad requiere el paquete {:tds, "~> 2.3"} instalado
         case TdsClient.query(sql, []) do
-          {:ok, %Tds.Result{columns: cols, rows: rows} = res} ->
+          {:ok, %{columns: cols, rows: rows, num_rows: num_rows}} ->
             if is_list(cols) and cols != [] do
               columns = Enum.map(cols, &to_string/1)
 
@@ -103,7 +104,7 @@ defmodule PrettycoreWeb.HerramientaSql do
                |> assign(:columns, ["Resultado"])
                |> assign(:rows, [
                  [
-                   "Comando ejecutado con éxito (#{res.num_rows || 0} filas afectadas)"
+                   "Comando ejecutado con éxito (#{num_rows || 0} filas afectadas)"
                  ]
                ])}
             end
