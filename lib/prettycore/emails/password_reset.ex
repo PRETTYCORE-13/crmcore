@@ -3,8 +3,8 @@ defmodule Prettycore.Emails.PasswordReset do
   require Logger
   alias Prettycore.Mailer
 
-  @from_email "servicios.ennovacore@gmail.com"
-  @from_name "Sistema - EnnovaCore"
+  @from_email "servicio.cliente@ennovacore.com.mx"
+  @from_name "PrettyCore"
   @token_expiry_minutes 30
 
   def send_reset_code(user_email, user_name, code) do

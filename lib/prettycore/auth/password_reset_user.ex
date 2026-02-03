@@ -48,7 +48,7 @@ defmodule Prettycore.Auth.PasswordResetUser do
   end
 
   defp get_xen_usuario(codigo) do
-    case Api.get_xen_usuario(codigo) do
+    case Api.get_xen_usuario(codigo, Api.service_token()) do
       {:ok, user} when is_map(user) -> {:ok, user}
       {:ok, [user | _]} -> {:ok, user}
       {:ok, []} -> {:error, :not_found}
@@ -57,7 +57,7 @@ defmodule Prettycore.Auth.PasswordResetUser do
   end
 
   defp get_sys_usuario(codigo) do
-    case Api.get_usuario(codigo) do
+    case Api.get_usuario(codigo, Api.service_token()) do
       {:ok, user} when is_map(user) -> {:ok, user}
       {:ok, [user | _]} -> {:ok, user}
       {:ok, []} -> {:error, :not_found}
@@ -89,7 +89,7 @@ defmodule Prettycore.Auth.PasswordResetUser do
       "S_USUARIO" => updated_by
     }
 
-    case Api.update("SYS_USUARIO", data) do
+    case Api.update("SYS_USUARIO", data, Api.service_token()) do
       {:ok, _} ->
         {:ok, :updated}
 

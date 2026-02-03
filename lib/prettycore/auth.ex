@@ -96,25 +96,31 @@ defmodule Prettycore.Auth do
   Solicita un código de reset para el usuario (por email o username).
   """
   def request_reset(identifier) when is_binary(identifier) do
+    alias Prettycore.Emails.PasswordReset, as: PasswordResetEmail
+
     # Buscar por email o username
     user = get_user_by_email(identifier) || get_user_by_username(identifier)
 
     case user do
       nil ->
         # Por seguridad, siempre retorna éxito
-        {:ok, "Si el usuario existe, recibirás un código"}
+        {:ok, "Si el usuario existe, recibirás un código en tu email"}
 
       %AuthUser{} = user ->
         if user.email && user.email != "" do
           code = generate_reset_code()
           save_reset_code(user.id, code)
 
-          Logger.info("Reset code generated for user #{user.username}: #{code}")
+          Logger.info("Reset code generated for user #{user.username}")
 
-          # En producción aquí enviarías el email
-          # Prettycore.Mailer.send_reset_code(user.email, code)
+          case PasswordResetEmail.send_reset_code(user.email, user.username, code) do
+            {:ok, _} ->
+              {:ok, "Si el usuario existe, recibirás un código en tu email", mask_email(user.email)}
 
-          {:ok, "Código enviado a #{mask_email(user.email)}. Código: #{code}"}
+            {:error, reason} ->
+              Logger.error("Error enviando email de reset: #{inspect(reason)}")
+              {:error, "No se pudo enviar el código. Intenta nuevamente."}
+          end
         else
           {:error, "El usuario no tiene email registrado"}
         end

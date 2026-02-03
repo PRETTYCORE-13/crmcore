@@ -3,7 +3,6 @@ defmodule PrettycoreWeb.MenuLayout do
 
   @menu [
     %{id: "inicio", label: "Inicio"},
-
   #  %{id: "programacion", label: "Programación"},
     %{id: "workorder", label: "Workorder"},
     %{id: "clientes", label: "Clientes"}
@@ -26,129 +25,97 @@ defmodule PrettycoreWeb.MenuLayout do
     <div class="pc-platform">
       <!-- Sidebar -->
       <aside class={"pc-platform-sidebar" <> if @sidebar_open, do: " pc-platform-sidebar-open", else: ""}>
-        <!-- BLOQUE SUPERIOR -->
-        <div class="pc-platform-sidebar-top-row">
-          <!-- Logo PrettyCore -->
-          <div class="pc-platform-logo-group mini">
+        <!-- HEADER: Logo + nombre + toggle -->
+        <div class="pc-sidebar-header">
+          <div class="pc-sidebar-brand">
             <img
-              class="pc-platform-logo-img"
+              src="https://prettycore.xyz/IMAGENES/PRETTYCORE.png"
+              alt="PrettyCore"
+              class="pc-sidebar-brand-full pc-sidebar-logo-open"
+            />
+            <img
               src="https://prettycore.xyz/IMAGENES/Logo%20Prettycore%20(8).png"
-              alt="PrettyCore logo"
+              alt="PrettyCore"
+              class="pc-sidebar-brand-icon pc-sidebar-logo-closed"
             />
           </div>
-          <!-- Logo Empresa -->
-          <div class="pc-platform-logo-group mini">
-            <%= if @company_logo do %>
-              <img
-                class="pc-platform-logo-img pc-company-logo-bordered"
-                src={@company_logo}
-                alt="Logo Empresa"
-              />
-            <% else %>
-              <img
-                class="pc-platform-logo-img pc-company-logo-bordered"
-                src="https://th.bing.com/th/id/R.7d592b78f7652da436b9ab21fc4fc25f?rik=g7VE7dZo6JaZrA&riu=http%3a%2f%2fgetwallpapers.com%2fwallpaper%2ffull%2f6%2f6%2f1%2f579397.jpg&ehk=WXw%2bNSZCri4XZrLylh33jyOiBetpiK2UKJLVW0%2bp5Fk%3d&risl=&pid=ImgRaw&r=0"
-                alt="Direem Negocios logo"
-              />
-            <% end %>
-          </div>
-          <!-- Toggle -->
           <button
             type="button"
-            class="pc-menu-item pc-menu-toggle mini"
+            class="pc-sidebar-toggle"
             phx-click={@menu_event}
             phx-value-id="toggle_sidebar"
           >
-            <span class="pc-menu-item-icon">
-              <%= if @sidebar_open do %>
-                <svg viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M15 4a1 1 0 0 1 .7 1.7L11.4 10l4.3 4.3A1 1 0 1 1 14.3 16L9.6 11.3a1 1 0 0 1 0-1.4L14.3 5A1 1 0 0 1 15 4Z"
-                  />
-                </svg>
-              <% else %>
-                <svg viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M9 4a1 1 0 0 0-.7 1.7L12.6 10l-4.3 4.3A1 1 0 0 0 9.7 16l4.7-4.7a1 1 0 0 0 0-1.4L9.7 5A1 1 0 0 0 9 4Z"
-                  />
-                </svg>
-              <% end %>
-            </span>
+            <%= if @sidebar_open do %>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="11 17 6 12 11 7" /><polyline points="18 17 13 12 18 7" />
+              </svg>
+            <% else %>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" />
+              </svg>
+            <% end %>
           </button>
         </div>
-        <!-- BLOQUE DE USUARIO -->
-        <div class="pc-user-block">
-          <!-- AVATAR -->
-          <div class="pc-user-avatar">
-            <%= if @company_logo do %>
-              <img
-                src={@company_logo}
-                alt="Logo empresa"
-                class="w-full h-full object-cover rounded-full"
-              />
-            <% else %>
-              {((@current_user_name && String.first(@current_user_name)) || "?")
-              |> String.upcase()}
-            <% end %>
-          </div>
-          <!-- TEXTO (oculto si sidebar está cerrado) -->
-          <div class="pc-user-info">
-            <div class="pc-user-name">{@current_user_name || "Usuario"}</div>
-            <div class="pc-user-role">Usuario</div>
-          </div>
-        </div>
+
         <!-- CUERPO DEL MENÚ -->
-        <div class="pc-platform-sidebar-body">
-          <nav class="pc-platform-menu">
-            <%= for item <- @menu_items do %>
-              <button
-                type="button"
-                class={menu_item_class(menu_active?(item.id, @current_page))}
-                phx-click={@menu_event}
-                phx-value-id={item.id}
-              >
-                <span class="pc-menu-item-indicator" />
-                <span class="pc-menu-item-icon"><.pc_icon name={item.id} /></span>
-                <span class="pc-menu-item-label">{item.label}</span>
-              </button>
-              <%= if item.id == "programacion" and @show_programacion_children do %>
-                <div class="pc-submenu">
-                  <button
-                    type="button"
-                    class={submenu_item_class("programacion_sql", @current_page)}
-                    phx-click={@menu_event}
-                    phx-value-id="programacion_sql"
-                  >
-                    <span class="pc-submenu-item-icon"><.pc_icon name="programacion_sql" /></span>
-                    <span class="pc-submenu-item-label">Herramienta SQL</span>
-                  </button>
-                </div>
+        <div class="pc-sidebar-body">
+          <div>
+            <!-- SECCIÓN: MENÚ -->
+            <div class="pc-sidebar-section-label">Menú</div>
+            <nav class="pc-sidebar-nav">
+              <%= for item <- @menu_items do %>
+                <button
+                  type="button"
+                  class={menu_item_class(menu_active?(item.id, @current_page))}
+                  phx-click={@menu_event}
+                  phx-value-id={item.id}
+                >
+                  <span class="pc-nav-icon"><.pc_icon name={item.id} /></span>
+                  <span class="pc-nav-label">{item.label}</span>
+                </button>
+                <%= if item.id == "programacion" and @show_programacion_children do %>
+                  <div class="pc-submenu">
+                    <button
+                      type="button"
+                      class={submenu_item_class("programacion_sql", @current_page)}
+                      phx-click={@menu_event}
+                      phx-value-id="programacion_sql"
+                    >
+                      <span class="pc-submenu-dot" />
+                      <span class="pc-nav-label">Herramienta SQL</span>
+                    </button>
+                  </div>
+                <% end %>
               <% end %>
-            <% end %>
-          </nav>
-          <!-- CONFIGURACIÓN
-          <button
-            type="button"
-            class={menu_item_class(menu_active?("config", @current_page)) <> " pc-menu-item-bottom"}
-            phx-click={@menu_event}
-            phx-value-id="config"
-          >
-            <span class="pc-menu-item-indicator" />
-            <span class="pc-menu-item-icon"><.pc_icon name="config" /></span>
-            <span class="pc-menu-item-label">Configuración</span>
-          </button>  -->
-          <!-- LOGOUT -->
-          <.link
-            href="/logout"
-            class="pc-menu-item pc-menu-item-bottom"
-            data-confirm="¿Cerrar sesión?"
-          >
-            <span class="pc-menu-item-indicator" />
-            <span class="pc-menu-item-icon"><.pc_icon name="logout" /></span>
-            <span class="pc-menu-item-label">Cerrar sesión</span>
-          </.link>
+            </nav>
+          </div>
+
+          <!-- SECCIÓN INFERIOR -->
+          <div>
+            <div class="pc-sidebar-section-label">Cuenta</div>
+            <nav class="pc-sidebar-nav">
+              <!-- USUARIO -->
+              <div class="pc-sidebar-user">
+                <div class="pc-sidebar-user-avatar">
+                  <%= if @company_logo do %>
+                    <img src={@company_logo} alt="Logo" class="pc-sidebar-user-avatar-img" />
+                  <% else %>
+                    {((@current_user_name && String.first(@current_user_name)) || "?") |> String.upcase()}
+                  <% end %>
+                </div>
+                <span class="pc-nav-label">{@current_user_name || "Usuario"}</span>
+              </div>
+              <!-- LOGOUT -->
+              <.link
+                href="/logout"
+                class="pc-nav-item pc-nav-logout"
+                data-confirm="¿Cerrar sesión?"
+              >
+                <span class="pc-nav-icon"><.pc_icon name="logout" /></span>
+                <span class="pc-nav-label">Cerrar sesión</span>
+              </.link>
+            </nav>
+          </div>
         </div>
       </aside>
       <!-- CONTENIDO -->
@@ -157,63 +124,58 @@ defmodule PrettycoreWeb.MenuLayout do
     """
   end
 
-  ## ICONOS
+  ## ICONOS — outline style
   attr :name, :string, required: true
 
   def pc_icon(assigns) do
     ~H"""
     <%= case @name do %>
       <% "inicio" -> %>
-        <svg viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M10 21v-5h4v5h4.5c.8 0 1.5-.7 1.5-1.5V11l-8-6-8 6v8.5c0 .8.7 1.5 1.5 1.5H10Z"
-          />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9.5L12 4l9 5.5" />
+          <path d="M19 13v6a1 1 0 0 1-1 1h-4v-5h-4v5H6a1 1 0 0 1-1-1v-6" />
         </svg>
       <% "programacion" -> %>
-        <svg viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M4 4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h6v2H8c-.6 0-1 .4-1 1s.4 1 1 1h8c.6 0 1-.4 1-1s-.4-1-1-1h-2v-2h6c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4Z"
-          />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" />
+          <line x1="8" y1="21" x2="16" y2="21" />
+          <line x1="12" y1="17" x2="12" y2="21" />
         </svg>
       <% "workorder" -> %>
-        <svg viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M8 3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V8.5L13.5 3H8Z"
-          />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" />
+          <rect x="9" y="3" width="6" height="4" rx="1" />
+          <line x1="9" y1="12" x2="15" y2="12" />
+          <line x1="9" y1="16" x2="13" y2="16" />
         </svg>
       <% "clientes" -> %>
-        <svg viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M8 3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V8.5L13.5 3H8Z"
-          />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
       <% "config" -> %>
-        <svg viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M10.7 2.3c.4-.6 1.2-.6 1.6 0l1 1.6c.2.3.5.5.9.6l1.8.5c.7.2 1.1.9.9 1.5l-.5 1.8c-.1.3 0 .7.3 1l1.4 1.4c.5.5.5 1.3 0 1.8l-1.4 1.4c-.3.3-.4.6-.3 1l.5 1.8c.2.7-.2 1.4-.9 1.5l-1.8.5c-.4.1-.7.3-.9.6l-1 1.6Z"
-          />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
         </svg>
       <% "programacion_sql" -> %>
-        <svg viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M12 3C7.6 3 4 4.3 4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6c0-1.7-3.6-3-8-3Z"
-          />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <ellipse cx="12" cy="5" rx="9" ry="3" />
+          <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+          <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
         </svg>
       <% "logout" -> %>
-        <svg viewBox="0 0 24 24">
-          <path
-            fill="currentColor"
-            d="M10 4a1 1 0 0 1 1 1v3h2V5a3 3 0 0 0-3-3H7a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h3a3 3 0 0 0 3-3v-3h-2v3a1 1 0 0 1-1 1H7Z"
-          />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
         </svg>
       <% _ -> %>
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="currentColor" /></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="8" />
+        </svg>
     <% end %>
     """
   end
@@ -225,8 +187,8 @@ defmodule PrettycoreWeb.MenuLayout do
 
   defp menu_active?(id, current), do: id == current
 
-  defp menu_item_class(true), do: "pc-menu-item pc-menu-item-active"
-  defp menu_item_class(false), do: "pc-menu-item"
+  defp menu_item_class(true), do: "pc-nav-item pc-nav-item-active"
+  defp menu_item_class(false), do: "pc-nav-item"
 
   defp submenu_item_class(id, current),
     do: if(id == current, do: "pc-submenu-item pc-submenu-item-active", else: "pc-submenu-item")

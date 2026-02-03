@@ -27,7 +27,7 @@ defmodule Prettycore.Auth.PasswordReset do
                    user.sysusr_codigo_k,
                    code
                  ) do
-            {:ok, "Código enviado exitosamente a #{mask_email(user.email)}"}
+            {:ok, "Si el usuario existe, recibirás un código en tu email", mask_email(user.email)}
           else
             {:error, reason} ->
               Logger.error("Error al enviar código: #{inspect(reason)}")

@@ -1,7 +1,7 @@
 # apps/prettycore_web/lib/prettycore_web/live/password_reset_live.ex
 defmodule PrettycoreWeb.PasswordResetLive do
   use PrettycoreWeb, :live_view
-  alias Prettycore.Auth.PasswordReset
+  alias Prettycore.Auth
 
   @impl true
   def mount(_params, _session, socket) do
@@ -10,6 +10,7 @@ defmodule PrettycoreWeb.PasswordResetLive do
      |> assign(:step, :request)
      # <- Cambiar de email a username
      |> assign(:username, "")
+     |> assign(:masked_email, nil)
      |> assign(:code, "")
      |> assign(:new_password, "")
      |> assign(:confirm_password, "")
@@ -22,13 +23,23 @@ defmodule PrettycoreWeb.PasswordResetLive do
   def handle_event("request_code", %{"username" => username}, socket) do
     socket = assign(socket, :loading, true)
 
-    case PasswordReset.request_reset_by_username(username) do
+    case Auth.request_reset(username) do
+      {:ok, message, masked_email} ->
+        {:noreply,
+         socket
+         |> assign(:step, :verify)
+         |> assign(:username, username)
+         |> assign(:masked_email, masked_email)
+         |> assign(:message, message)
+         |> assign(:error, nil)
+         |> assign(:loading, false)}
+
       {:ok, message} ->
         {:noreply,
          socket
          |> assign(:step, :verify)
-         # <- Guardar username
          |> assign(:username, username)
+         |> assign(:masked_email, "***")
          |> assign(:message, message)
          |> assign(:error, nil)
          |> assign(:loading, false)}
@@ -36,7 +47,6 @@ defmodule PrettycoreWeb.PasswordResetLive do
       {:error, reason} ->
         {:noreply,
          socket
-         # <- Cambiar inspect por to_string
          |> assign(:error, to_string(reason))
          |> assign(:message, nil)
          |> assign(:loading, false)}
@@ -61,7 +71,7 @@ defmodule PrettycoreWeb.PasswordResetLive do
 
       true ->
         # Usar username en lugar de email
-        case PasswordReset.verify_and_reset(socket.assigns.username, code, password) do
+        case Auth.verify_and_reset(socket.assigns.username, code, password) do
           {:ok, message} ->
             {:noreply,
              socket
@@ -150,7 +160,7 @@ defmodule PrettycoreWeb.PasswordResetLive do
                 class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-center text-2xl font-mono tracking-widest focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all outline-none"
                 placeholder="123456"
               />
-              <p class="text-xs text-gray-500 mt-1">Revisa tu correo (usuario: {@username})</p>
+              <p class="text-xs text-gray-500 mt-1">Revisa tu correo ({@masked_email})</p>
             </div>
 
             <div class="space-y-2">

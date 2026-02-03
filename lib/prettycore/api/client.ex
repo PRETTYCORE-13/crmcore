@@ -17,6 +17,10 @@ defmodule Prettycore.Api.Client do
 
   @base_url "http://ecore.ath.cx:1405/SP/EN_RESTHELPER"
   @timeout 30_000
+  @service_token "IFcRzSfaBG6ycnpWzThyfEdKHglK14tlZylvRhOhlQ1fDHobmveKk6JowcU/BhCquBlqQv7zkrLIUYvFZmQZqHdqNiLptzCBf5wT826XpY4="
+
+  @doc "Token de servicio para llamadas sin sesión de usuario"
+  def service_token, do: @service_token
 
   # ============================================================
   # PUBLIC API - GET (SELECT)

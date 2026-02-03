@@ -30,6 +30,23 @@ config :prettycore, Prettycore.PsqlRepo,
   parameters: [client_encoding: "UTF8"]
 
 
+# SMTP Configuration for Hostinger
+config :prettycore, Prettycore.Mailer,
+  adapter: Swoosh.Adapters.SMTP,
+  relay: "smtp.hostinger.com",
+  username: "servicio.cliente@ennovacore.com.mx",
+  password: "MegaCore.1",
+  ssl: false,
+  tls: :always,
+  tls_options: [
+    verify: :verify_none,
+    versions: [:"tlsv1.2", :"tlsv1.3"]
+  ],
+  auth: :always,
+  port: 587,
+  retries: 3,
+  timeout: 10_000
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
@@ -101,5 +118,5 @@ config :phoenix_live_view,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
 
-# Disable swoosh api client as it is only required for production adapters.
+# SMTP adapter doesn't need an API client, but we must not disable delivery
 config :swoosh, :api_client, false
