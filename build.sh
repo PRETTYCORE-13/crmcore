@@ -9,3 +9,6 @@ MIX_ENV=prod mix assets.deploy
 
 MIX_ENV=prod mix phx.gen.release
 MIX_ENV=prod mix release --overwrite
+
+# Run migrations
+MIX_ENV=prod mix ecto.migrate --repo Prettycore.PsqlRepo
