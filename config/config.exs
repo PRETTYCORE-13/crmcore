@@ -10,9 +10,7 @@ import Config
 # Load environment variables from .env file
 import_config "load_env.exs"
 
-config :prettycore, Prettycore.PsqlRepo,
-
-
+config :prettycore,
   ecto_repos: [Prettycore.PsqlRepo],
   generators: [timestamp_type: :utc_datetime]
 
