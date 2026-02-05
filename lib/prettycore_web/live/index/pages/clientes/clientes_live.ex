@@ -27,9 +27,32 @@ defmodule PrettycoreWeb.Clientes do
   # Recibimos el :email desde la ruta /admin/clientes
   @impl true
   def mount(_params, _session, socket) do
-    # Opciones para los filtros (podrían venir de BD)
-    sysudn_opts = ["100", "200", "300"]
-    ruta_opts = ["001", "002", "003", "999"]
+    alias Prettycore.Api.Client, as: Api
+    token = socket.assigns[:frog_token]
+
+    # Obtener UDNs dinámicamente de SYS_USUARIO
+    sysudn_opts =
+      case Api.get_all("SYS_USUARIO", token) do
+        {:ok, users} ->
+          users
+          |> Enum.map(& &1["SYSUDN_CODIGO_K"])
+          |> Enum.reject(&(&1 in [nil, ""]))
+          |> Enum.uniq()
+          |> Enum.sort()
+        {:error, _} -> []
+      end
+
+    # Obtener rutas dinámicamente de VTA_RUTA
+    ruta_opts =
+      case Api.get_all("VTA_RUTA", token) do
+        {:ok, rutas} ->
+          rutas
+          |> Enum.map(& &1["VTARUT_CODIGO_K"])
+          |> Enum.reject(&(&1 in [nil, ""]))
+          |> Enum.uniq()
+          |> Enum.sort()
+        {:error, _} -> []
+      end
 
     {:ok,
      socket
@@ -40,7 +63,9 @@ defmodule PrettycoreWeb.Clientes do
      |> assign(:filters_open, false)
      |> assign(:expanded_clients, MapSet.new())
      |> assign(:sysudn_opts, sysudn_opts)
-     |> assign(:ruta_opts, ruta_opts)}
+     |> assign(:ruta_opts, ruta_opts)
+     |> assign(:stats_modal_open, false)
+     |> assign(:stats_modal_ref, nil)}
   end
 
   @impl true
@@ -302,6 +327,22 @@ def handle_event("edit_cliente", %{"codigo" => codigo, "dir" => dir}, socket) do
   #   |> assign(:show_edit_modal, true)
   # }
 end
+
+  ## Handle event para abrir modal de estadísticas
+  def handle_event("open_stats_modal", %{"codigo" => codigo}, socket) do
+    {:noreply,
+     socket
+     |> assign(:stats_modal_open, true)
+     |> assign(:stats_modal_ref, codigo)}
+  end
+
+  ## Handle event para cerrar modal de estadísticas
+  def handle_event("close_stats_modal", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:stats_modal_open, false)
+     |> assign(:stats_modal_ref, nil)}
+  end
 
   ## Navegación centralizada con CASE (modelo recomendado)
   def handle_event("change_page", %{"id" => id}, socket) do

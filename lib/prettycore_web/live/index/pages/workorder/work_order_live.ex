@@ -3,14 +3,15 @@ defmodule PrettycoreWeb.WorkOrderLive do
 
   alias Prettycore.Workorders
   alias Prettycore.WorkorderApi
-  alias Prettycore.Auth.User
-  import Ecto.Query, only: [from: 2]
 
   ## MOUNT
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
+    # Ensure frog_token is available (from on_mount or session)
+    token = socket.assigns[:frog_token] || session["frog_token"]
+    socket = assign(socket, :frog_token, token)
     # Get all workorders once for filter options
-    all_workorders = Workorders.list_enc()
+    all_workorders = Workorders.list_enc(token)
 
     sysudn_opts =
       all_workorders
@@ -44,12 +45,13 @@ defmodule PrettycoreWeb.WorkOrderLive do
     # Set default estado if not provided
     params =
       params
-      |> Map.put_new("estado", "por_aceptar")
+      |> Map.put_new("estado", "todas")
       |> Map.put_new("page", "1")
       |> Map.put_new("page_size", "10")
 
+    token = socket.assigns[:frog_token]
     # Use Flop to handle pagination and filtering
-    case Workorders.list_enc_with_flop(params) do
+    case Workorders.list_enc_with_flop(params, token) do
       {:ok, {workorders, meta}} ->
         {:noreply,
          socket
@@ -113,38 +115,25 @@ defmodule PrettycoreWeb.WorkOrderLive do
   # ------------------------------------------------------------------
   def handle_event("cambiar_estado", %{"ref" => ref, "estado" => estado_str}, socket) do
     estado = String.to_integer(estado_str)
-    sysusr_codigo = socket.assigns.current_user_email
+    token = socket.assigns[:frog_token]
 
-    password_query =
-      from(u in User,
-        where: u.sysusr_codigo_k == ^sysusr_codigo,
-        select: u.sysusr_password
-      )
+    case WorkorderApi.cambiar_estado(ref, estado, token) do
+      {:ok, _body} ->
+        # Reload workorders with current params
+        case Workorders.list_enc_with_flop(socket.assigns.params, token) do
+          {:ok, {workorders, meta}} ->
+            {:noreply,
+             socket
+             |> assign(:workorders, workorders)
+             |> assign(:meta, meta)}
 
-    case Repo.one(password_query) do
-      nil ->
-        IO.puts("No se encontró SYSUSR_PASSWORD para #{sysusr_codigo}")
-        {:noreply, socket}
-
-      password ->
-        case WorkorderApi.cambiar_estado(ref, estado, password) do
-          {:ok, _body} ->
-            # Reload workorders with current params
-            case Workorders.list_enc_with_flop(socket.assigns.params) do
-              {:ok, {workorders, meta}} ->
-                {:noreply,
-                 socket
-                 |> assign(:workorders, workorders)
-                 |> assign(:meta, meta)}
-
-              {:error, _} ->
-                {:noreply, socket}
-            end
-
-          {:error, reason} ->
-            IO.inspect(reason, label: "error cambiar_estado")
+          {:error, _} ->
             {:noreply, socket}
         end
+
+      {:error, reason} ->
+        IO.inspect(reason, label: "error cambiar_estado")
+        {:noreply, socket}
     end
   end
 
@@ -169,13 +158,14 @@ defmodule PrettycoreWeb.WorkOrderLive do
   # FILTROS AVANZADOS
   # ------------------------------------------------------------------
   def handle_event("set_filter", params, socket) do
-    # Clean empty params and reset to page 1 when filters change
+    # Extract filters - may come nested under "filters" key or flat
+    filter_params = params["filters"] || params
+
+    # Build clean params, keeping only non-empty values
     clean_params =
-      params
-      |> Enum.reject(fn {_k, v} -> v in [nil, ""] end)
-      |> Enum.into(%{})
+      filter_params
+      |> Enum.reject(fn {k, v} -> k in ["_csrf_token", "_target"] or v in [nil, ""] end)
       |> Enum.map(fn {k, v} ->
-        # Si el valor es una lista, tomar el primer elemento
         {k, if(is_list(v), do: List.first(v), else: v)}
       end)
       |> Enum.into(%{})
@@ -199,9 +189,10 @@ defmodule PrettycoreWeb.WorkOrderLive do
 
     detalles_cache = socket.assigns.detalles
 
+    token = socket.assigns[:frog_token]
     detalles =
       Map.get(detalles_cache, key) ||
-        Workorders.list_det(sysudn, systra, serie, folio)
+        Workorders.list_det(sysudn, systra, serie, folio, token)
 
     open_key = if socket.assigns.open_key == key, do: nil, else: key
 

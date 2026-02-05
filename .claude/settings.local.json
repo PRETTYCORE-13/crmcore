@@ -36,7 +36,8 @@
       "Bash(mix ecto.migrate:*)",
       "Bash(mix deps.clean:*)",
       "Bash(mix ecto.gen.migration:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

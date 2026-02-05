@@ -1,27 +1,25 @@
-    <section class="flex flex-col gap-6 p-6 max-w-7xl mx-auto min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200" phx-hook="NavigateAfterFlash" id="cliente-form-container">
+    <section class="flex flex-col gap-4 sm:gap-6 p-3 sm:p-6 max-w-7xl mx-auto min-h-screen bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200" phx-hook="NavigateAfterFlash" id="cliente-form-container">
       <!-- HEADER MODERNO CON GRADIENTE -->
-      <header class="bg-gradient-to-r from-gray-800 via-gray-900 to-black rounded-2xl shadow-2xl p-6 text-white">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-4">
-            <.link navigate={~p"/admin/clientes"} class="p-2.5 hover:bg-white/20 rounded-xl transition-all duration-200 backdrop-blur-sm">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <header class="bg-gradient-to-r from-gray-800 via-gray-900 to-black rounded-xl sm:rounded-2xl shadow-2xl p-3 sm:p-6 text-white">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <.link navigate={~p"/admin/clientes"} class="p-2 sm:p-2.5 hover:bg-white/20 rounded-xl transition-all duration-200 backdrop-blur-sm">
+              <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path>
               </svg>
             </.link>
             <div>
-              <h1 class="text-2xl font-bold tracking-tight">{@page_title}</h1>
-              <p class="text-sm text-white/80 mt-0.5">* Campos obligatorios | Complete la información del cliente</p>
+              <h1 class="text-lg sm:text-2xl font-bold tracking-tight">{@page_title}</h1>
+              <p class="text-xs sm:text-sm text-white/80 mt-0.5 hidden sm:block">* Campos obligatorios | Complete la información del cliente</p>
             </div>
           </div>
-          <div class="flex gap-3">
-            <button type="button" class="px-5 py-2.5 text-sm font-medium bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-200 border border-white/30">
+          <div class="flex gap-2 sm:gap-3">
+            <.link navigate={~p"/admin/clientes"} class="flex-1 sm:flex-none text-center px-3 sm:px-5 py-2 sm:py-2.5 text-sm font-medium bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-200 border border-white/30">
               Cancelar
+            </.link>
+            <button type="submit" form="cliente-form" class="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 text-sm font-semibold bg-white text-purple-600 hover:bg-white/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+              Guardar
             </button>
-            <button type="submit" form="cliente-form" class="px-6 py-2.5 text-sm font-semibold bg-white text-purple-600 text-purple-400 font-semibold hover:bg-white/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
-              💾 Guardar
-            </button>
-
-
           </div>
         </div>
       </header>
@@ -29,55 +27,55 @@
       
       <!-- FORMULARIO CON TABS -->
       <.form id="cliente-form" for={@form} phx-change="validate" phx-submit="save">
-        <div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-300">
+        <div class="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-gray-300">
           <!-- TABS NAVEGACIÓN MODERNA -->
-          <div class="bg-gradient-to-r from-gray-100 to-gray-200 rounded-t-2xl border-b-2 border-gray-300">
-            <nav class="flex -mb-0.5 overflow-x-auto scrollbar-hide p-2 gap-2" aria-label="Tabs">
+          <div class="bg-gradient-to-r from-gray-100 to-gray-200 rounded-t-xl sm:rounded-t-2xl border-b-2 border-gray-300">
+            <nav class="flex -mb-0.5 overflow-x-auto scrollbar-hide p-1.5 sm:p-2 gap-1 sm:gap-2" aria-label="Tabs">
               <button
                 type="button"
                 phx-click="change_tab"
                 phx-value-tab="basicos"
-                class={"px-6 py-3 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "basicos", do: "bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-gray-900"}"}
+                class={"px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "basicos", do: "bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-gray-900"}"}
               >
-                📋 Datos Básicos
+                Datos
               </button>
               <button
                 type="button"
                 phx-click="change_tab"
                 phx-value-tab="clasificacion"
-                class={"px-6 py-3 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "clasificacion", do: "bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-gray-900"}"}
+                class={"px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "clasificacion", do: "bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-gray-900"}"}
               >
-                🏷️ Clasificación *
+                Clasif.
               </button>
               <button
                 type="button"
                 phx-click="change_tab"
                 phx-value-tab="facturacion"
-                class={"px-6 py-3 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "facturacion", do: "bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-gray-900"}"}
+                class={"px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "facturacion", do: "bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-gray-900"}"}
               >
-                💰 Facturación
+                Fact.
               </button>
               <button
                 type="button"
                 phx-click="change_tab"
                 phx-value-tab="direcciones"
-                class={"px-6 py-3 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "direcciones", do: "bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-gray-900"}"}
+                class={"px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "direcciones", do: "bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-gray-900"}"}
               >
-                📍 Direcciones <span class="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">({length(@form[:direcciones].value || [])})</span>
+                Dir. <span class="ml-0.5 px-1.5 py-0.5 bg-white/20 rounded-full text-xs">({length(@form[:direcciones].value || [])})</span>
               </button>
               <button
                 type="button"
                 phx-click="change_tab"
                 phx-value-tab="opcionales"
-                class={"px-6 py-3 text-sm font-semibold rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "opcionales", do: "bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-gray-900"}"}
+                class={"px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg sm:rounded-xl whitespace-nowrap transition-all duration-200 #{if @current_tab == "opcionales", do: "bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50", else: "text-gray-600 hover:bg-white/70 hover:text-gray-900"}"}
               >
-                ⚙️ Opcionales
+                Opc.
               </button>
             </nav>
           </div>
 
           <!-- CONTENIDO DE TABS -->
-          <div class="p-8">
+          <div class="p-3 sm:p-8">
             <!-- TAB: DATOS BÁSICOS -->
             <div class={if @current_tab == "basicos", do: "block", else: "hidden"}>
               <div class="mb-6">
@@ -521,20 +519,20 @@
         </div>
 
         <!-- BOTONES FLOTANTES (STICKY) -->
-        <div class="sticky bottom-0 mt-4 p-4 bg-white border-t border-gray-200 rounded-lg shadow-lg flex justify-between items-center">
-          <div class="text-sm text-gray-600">
+        <div class="sticky bottom-0 mt-4 p-3 sm:p-4 bg-white border-t border-gray-200 rounded-lg shadow-lg flex justify-between items-center">
+          <div class="text-xs sm:text-sm text-gray-600 hidden sm:block">
             Tab actual: <span class="font-semibold">{@current_tab}</span>
           </div>
-          <div class="flex gap-3">
-            <.link navigate={~p"/admin/clientes"} class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium">
+          <div class="flex gap-2 sm:gap-3 w-full sm:w-auto">
+            <.link navigate={~p"/admin/clientes"} class="flex-1 sm:flex-none text-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium text-sm">
               Cancelar
             </.link>
-<button
-  type="submit"
-  class="px-6 py-2 bg-gradient-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-purple-400 font-semibold rounded-lg shadow-md"
->
-  💾 Guardar
-</button>
+            <button
+              type="submit"
+              class="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-gradient-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-purple-400 font-semibold rounded-lg shadow-md text-sm"
+            >
+              Guardar
+            </button>
           </div>
         </div>
       </.form>

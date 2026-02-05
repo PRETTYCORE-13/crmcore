@@ -326,3 +326,107 @@
 .pc-sidebar-body::-webkit-scrollbar-thumb:hover {
   background: #404040;
 }
+
+/* ---- MOBILE HAMBURGER BUTTON ---- */
+.pc-mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 60;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: #141414;
+  color: #ffffff;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* ---- MOBILE OVERLAY ---- */
+.pc-sidebar-overlay {
+  display: none;
+}
+
+/* ========================================
+   MOBILE RESPONSIVE (max-width: 768px)
+   ======================================== */
+@media (max-width: 768px) {
+  /* Show hamburger button */
+  .pc-mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Sidebar: hidden off-screen by default */
+  .pc-platform-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 240px;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* When toggled open on mobile via JS: slide in */
+  .pc-platform-sidebar.pc-sidebar-visible {
+    transform: translateX(0);
+    width: 240px;
+  }
+
+  /* Always show labels on mobile when visible */
+  .pc-platform-sidebar.pc-sidebar-visible .pc-nav-label {
+    opacity: 1;
+    width: auto;
+  }
+
+  /* Override collapsed desktop styles when sidebar is visible on mobile */
+  .pc-platform-sidebar.pc-sidebar-visible .pc-sidebar-logo-open {
+    display: block;
+  }
+  .pc-platform-sidebar.pc-sidebar-visible .pc-sidebar-logo-closed {
+    display: none;
+  }
+  .pc-platform-sidebar.pc-sidebar-visible .pc-sidebar-header {
+    justify-content: space-between;
+  }
+  .pc-platform-sidebar.pc-sidebar-visible .pc-sidebar-brand {
+    justify-content: flex-start;
+  }
+  .pc-platform-sidebar.pc-sidebar-visible .pc-nav-item {
+    justify-content: flex-start;
+    padding: 10px 12px;
+  }
+  .pc-platform-sidebar.pc-sidebar-visible .pc-sidebar-user {
+    justify-content: flex-start;
+    padding: 10px 12px;
+  }
+  .pc-platform-sidebar.pc-sidebar-visible .pc-sidebar-section-label {
+    font-size: 11px;
+    text-align: left;
+    padding: 16px 8px 8px;
+  }
+
+  /* Overlay backdrop */
+  .pc-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+  }
+
+  .pc-sidebar-overlay.pc-sidebar-overlay-visible {
+    display: block;
+  }
+
+  /* Main content full width */
+  .pc-platform-main {
+    width: 100%;
+    padding-top: 56px; /* space for hamburger button */
+  }
+}

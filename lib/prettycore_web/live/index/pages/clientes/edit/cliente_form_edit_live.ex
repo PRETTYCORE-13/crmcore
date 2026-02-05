@@ -770,28 +770,40 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
 
   @impl true
   def handle_event("add_direccion", _params, socket) do
-    # Obtener el changeset actual
     current_form = socket.assigns.form
     params = current_form.params || %{}
 
-    # Obtener direcciones existentes
-    direcciones = Map.get(params, "direcciones", [])
+    # Obtener direcciones existentes (puede ser mapa o lista)
+    direcciones_raw = Map.get(params, "direcciones", %{})
 
-    # Calcular el siguiente código de dirección
-    next_codigo = (length(direcciones) + 1) |> to_string()
+    direcciones_list =
+      case direcciones_raw do
+        dirs when is_map(dirs) -> Map.values(dirs)
+        dirs when is_list(dirs) -> dirs
+        _ -> []
+      end
 
-    # Agregar nueva dirección
+    next_index = length(direcciones_list) |> to_string()
+    next_codigo = (length(direcciones_list) + 1) |> to_string()
+
     new_direccion = %{
       "ctedir_codigo_k" => next_codigo,
       "ctedir_calle" => "",
       "ctedir_callenumext" => "",
-      "ctedir_cp" => ""
+      "ctedir_cp" => "",
+      "ctedir_tipofis" => "false",
+      "ctedir_tipoent" => "false"
     }
 
-    updated_direcciones = direcciones ++ [new_direccion]
+    updated_direcciones =
+      direcciones_list
+      |> Enum.with_index()
+      |> Enum.map(fn {dir, idx} -> {to_string(idx), dir} end)
+      |> Map.new()
+      |> Map.put(next_index, new_direccion)
+
     updated_params = Map.put(params, "direcciones", updated_direcciones)
 
-    # Crear nuevo changeset
     changeset =
       %ClienteForm{}
       |> ClienteForm.changeset(updated_params)
@@ -806,18 +818,29 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
     current_form = socket.assigns.form
     params = current_form.params || %{}
 
-    # Obtener direcciones existentes
-    direcciones = Map.get(params, "direcciones", [])
+    # Obtener direcciones existentes (puede ser mapa o lista)
+    direcciones_raw = Map.get(params, "direcciones", %{})
 
-    # No permitir eliminar si solo hay una dirección
-    if length(direcciones) <= 1 do
+    direcciones_list =
+      case direcciones_raw do
+        dirs when is_map(dirs) -> Map.values(dirs)
+        dirs when is_list(dirs) -> dirs
+        _ -> []
+      end
+
+    if length(direcciones_list) <= 1 do
       {:noreply, put_flash(socket, :error, "Debe mantener al menos una dirección")}
     else
-      # Eliminar la dirección en el índice especificado
-      updated_direcciones = List.delete_at(direcciones, index)
+      updated_list = List.delete_at(direcciones_list, index)
+
+      updated_direcciones =
+        updated_list
+        |> Enum.with_index()
+        |> Enum.map(fn {dir, idx} -> {to_string(idx), dir} end)
+        |> Map.new()
+
       updated_params = Map.put(params, "direcciones", updated_direcciones)
 
-      # Crear nuevo changeset
       changeset =
         %ClienteForm{}
         |> ClienteForm.changeset(updated_params)

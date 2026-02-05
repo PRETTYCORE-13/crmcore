@@ -1,10 +1,11 @@
 defmodule PrettycoreWeb.MenuLayout do
   use Phoenix.Component
+  alias Phoenix.LiveView.JS
 
   @menu [
     %{id: "inicio", label: "Inicio"},
   #  %{id: "programacion", label: "Programación"},
-    %{id: "workorder", label: "Workorder"},
+    %{id: "workorder", label: "Orden T"},
     %{id: "clientes", label: "Clientes"}
   ]
 
@@ -12,7 +13,7 @@ defmodule PrettycoreWeb.MenuLayout do
   attr :current_page, :string, required: true
   attr :menu_event, :string, default: "change_page"
   attr :show_programacion_children, :boolean, default: false
-  attr :sidebar_open, :boolean, default: true
+  attr :sidebar_open, :boolean, default: false
   attr :current_user_email, :string, default: nil
   attr :current_user_name, :string, default: nil
   attr :company_logo, :string, default: nil
@@ -23,6 +24,21 @@ defmodule PrettycoreWeb.MenuLayout do
 
     ~H"""
     <div class="pc-platform">
+      <!-- Mobile hamburger button -->
+      <button
+        type="button"
+        class="pc-mobile-menu-btn"
+        phx-click={mobile_toggle_js()}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+        </svg>
+      </button>
+      <!-- Mobile overlay -->
+      <div
+        class="pc-sidebar-overlay"
+        phx-click={mobile_toggle_js()}
+      />
       <!-- Sidebar -->
       <aside class={"pc-platform-sidebar" <> if @sidebar_open, do: " pc-platform-sidebar-open", else: ""}>
         <!-- HEADER: Logo + nombre + toggle -->
@@ -42,8 +58,7 @@ defmodule PrettycoreWeb.MenuLayout do
           <button
             type="button"
             class="pc-sidebar-toggle"
-            phx-click={@menu_event}
-            phx-value-id="toggle_sidebar"
+            phx-click={toggle_sidebar_js(@menu_event)}
           >
             <%= if @sidebar_open do %>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -119,7 +134,32 @@ defmodule PrettycoreWeb.MenuLayout do
         </div>
       </aside>
       <!-- CONTENIDO -->
-      <main class="pc-platform-main">{render_slot(@inner_block)}</main>
+      <main class="pc-platform-main">
+        <!-- Banner carrusel -->
+        <div class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 overflow-hidden whitespace-nowrap">
+          <div class="inline-flex animate-marquee">
+            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+            </span>
+            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+            </span>
+            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+            </span>
+            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+            </span>
+            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+            </span>
+            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+            </span>
+          </div>
+        </div>
+        {render_slot(@inner_block)}
+      </main>
     </div>
     """
   end
@@ -192,4 +232,15 @@ defmodule PrettycoreWeb.MenuLayout do
 
   defp submenu_item_class(id, current),
     do: if(id == current, do: "pc-submenu-item pc-submenu-item-active", else: "pc-submenu-item")
+
+  defp toggle_sidebar_js(menu_event) do
+    JS.push(menu_event, value: %{id: "toggle_sidebar"})
+    |> JS.toggle_class("pc-sidebar-visible", to: ".pc-platform-sidebar")
+    |> JS.toggle_class("pc-sidebar-overlay-visible", to: ".pc-sidebar-overlay")
+  end
+
+  defp mobile_toggle_js do
+    JS.toggle_class("pc-sidebar-visible", to: ".pc-platform-sidebar")
+    |> JS.toggle_class("pc-sidebar-overlay-visible", to: ".pc-sidebar-overlay")
+  end
 end

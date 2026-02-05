@@ -30,6 +30,16 @@
   --pc-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* === Marquee Banner === */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
 /* === Container === */
 .pc-wrap {
   padding: clamp(1rem, 2vw, 2rem);

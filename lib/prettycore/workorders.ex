@@ -15,12 +15,12 @@ defmodule Prettycore.Workorders do
   @doc """
   Lista todas las work orders.
   """
-  def list_enc do
-    case Api.get_workorders() do
+  def list_enc(token \\ nil) do
+    case Api.get_workorders(token) do
       {:ok, workorders} ->
         workorders
         |> Enum.map(&normalize_workorder/1)
-        |> load_tipos()
+        |> load_tipos(token)
 
       {:error, _} ->
         []
@@ -44,18 +44,18 @@ defmodule Prettycore.Workorders do
       iex> list_enc_filtered(%{sysudn: "100", fecha_desde: "2025-01-01"})
       [%{...}, ...]
   """
-  def list_enc_filtered(filters \\ %{}) do
+  def list_enc_filtered(filters \\ %{}, token \\ nil) do
     # Construir filtros para la API
     api_filters = build_api_filters(filters)
 
-    case Api.get_filtered("XEN_WOKORDERENC", api_filters) do
+    case Api.get_filtered("XEN_WOKORDERENC", api_filters, token) do
       {:ok, workorders} ->
         workorders
         |> Enum.map(&normalize_workorder/1)
         |> filter_by_estado(filters[:estado])
         |> filter_by_fecha_desde(filters[:fecha_desde])
         |> filter_by_fecha_hasta(filters[:fecha_hasta])
-        |> load_tipos()
+        |> load_tipos(token)
 
       {:error, _} ->
         []
@@ -72,7 +72,7 @@ defmodule Prettycore.Workorders do
       iex> list_enc_with_flop(%{page: 1, page_size: 20})
       {:ok, {[%{...}, ...], %Flop.Meta{}}}
   """
-  def list_enc_with_flop(flop_params \\ %{}) do
+  def list_enc_with_flop(flop_params \\ %{}, token \\ nil) do
     page = String.to_integer(flop_params["page"] || "1")
     page_size = String.to_integer(flop_params["page_size"] || "20")
 
@@ -86,7 +86,7 @@ defmodule Prettycore.Workorders do
     }
 
     # Obtener todos los workorders filtrados
-    workorders = list_enc_filtered(filters)
+    workorders = list_enc_filtered(filters, token)
 
     # Aplicar paginación manual
     total_count = length(workorders)
@@ -117,7 +117,7 @@ defmodule Prettycore.Workorders do
   @doc """
   Lista los detalles de una work order (imágenes).
   """
-  def list_det(sysudn, systra, serie, folio) do
+  def list_det(sysudn, systra, serie, folio, token \\ nil) do
     filters = %{
       "SYSUDN_CODIGO_K" => sysudn,
       "SYSTRA_CODIGO_K" => systra,
@@ -125,7 +125,7 @@ defmodule Prettycore.Workorders do
       "WOKE_FOLIO_K" => folio
     }
 
-    case Api.get_filtered("XEN_WOKORDERDET", filters) do
+    case Api.get_filtered("XEN_WOKORDERDET", filters, token) do
       {:ok, detalles} ->
         Enum.map(detalles, fn det ->
           %{
@@ -150,7 +150,7 @@ defmodule Prettycore.Workorders do
         Map.put(acc, "SYSUDN_CODIGO_K", value)
 
       {:usuario, value}, acc when is_binary(value) and value != "" ->
-        Map.put(acc, "SYSUSR_CODIGO_K", value)
+        Map.put(acc, "WOKE_USUARIO", value)
 
       _, acc ->
         acc
@@ -227,12 +227,12 @@ defmodule Prettycore.Workorders do
       systra: wo["SYSTRA_CODIGO_K"],
       serie: wo["WOKE_SERIE_K"],
       folio: wo["WOKE_FOLIO_K"],
-      fecha: parse_datetime(wo["WOKE_FECHA"]),
-      estado: wo["WOKE_ESTADO"],
-      usuario: wo["SYSUSR_CODIGO_K"],
-      xenwot_codigo_k: wo["XENWOT_CODIGO_K"],
+      referencia: wo["WOKE_REFERENCIA"],
+      fecha: parse_datetime(wo["S_FECHA"]),
+      estado: wo["S_MAQEDO"],
+      usuario: wo["WOKE_USUARIO"],
+      woktpo_codigo_k: wo["WOKTPO_CODIGO_K"],
       descripcion: wo["WOKE_DESCRIPCION"],
-      observaciones: wo["WOKE_OBSERVACIONES"],
       tipo: nil  # Se carga después
     }
   end
@@ -247,14 +247,14 @@ defmodule Prettycore.Workorders do
   defp parse_datetime(%NaiveDateTime{} = dt), do: dt
   defp parse_datetime(_), do: nil
 
-  defp load_tipos(workorders) do
+  defp load_tipos(workorders, token) do
     # Obtener todos los tipos de workorder
-    tipos_map = case Api.get_workorder_tipos() do
+    tipos_map = case Api.get_workorder_tipos(token) do
       {:ok, tipos} ->
         Enum.into(tipos, %{}, fn tipo ->
-          {tipo["XENWOT_CODIGO_K"], %{
-            codigo: tipo["XENWOT_CODIGO_K"],
-            descripcion: tipo["XENWOT_DESCRIPCION"]
+          {tipo["WOKTPO_CODIGO_K"], %{
+            codigo: tipo["WOKTPO_CODIGO_K"],
+            descripcion: tipo["WOKTPO_DESCRIPCION"]
           }}
         end)
 
@@ -264,7 +264,7 @@ defmodule Prettycore.Workorders do
 
     # Asignar tipo a cada workorder
     Enum.map(workorders, fn wo ->
-      tipo = Map.get(tipos_map, wo.xenwot_codigo_k)
+      tipo = Map.get(tipos_map, wo.woktpo_codigo_k)
       %{wo | tipo: tipo}
     end)
   end

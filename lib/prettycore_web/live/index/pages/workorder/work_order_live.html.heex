@@ -1,27 +1,27 @@
 <% # Workorders are now paginated at database level via Flop %> <% params = @params || %{} %>
-<section class="flex flex-col gap-6 p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+<section class="flex flex-col gap-4 sm:gap-6 p-3 sm:p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
   <!-- HEADER MODERNO -->
-  <header class="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-    <div class="flex items-center justify-between gap-4">
-      <div class="flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-700 to-black flex items-center justify-center shadow-lg">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <header class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-gray-700 to-black flex items-center justify-center shadow-lg flex-shrink-0">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
           </svg>
         </div>
         <div>
-          <h1 class="text-2xl font-bold text-gray-900">Órdenes de Trabajo</h1>
-          <p class="text-sm text-gray-500 mt-0.5">Visualiza y gestiona tus órdenes de trabajo</p>
+          <h1 class="text-lg sm:text-2xl font-bold text-gray-900">Órdenes de Trabajo</h1>
+          <p class="text-xs sm:text-sm text-gray-500 mt-0.5">Visualiza y gestiona tus órdenes</p>
         </div>
       </div>
 
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 sm:gap-3">
         <!-- Contador de Órdenes -->
-        <div class="px-4 py-2 bg-gray-100 rounded-lg border border-gray-300">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-medium text-gray-700">Total:</span>
-            <span class="text-xl font-bold text-gray-900">{@meta.total_count}</span>
+        <div class="px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 rounded-lg border border-gray-300">
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <span class="text-xs sm:text-sm font-medium text-gray-700">Total:</span>
+            <span class="text-base sm:text-xl font-bold text-gray-900">{@meta.total_count}</span>
           </div>
         </div>
 
@@ -29,7 +29,7 @@
         <button
           type="button"
           phx-click="toggle_filters"
-          class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+          class="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-gray-800 to-black hover:from-gray-700 hover:to-gray-900 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
@@ -41,7 +41,7 @@
   </header>
   <!-- Drawer lateral de filtros -->
   <div
-    class={"fixed inset-y-0 right-0 w-96 bg-white/95 backdrop-blur-lg border-l border-gray-300 shadow-2xl transform transition-transform duration-300 ease-in-out z-50 " <> if @filters_open, do: "translate-x-0", else: "translate-x-full"}
+    class={"fixed inset-y-0 right-0 w-full sm:w-96 bg-white/95 backdrop-blur-lg border-l border-gray-300 shadow-2xl transform transition-transform duration-300 ease-in-out z-50 " <> if @filters_open, do: "translate-x-0", else: "translate-x-full"}
     phx-click-away="toggle_filters"
   >
     <div class="flex items-center justify-between p-6 border-b-2 border-gray-300 bg-gradient-to-r from-gray-100 to-gray-200">
@@ -70,7 +70,6 @@
       as={:filters}
       phx-submit="set_filter"
       class="flex flex-col gap-6 p-6 overflow-y-auto"
-      phx-change="set_filter"
     >
       <!-- ESTADO: Todas / Pendientes -->
       <div class="flex flex-col gap-3">
@@ -78,23 +77,13 @@
           <span class="w-6 h-6 rounded-lg bg-gradient-to-r from-gray-700 to-black flex items-center justify-center text-white text-xs">📊</span>
           Estado
         </label>
-        <div class="flex gap-2">
-          <.button
-            name="estado"
-            value="todas"
-            class={"flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border-2 transition-all duration-200 " <> if params["estado"] == "todas", do: "bg-gradient-to-r from-gray-800 to-black border-transparent text-white shadow-lg shadow-gray-500/50", else: "bg-white border-gray-300 text-gray-700 hover:border-gray-500 hover:bg-gray-50"}
-            phx-value-filter="todas"
-          >
-            Todas
-          </.button>
-          <.button
-            name="estado"
-            value="por_aceptar"
-            class={"flex-1 px-4 py-2.5 text-sm font-medium rounded-xl border-2 transition-all duration-200 " <> if params["estado"] == "por_aceptar", do: "bg-gradient-to-r from-gray-800 to-black border-transparent text-white shadow-lg shadow-gray-500/50", else: "bg-white border-gray-300 text-gray-700 hover:border-gray-500 hover:bg-gray-50"}
-          >
-            Pendientes
-          </.button>
-        </div>
+        <.input
+          type="select"
+          name="estado"
+          value={params["estado"] || "todas"}
+          options={[{"Todas", "todas"}, {"Pendientes", "por_aceptar"}]}
+          class="w-full px-4 py-3 text-sm rounded-xl border-2 border-gray-300 bg-white focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-gray-500/20 transition-all duration-200"
+        />
       </div>
 
       <div class="flex flex-col gap-3">
@@ -150,10 +139,25 @@
           class="w-full px-4 py-3 text-sm rounded-xl border-2 border-gray-300 bg-white focus:outline-none focus:border-gray-600 focus:ring-2 focus:ring-gray-500/20 transition-all duration-200"
         />
       </div>
+
+      <button
+        type="submit"
+        class="w-full px-4 py-3 bg-gradient-to-r from-gray-800 to-black text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-gray-700 hover:to-gray-900 transition-all duration-200"
+      >
+        Aplicar filtros
+      </button>
     </.form>
+    <div class="px-6 pb-6">
+      <a
+        href="/admin/workorder"
+        class="block w-full px-4 py-3 text-center text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl border-2 border-gray-300 hover:bg-gray-200 transition-all duration-200"
+      >
+        Borrar filtros
+      </a>
+    </div>
   </div>
   
-  <div class="rounded-2xl bg-white/80 backdrop-blur-sm border-2 border-gray-300 shadow-2xl p-6">
+  <div class="rounded-xl sm:rounded-2xl bg-white/80 backdrop-blur-sm border-2 border-gray-300 shadow-2xl p-2 sm:p-6 overflow-x-auto">
     <%= if @workorders==[] do %>
       <!-- Lista vacía normal -->
       <div class="py-16 px-6 text-center grid place-items-center gap-4">
@@ -188,7 +192,7 @@
 
         <:col :let={w} label="Tipo">
           <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full bg-gray-200 text-gray-800">
-            {w.tipo.descripcion}
+            {if w.tipo, do: w.tipo.descripcion, else: "-"}
           </span>
         </:col>
 
@@ -208,26 +212,26 @@
 
         <:action :let={w}>
           <% botones_desactivados? = params["estado"] == "todas" and w.estado != 100 %>
-          <div class="flex gap-3 justify-center">
+          <div class="flex gap-1.5 sm:gap-3 justify-center">
             <.button
               type="button"
-              class={"px-4 py-2 rounded-xl text-sm font-semibold border-none transition-all duration-200 shadow-lg " <> if botones_desactivados?, do: "bg-gray-300 text-gray-500 cursor-not-allowed", else: "bg-gradient-to-r from-gray-800 to-black text-white hover:shadow-gray-500/50 hover:scale-105"}
+              class={"px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold border-none transition-all duration-200 shadow-lg " <> if botones_desactivados?, do: "bg-gray-300 text-gray-500 cursor-not-allowed", else: "bg-gradient-to-r from-gray-800 to-black text-white hover:shadow-gray-500/50 hover:scale-105"}
               phx-click="cambiar_estado"
               phx-value-ref={w.referencia}
               phx-value-estado="1"
               disabled={botones_desactivados?}
             >
-              ✓ Aceptar
+              ✓ <span class="hidden sm:inline">Aceptar</span>
             </.button>
             <.button
               type="button"
-              class={"px-4 py-2 rounded-xl text-sm font-semibold border-none transition-all duration-200 shadow-lg " <> if botones_desactivados?, do: "bg-gray-300 text-gray-500 cursor-not-allowed", else: "bg-gradient-to-r from-gray-700 to-gray-900 text-white hover:shadow-gray-500/50 hover:scale-105"}
+              class={"px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold border-none transition-all duration-200 shadow-lg " <> if botones_desactivados?, do: "bg-gray-300 text-gray-500 cursor-not-allowed", else: "bg-gradient-to-r from-gray-700 to-gray-900 text-white hover:shadow-gray-500/50 hover:scale-105"}
               phx-click="cambiar_estado"
               phx-value-ref={w.referencia}
               phx-value-estado="0"
               disabled={botones_desactivados?}
             >
-              ✕ Rechazar
+              ✕ <span class="hidden sm:inline">Rechazar</span>
             </.button>
           </div>
         </:action>
@@ -236,7 +240,7 @@
           <% key = "#{w.sysudn}|#{w.systra}|#{w.serie}|#{w.folio}" %>
 
           <%= if @open_key == key do %>
-            <div class="px-8 py-6 bg-gradient-to-br from-gray-50/50 to-gray-100/50 rounded-xl border-t-2 border-gray-300">
+            <div class="px-3 py-4 sm:px-8 sm:py-6 bg-gradient-to-br from-gray-50/50 to-gray-100/50 rounded-xl border-t-2 border-gray-300">
               <div class="mb-4">
                 <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                   <span class="w-8 h-8 rounded-lg bg-gradient-to-r from-gray-700 to-black flex items-center justify-center text-white">📸</span>
@@ -282,38 +286,38 @@
         </:expanded>
       </.table>
       <!-- Controles de paginación con Flop Phoenix -->
-      <div class="flex justify-center items-center gap-4 mt-8 px-4">
+      <div class="flex justify-center items-center gap-2 sm:gap-4 mt-6 sm:mt-8 px-2 sm:px-4">
         <!-- Botón Anterior -->
         <%= if @meta.has_previous_page? do %>
           <a
             href={build_pagination_path(%{"page" => @meta.previous_page}, @params)}
-            class="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl border-2 border-gray-400 bg-white text-gray-700 hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:border-transparent shadow-lg hover:shadow-gray-500/50 transition-all duration-200"
+            class="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-gray-400 bg-white text-gray-700 hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:border-transparent shadow-lg hover:shadow-gray-500/50 transition-all duration-200"
             aria-label="Ir a la página anterior"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
-            Anterior
+            <span class="hidden sm:inline">Anterior</span>
           </a>
         <% else %>
-          <span class="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl border-2 border-gray-300 bg-gray-200 text-gray-500 cursor-not-allowed">
+          <span class="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-gray-300 bg-gray-200 text-gray-500 cursor-not-allowed">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
-            Anterior
+            <span class="hidden sm:inline">Anterior</span>
           </span>
         <% end %>
         <!-- Números de página personalizados (máximo 3 visibles) -->
-        <div class="flex gap-2">
+        <div class="flex gap-1.5 sm:gap-2">
           <%= for page <- get_visible_pages(@meta.current_page, @meta.total_pages, 3) do %>
             <%= if page == @meta.current_page do %>
-              <span class="w-12 h-12 flex items-center justify-center rounded-xl font-bold bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50 text-base">
+              <span class="w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg sm:rounded-xl font-bold bg-gradient-to-r from-gray-800 to-black text-white shadow-lg shadow-gray-500/50 text-sm sm:text-base">
                 {page}
               </span>
             <% else %>
               <a
                 href={build_pagination_path(%{"page" => page}, @params)}
-                class="w-12 h-12 flex items-center justify-center rounded-xl border-2 border-gray-400 bg-white text-gray-700 hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:border-transparent shadow-lg hover:shadow-gray-500/50 transition-all duration-200 font-semibold"
+                class="w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center rounded-lg sm:rounded-xl border-2 border-gray-400 bg-white text-gray-700 hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:border-transparent shadow-lg hover:shadow-gray-500/50 transition-all duration-200 font-semibold text-sm sm:text-base"
               >
                 {page}
               </a>
@@ -324,17 +328,17 @@
         <%= if @meta.has_next_page? do %>
           <a
             href={build_pagination_path(%{"page" => @meta.next_page}, @params)}
-            class="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl border-2 border-gray-400 bg-white text-gray-700 hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:border-transparent shadow-lg hover:shadow-gray-500/50 transition-all duration-200"
+            class="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-gray-400 bg-white text-gray-700 hover:bg-gradient-to-r hover:from-gray-800 hover:to-black hover:text-white hover:border-transparent shadow-lg hover:shadow-gray-500/50 transition-all duration-200"
             aria-label="Ir a la página siguiente"
           >
-            Siguiente
+            <span class="hidden sm:inline">Siguiente</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </a>
         <% else %>
-          <span class="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-xl border-2 border-gray-300 bg-gray-200 text-gray-500 cursor-not-allowed">
-            Siguiente
+          <span class="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded-xl border-2 border-gray-300 bg-gray-200 text-gray-500 cursor-not-allowed">
+            <span class="hidden sm:inline">Siguiente</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
@@ -343,4 +347,5 @@
       </div>
     <% end %>
   </div>
+
 </section>
