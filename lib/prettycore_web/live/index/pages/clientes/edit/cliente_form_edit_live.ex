@@ -396,7 +396,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
   end
 
   @impl true
-  def mount(params, session, socket) do
+  def mount(params, _session, socket) do
     # Modo edición: obtener cliente_id de los parámetros
     cliente_id = Map.get(params, "id")
     frog_token = socket.assigns[:frog_token]
@@ -630,7 +630,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
   @impl true
   def handle_event(
         "validate",
-        %{"_target" => target, "cliente_form" => params} = event_params,
+        %{"_target" => target, "cliente_form" => params} = _event_params,
         socket
       ) do
     changeset =
@@ -713,7 +713,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
   @impl true
   def handle_event("save", %{"cliente_form" => params}, socket) do
     changeset = ClienteForm.changeset(%ClienteForm{}, params)
-    cliente_id = socket.assigns[:cliente_id]
+    _cliente_id = socket.assigns[:cliente_id]
 
     IO.inspect("actualizar", label: "MODO")
 

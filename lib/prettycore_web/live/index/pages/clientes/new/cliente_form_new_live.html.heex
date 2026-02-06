@@ -89,9 +89,10 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl">
                 <div class="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border-2 border-gray-300">
                   <%!-- Campo hidden para enviar el código en el formulario --%>
-                  <.input
-                    field={@form[:ctecli_codigo_k]}
+                  <input
                     type="hidden"
+                    name={@form[:ctecli_codigo_k].name}
+                    value={@form[:ctecli_codigo_k].value}
                   />
                   <%!-- Campo visible (disabled) solo para mostrar --%>
                   <.input
