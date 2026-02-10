@@ -33,6 +33,14 @@ defmodule PrettycoreWeb.Router do
     get "/logout", SessionController, :delete
   end
 
+  ## Pantalla de carga (sin AuthOnMount para no hacer API calls extra)
+  live_session :loading do
+    scope "/admin", PrettycoreWeb do
+      pipe_through :browser
+      live "/loading", LoadingLive
+    end
+  end
+
   ## ÁREA PROTEGIDA: requiere sesión
   live_session :auth,
     on_mount: [{PrettycoreWeb.AuthOnMount, :ensure_authenticated}] do
@@ -40,8 +48,8 @@ defmodule PrettycoreWeb.Router do
       pipe_through :browser
 
       live "/platform", Inicio
-  #    live "/programacion", Programacion
-  #    live "/programacion/sql", HerramientaSql
+      live "/programacion", Programacion
+      live "/programacion/sql", HerramientaSql
       live "/workorder", WorkOrderLive
       live "/clientes", Clientes
       live "/clientes/new", ClienteFormNewLive

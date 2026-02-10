@@ -30,28 +30,40 @@ defmodule PrettycoreWeb.Clientes do
     alias Prettycore.Api.Client, as: Api
     token = socket.assigns[:frog_token]
 
-    # Obtener UDNs dinámicamente de SYS_USUARIO
+    # Obtener UDNs con caché
     sysudn_opts =
-      case Api.get_all("SYS_USUARIO", token) do
-        {:ok, users} ->
-          users
-          |> Enum.map(& &1["SYSUDN_CODIGO_K"])
-          |> Enum.reject(&(&1 in [nil, ""]))
-          |> Enum.uniq()
-          |> Enum.sort()
-        {:error, _} -> []
+      case :persistent_term.get(:cache_sysudn_opts, nil) do
+        nil ->
+          opts = case Api.get_all("SYS_USUARIO", token) do
+            {:ok, users} ->
+              users
+              |> Enum.map(& &1["SYSUDN_CODIGO_K"])
+              |> Enum.reject(&(&1 in [nil, ""]))
+              |> Enum.uniq()
+              |> Enum.sort()
+            {:error, _} -> []
+          end
+          if opts != [], do: :persistent_term.put(:cache_sysudn_opts, opts)
+          opts
+        cached -> cached
       end
 
-    # Obtener rutas dinámicamente de VTA_RUTA
+    # Obtener rutas con caché
     ruta_opts =
-      case Api.get_all("VTA_RUTA", token) do
-        {:ok, rutas} ->
-          rutas
-          |> Enum.map(& &1["VTARUT_CODIGO_K"])
-          |> Enum.reject(&(&1 in [nil, ""]))
-          |> Enum.uniq()
-          |> Enum.sort()
-        {:error, _} -> []
+      case :persistent_term.get(:cache_ruta_opts, nil) do
+        nil ->
+          opts = case Api.get_all("VTA_RUTA", token) do
+            {:ok, rutas} ->
+              rutas
+              |> Enum.map(& &1["VTARUT_CODIGO_K"])
+              |> Enum.reject(&(&1 in [nil, ""]))
+              |> Enum.uniq()
+              |> Enum.sort()
+            {:error, _} -> []
+          end
+          if opts != [], do: :persistent_term.put(:cache_ruta_opts, opts)
+          opts
+        cached -> cached
       end
 
     {:ok,

@@ -12,6 +12,9 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
 
     @primary_key false
     embedded_schema do
+      # Denominación comercial (display only, viene de CTE_DIRECCION)
+      field(:ctecli_dencomercia, :string)
+
       # Datos de identificación (obligatorios)
       field(:ctedir_codigo_k, :string)
       field(:ctedir_responsable, :string)
@@ -90,6 +93,8 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
       changeset =
         direccion
         |> cast(attrs, [
+          # Denominación comercial
+          :ctecli_dencomercia,
           # Identificación
           :ctedir_codigo_k,
           :ctedir_responsable,
@@ -434,7 +439,7 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
     canales = Catalogos.listar_canales(t)
     regimenes = Catalogos.listar_regimenes(t)
     paquetes_servicio = Catalogos.listar_paquetes_servicio(t)
-    transacciones = Catalogos.listar_transacciones(t)
+#    transacciones = Catalogos.listar_transacciones(t)
     monedas = Catalogos.listar_monedas(t)
     estados = Catalogos.listar_estados(t)
     rutas = Catalogos.listar_rutas(t)
@@ -460,7 +465,7 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
      |> assign(:subcanales, [])
      |> assign(:regimenes, regimenes)
      |> assign(:paquetes_servicio, paquetes_servicio)
-     |> assign(:transacciones, transacciones)
+  #   |> assign(:transacciones, transacciones)
      |> assign(:monedas, monedas)
      |> assign(:estados, estados)
      |> assign(:municipios, [])
@@ -589,7 +594,7 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
           # Crear nuevo cliente usando el token de la API
           case ClientesApi.crear_cliente(cliente_data, frog_token) do
             {:ok, _response} ->
-              IO.puts("Cliente creado exitosamente")
+              Prettycore.Clientes.invalidar_cache()
 
               {:noreply,
                socket

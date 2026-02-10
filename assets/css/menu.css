@@ -5,8 +5,32 @@
 /* Layout */
 .pc-platform {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   background: #f5f5f5;
+}
+
+/* Barra negra superior full-width */
+.pc-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  background: #000000;
+  padding: 8px 24px;
+  flex-shrink: 0;
+}
+
+.pc-topbar-logo {
+  height: 30px;
+  object-fit: contain;
+}
+
+/* Fila sidebar + contenido */
+.pc-platform-row {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
 .pc-platform-main {
@@ -46,48 +70,31 @@
   display: flex;
   align-items: center;
   min-width: 0;
-  overflow: hidden;
 }
 
 .pc-platform-sidebar:not(.pc-platform-sidebar-open) .pc-sidebar-header {
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
 
 .pc-platform-sidebar:not(.pc-platform-sidebar-open) .pc-sidebar-brand {
   justify-content: center;
 }
 
-/* Logo completo (abierto) */
-.pc-sidebar-brand-full {
-  height: 28px;
-  width: auto;
+/* Logo gota morada - siempre visible */
+.pc-sidebar-drop-logo {
+  width: 40px;
+  height: 40px;
   object-fit: contain;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Icono solo (cerrado) */
-.pc-sidebar-brand-icon {
+/* Sidebar cerrado: gota más pequeña */
+.pc-platform-sidebar:not(.pc-platform-sidebar-open) .pc-sidebar-drop-logo {
   width: 32px;
   height: 32px;
-  border-radius: 8px;
-  object-fit: contain;
-}
-
-/* Abierto: mostrar full, ocultar icon */
-.pc-sidebar-logo-closed {
-  display: none;
-}
-
-.pc-sidebar-logo-open {
-  display: block;
-}
-
-/* Cerrado: mostrar icon, ocultar full */
-.pc-platform-sidebar:not(.pc-platform-sidebar-open) .pc-sidebar-logo-open {
-  display: none;
-}
-
-.pc-platform-sidebar:not(.pc-platform-sidebar-open) .pc-sidebar-logo-closed {
-  display: block;
 }
 
 /* ---- TOGGLE ---- */
@@ -95,9 +102,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
   border: none;
   background: transparent;
   color: #525252;
@@ -385,11 +392,9 @@
   }
 
   /* Override collapsed desktop styles when sidebar is visible on mobile */
-  .pc-platform-sidebar.pc-sidebar-visible .pc-sidebar-logo-open {
-    display: block;
-  }
-  .pc-platform-sidebar.pc-sidebar-visible .pc-sidebar-logo-closed {
-    display: none;
+  .pc-platform-sidebar.pc-sidebar-visible .pc-sidebar-drop-logo {
+    width: 40px;
+    height: 40px;
   }
   .pc-platform-sidebar.pc-sidebar-visible .pc-sidebar-header {
     justify-content: space-between;

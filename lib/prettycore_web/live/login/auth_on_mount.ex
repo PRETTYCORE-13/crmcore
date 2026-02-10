@@ -39,6 +39,20 @@ defmodule PrettycoreWeb.AuthOnMount do
   end
 
   defp get_company_logo(token) do
+    # Primero buscar en caché
+    case :persistent_term.get(:company_logo_cache, nil) do
+      nil ->
+        # No hay caché, consultar API
+        logo = fetch_company_logo(token)
+        if logo, do: :persistent_term.put(:company_logo_cache, logo)
+        logo
+
+      cached_logo ->
+        cached_logo
+    end
+  end
+
+  defp fetch_company_logo(token) do
     case Api.get_all("SYS_EMPRESA", token) do
       {:ok, [empresa | _]} ->
         logo = Map.get(empresa, "SYSEMP_LOGOTIPO")

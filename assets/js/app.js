@@ -191,9 +191,11 @@ const NavigateAfterFlash = {
   }
 };
 
+const isLocalhost = window.location.hostname === "localhost" || window.location.hostname.contains("localhost");
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
-  longPollFallbackMs: 2500,
+  longPollFallbackMs: isLocalhost ? null : 5000,
   params: {_csrf_token: csrfToken},
   hooks: {...colocatedHooks, LocationMap, NavigateAfterFlash},
 })

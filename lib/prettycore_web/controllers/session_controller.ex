@@ -22,7 +22,7 @@ defmodule PrettycoreWeb.SessionController do
         |> put_session(:user_name, username)
         |> put_session(:frog_token, frog_token)
         |> configure_session(renew: true)
-        |> redirect(to: ~p"/admin/platform")
+        |> redirect(to: ~p"/admin/loading")
 
       {:error, :invalid_credentials} ->
         conn

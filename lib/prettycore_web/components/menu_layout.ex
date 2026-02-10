@@ -4,7 +4,7 @@ defmodule PrettycoreWeb.MenuLayout do
 
   @menu [
     %{id: "inicio", label: "Inicio"},
-  #  %{id: "programacion", label: "Programación"},
+    %{id: "programacion", label: "Programación"},
     %{id: "workorder", label: "Orden T"},
     %{id: "clientes", label: "Clientes"}
   ]
@@ -24,48 +24,53 @@ defmodule PrettycoreWeb.MenuLayout do
 
     ~H"""
     <div class="pc-platform">
-      <!-- Mobile hamburger button -->
-      <button
-        type="button"
-        class="pc-mobile-menu-btn"
-        phx-click={mobile_toggle_js()}
-      >
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </button>
-      <!-- Mobile overlay -->
-      <div
-        class="pc-sidebar-overlay"
-        phx-click={mobile_toggle_js()}
-      />
-      <!-- Sidebar -->
-      <aside class={"pc-platform-sidebar" <> if @sidebar_open, do: " pc-platform-sidebar-open", else: ""}>
-        <!-- HEADER: Logo + nombre + toggle -->
-        <div class="pc-sidebar-header">
-          <div class="pc-sidebar-brand">
-            <img
-              src="https://prettycore.xyz/IMAGENES/PRETTYCORE.png"
-              alt="PrettyCore"
-              class="pc-sidebar-brand-full pc-sidebar-logo-open"
-            />
-            <img
-              src="https://prettycore.xyz/IMAGENES/Logo%20Prettycore%20(8).png"
-              alt="PrettyCore"
-              class="pc-sidebar-brand-icon pc-sidebar-logo-closed"
-            />
-          </div>
+      <!-- Barra negra superior full-width con branding PRETTYCORE -->
+      <div class="pc-topbar">
+        <img
+          src="https://prettycore.xyz/IMAGENES/PRETTYCORE.png"
+          alt="PRETTYCORE"
+          class="pc-topbar-logo"
+        />
+      </div>
+      <!-- Fila: Sidebar + Contenido -->
+      <div class="pc-platform-row">
+        <!-- Mobile hamburger button -->
+        <button
+          type="button"
+          class="pc-mobile-menu-btn"
+          phx-click={mobile_toggle_js()}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <!-- Mobile overlay -->
+        <div
+          class="pc-sidebar-overlay"
+          phx-click={mobile_toggle_js()}
+        />
+        <!-- Sidebar -->
+        <aside class={"pc-platform-sidebar" <> if @sidebar_open, do: " pc-platform-sidebar-open", else: ""}>
+          <!-- HEADER: Logo gota + toggle -->
+          <div class="pc-sidebar-header">
+            <div class="pc-sidebar-brand">
+              <img
+                src="https://prettycore.xyz/IMAGENES/Logo%20Prettycore%20(8).png"
+                alt="PrettyCore"
+                class="pc-sidebar-drop-logo"
+              />
+            </div>
           <button
             type="button"
             class="pc-sidebar-toggle"
             phx-click={toggle_sidebar_js(@menu_event)}
           >
             <%= if @sidebar_open do %>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="11 17 6 12 11 7" /><polyline points="18 17 13 12 18 7" />
               </svg>
             <% else %>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="13 17 18 12 13 7" /><polyline points="6 17 11 12 6 7" />
               </svg>
             <% end %>
@@ -132,34 +137,35 @@ defmodule PrettycoreWeb.MenuLayout do
             </nav>
           </div>
         </div>
-      </aside>
-      <!-- CONTENIDO -->
-      <main class="pc-platform-main">
-        <!-- Banner carrusel -->
-        <div class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 overflow-hidden whitespace-nowrap">
-          <div class="inline-flex animate-marquee">
-            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
-              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
-            </span>
-            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
-              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
-            </span>
-            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
-              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
-            </span>
-            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
-              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
-            </span>
-            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
-              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
-            </span>
-            <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
-              ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
-            </span>
+        </aside>
+        <!-- CONTENIDO -->
+        <main class="pc-platform-main">
+          <!-- Banner carrusel -->
+          <div class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 overflow-hidden whitespace-nowrap">
+            <div class="inline-flex animate-marquee">
+              <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+                ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+              </span>
+              <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+                ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+              </span>
+              <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+                ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+              </span>
+              <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+                ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+              </span>
+              <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+                ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+              </span>
+              <span class="px-8 py-2 text-sm font-semibold text-white tracking-wide">
+                ¿Tienes alguna idea de app web y no sabes cómo hacerla realidad? CONTÁCTANOS
+              </span>
+            </div>
           </div>
-        </div>
-        {render_slot(@inner_block)}
-      </main>
+          {render_slot(@inner_block)}
+        </main>
+      </div>
     </div>
     """
   end

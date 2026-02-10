@@ -119,7 +119,7 @@ defmodule Prettycore.Api.Client do
   def get_regimenes(token \\ nil), do: get_all("CTE_REGIMEN", token)
   def get_cadenas(token \\ nil), do: get_all("CTE_CADENA", token)
   def get_paquetes_servicio(token \\ nil), do: get_all("CTE_PAQUETESERV", token)
-  def get_transacciones(token \\ nil), do: get_filtered("SYS_TRANSAC", %{"SYSTRA_TIPO" => "F"}, token)
+ # def get_transacciones(token \\ nil), do: get_filtered("SYS_TRANSAC", %{"SYSTRA_TIPO" => "F"}, token)
   def get_monedas(token \\ nil), do: get_all("CFG_MONEDA", token)
   def get_rutas(token \\ nil), do: get_all("VTA_RUTA", token)
 
@@ -171,8 +171,6 @@ defmodule Prettycore.Api.Client do
     url = "#{@base_url}/REST_USUARIO"
     data = %{"FG_USUARIO" => frog_usuario}
 
-    Logger.debug("API FROG AUTH: #{url} with user #{frog_usuario}")
-
     # Token fijo para autenticar el endpoint REST_USUARIO
     auth_token = "IFcRzSfaBG6ycnpWzThyfEdKHglK14tlZylvRhOhlQ1fDHobmveKk6JowcU/BhCquBlqQv7zkrLIUYvFZmQZqHdqNiLptzCBf5wT826XpY4="
 
@@ -184,7 +182,14 @@ defmodule Prettycore.Api.Client do
 
     body = Jason.encode!(data)
 
-    case Req.post(url, body: body, headers: headers, receive_timeout: @timeout) do
+    {elapsed_us, http_result} = :timer.tc(fn ->
+      Req.post(url, body: body, headers: headers, receive_timeout: @timeout)
+    end)
+
+    elapsed_ms = div(elapsed_us, 1000)
+    Logger.debug("API FROG AUTH: #{url} user=#{frog_usuario} [#{elapsed_ms}ms]")
+
+    case http_result do
       {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
         case parse_response(resp_body) do
           {:ok, %{"SYSUSR_PASSWORD" => password}} when is_binary(password) ->
@@ -226,79 +231,99 @@ defmodule Prettycore.Api.Client do
   # ============================================================
 
   defp do_get(url, auth_token) do
-    Logger.debug("API GET: #{url}")
-
     headers = build_headers(auth_token)
 
-    case Req.get(url, headers: headers, receive_timeout: @timeout) do
+    {elapsed_us, result} = :timer.tc(fn ->
+      Req.get(url, headers: headers, receive_timeout: @timeout)
+    end)
+
+    elapsed_ms = div(elapsed_us, 1000)
+    Logger.debug("API GET: #{url} [#{elapsed_ms}ms]")
+
+    case result do
       {:ok, %Req.Response{status: status, body: body}} when status in 200..299 ->
         parse_response(body)
 
       {:ok, %Req.Response{status: status, body: body}} ->
-        Logger.error("API GET error #{status}: #{inspect(body)}")
+        Logger.error("API GET error #{status}: #{url} [#{elapsed_ms}ms]")
         {:error, {:http_error, status, body}}
 
       {:error, reason} ->
-        Logger.error("API GET connection error: #{inspect(reason)}")
+        Logger.error("API GET connection error: #{url} [#{elapsed_ms}ms] #{inspect(reason)}")
         {:error, {:connection_error, reason}}
     end
   end
 
   defp do_post(url, data, auth_token) do
-    Logger.debug("API POST: #{url}")
-
     headers = build_headers(auth_token)
     body = Jason.encode!(data)
 
-    case Req.post(url, body: body, headers: headers, receive_timeout: @timeout) do
+    {elapsed_us, result} = :timer.tc(fn ->
+      Req.post(url, body: body, headers: headers, receive_timeout: @timeout)
+    end)
+
+    elapsed_ms = div(elapsed_us, 1000)
+    Logger.debug("API POST: #{url} [#{elapsed_ms}ms]")
+
+    case result do
       {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
         parse_response(resp_body)
 
       {:ok, %Req.Response{status: status, body: resp_body}} ->
-        Logger.error("API POST error #{status}: #{inspect(resp_body)}")
+        Logger.error("API POST error #{status}: #{url} [#{elapsed_ms}ms]")
         {:error, {:http_error, status, resp_body}}
 
       {:error, reason} ->
-        Logger.error("API POST connection error: #{inspect(reason)}")
+        Logger.error("API POST connection error: #{url} [#{elapsed_ms}ms] #{inspect(reason)}")
         {:error, {:connection_error, reason}}
     end
   end
 
   defp do_put(url, data, auth_token) do
-    Logger.debug("API PUT: #{url}")
-
     headers = build_headers(auth_token)
     body = Jason.encode!(data)
 
-    case Req.put(url, body: body, headers: headers, receive_timeout: @timeout) do
+    {elapsed_us, result} = :timer.tc(fn ->
+      Req.put(url, body: body, headers: headers, receive_timeout: @timeout)
+    end)
+
+    elapsed_ms = div(elapsed_us, 1000)
+    Logger.debug("API PUT: #{url} [#{elapsed_ms}ms]")
+
+    case result do
       {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
         parse_response(resp_body)
 
       {:ok, %Req.Response{status: status, body: resp_body}} ->
-        Logger.error("API PUT error #{status}: #{inspect(resp_body)}")
+        Logger.error("API PUT error #{status}: #{url} [#{elapsed_ms}ms]")
         {:error, {:http_error, status, resp_body}}
 
       {:error, reason} ->
-        Logger.error("API PUT connection error: #{inspect(reason)}")
+        Logger.error("API PUT connection error: #{url} [#{elapsed_ms}ms] #{inspect(reason)}")
         {:error, {:connection_error, reason}}
     end
   end
 
   defp do_delete(url, auth_token) do
-    Logger.debug("API DELETE: #{url}")
-
     headers = build_headers(auth_token)
 
-    case Req.delete(url, headers: headers, receive_timeout: @timeout) do
+    {elapsed_us, result} = :timer.tc(fn ->
+      Req.delete(url, headers: headers, receive_timeout: @timeout)
+    end)
+
+    elapsed_ms = div(elapsed_us, 1000)
+    Logger.debug("API DELETE: #{url} [#{elapsed_ms}ms]")
+
+    case result do
       {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
         {:ok, resp_body}
 
       {:ok, %Req.Response{status: status, body: resp_body}} ->
-        Logger.error("API DELETE error #{status}: #{inspect(resp_body)}")
+        Logger.error("API DELETE error #{status}: #{url} [#{elapsed_ms}ms]")
         {:error, {:http_error, status, resp_body}}
 
       {:error, reason} ->
-        Logger.error("API DELETE connection error: #{inspect(reason)}")
+        Logger.error("API DELETE connection error: #{url} [#{elapsed_ms}ms] #{inspect(reason)}")
         {:error, {:connection_error, reason}}
     end
   end

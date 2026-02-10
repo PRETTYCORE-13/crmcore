@@ -10,6 +10,12 @@ defmodule Prettycore.Clientes do
 
   alias Prettycore.Api.Client, as: Api
 
+  @doc "Invalida el caché de clientes y direcciones para forzar recarga desde API"
+  def invalidar_cache do
+    :persistent_term.erase(:cache_cte_cliente)
+    :persistent_term.erase(:cache_cte_direccion)
+  end
+
   # Función helper para convertir Latin-1 a UTF-8
   defp fix_encoding(nil), do: nil
 
@@ -288,10 +294,42 @@ defmodule Prettycore.Clientes do
     page = String.to_integer(params["page"] || "1")
     page_size = String.to_integer(params["page_size"] || "20")
 
-    # Obtener TODO en solo 3 llamadas (en lugar de N+1)
-    with {:ok, clientes} <- Api.get_all("CTE_CLIENTE", token),
-         {:ok, todas_direcciones} <- Api.get_all("CTE_DIRECCION", token),
-         {:ok, todos_estados} <- Api.get_all("MAP_ESTADO", token) do
+    # Obtener estados con caché (nunca cambian)
+    todos_estados =
+      case :persistent_term.get(:cache_map_estado, nil) do
+        nil ->
+          case Api.get_all("MAP_ESTADO", token) do
+            {:ok, data} ->
+              :persistent_term.put(:cache_map_estado, data)
+              data
+            {:error, _} -> []
+          end
+        cached -> cached
+      end
+
+    # Obtener clientes y direcciones con caché (se invalida al guardar)
+    clientes_data =
+      case :persistent_term.get(:cache_cte_cliente, nil) do
+        nil ->
+          case Api.get_all("CTE_CLIENTE", token) do
+            {:ok, data} -> :persistent_term.put(:cache_cte_cliente, data); data
+            {:error, reason} -> {:error, reason}
+          end
+        cached -> cached
+      end
+
+    direcciones_data =
+      case :persistent_term.get(:cache_cte_direccion, nil) do
+        nil ->
+          case Api.get_all("CTE_DIRECCION", token) do
+            {:ok, data} -> :persistent_term.put(:cache_cte_direccion, data); data
+            {:error, reason} -> {:error, reason}
+          end
+        cached -> cached
+      end
+
+    with clientes when is_list(clientes) <- clientes_data,
+         todas_direcciones when is_list(todas_direcciones) <- direcciones_data do
 
       # Indexar direcciones por código de cliente para búsqueda rápida
       direcciones_por_cliente = Enum.group_by(todas_direcciones, & &1["CTECLI_CODIGO_K"])
@@ -417,10 +455,29 @@ defmodule Prettycore.Clientes do
       {:ok, %{cliente: %{...}, direcciones: [...]}}
   """
   def get_cliente_by_codigo(codigo, token \\ nil) do
-    alias Prettycore.Api.Cache
-    # La API no soporta filtros: traer todo y filtrar en memoria (con cache)
-    with {:ok, todos_clientes} <- Cache.fetch({:all_clientes, token}, fn -> Api.get_all("CTE_CLIENTE", token) end),
-         {:ok, todas_direcciones} <- Cache.fetch({:all_direcciones, token}, fn -> Api.get_all("CTE_DIRECCION", token) end) do
+    # Usar persistent_term (precargado en login) en lugar de llamadas API
+    todos_clientes =
+      case :persistent_term.get(:cache_cte_cliente, nil) do
+        nil ->
+          case Api.get_all("CTE_CLIENTE", token) do
+            {:ok, data} -> :persistent_term.put(:cache_cte_cliente, data); data
+            {:error, reason} -> {:error, reason}
+          end
+        cached -> cached
+      end
+
+    todas_direcciones =
+      case :persistent_term.get(:cache_cte_direccion, nil) do
+        nil ->
+          case Api.get_all("CTE_DIRECCION", token) do
+            {:ok, data} -> :persistent_term.put(:cache_cte_direccion, data); data
+            {:error, reason} -> {:error, reason}
+          end
+        cached -> cached
+      end
+
+    with todos_clientes when is_list(todos_clientes) <- todos_clientes,
+         todas_direcciones when is_list(todas_direcciones) <- todas_direcciones do
 
       # Buscar el cliente por código
       cliente = Enum.find(todos_clientes, fn c -> c["CTECLI_CODIGO_K"] == codigo end)
@@ -440,8 +497,8 @@ defmodule Prettycore.Clientes do
           {:ok, %{cliente: cliente_normalizado, direcciones: dirs}}
       end
     else
-      {:error, reason} ->
-        {:error, reason}
+      {:error, reason} -> {:error, reason}
+      _ -> {:error, :not_found}
     end
   end
 
@@ -516,6 +573,7 @@ defmodule Prettycore.Clientes do
   defp normalize_direccion(dir) do
     %{
       ctecli_codigo_k: dir["CTECLI_CODIGO_K"],
+      ctecli_dencomercia: dir["CTECLI_DENCOMERCIA"],
       ctedir_codigo_k: dir["CTEDIR_CODIGO_K"],
       ctedir_tipofis: dir["CTEDIR_TIPOFIS"],
       ctedir_tipoent: dir["CTEDIR_TIPOENT"],

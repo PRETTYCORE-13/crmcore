@@ -12,6 +12,9 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
 
     @primary_key false
     embedded_schema do
+      # Denominación comercial (display only, viene de CTE_DIRECCION)
+      field(:ctecli_dencomercia, :string)
+
       # Datos de identificación (obligatorios)
       field(:ctedir_codigo_k, :string)
       field(:ctedir_responsable, :string)
@@ -90,6 +93,8 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
       changeset =
         direccion
         |> cast(attrs, [
+          # Denominación comercial
+          :ctecli_dencomercia,
           # Identificación
           :ctedir_codigo_k,
           :ctedir_responsable,
@@ -408,6 +413,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
         # Traer TODOS los campos tal como están en la BD (sin valores por defecto)
         direcciones_form = Enum.map(direcciones_db, fn dir ->
           %DireccionForm{
+            ctecli_dencomercia: dir.ctecli_dencomercia,
             ctedir_codigo_k: dir.ctedir_codigo_k,
             ctedir_responsable: dir.ctedir_responsable,
             ctedir_telefono: dir.ctedir_telefono,
@@ -546,9 +552,10 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
     canales = Catalogos.listar_canales(t)
     regimenes = Catalogos.listar_regimenes(t)
     paquetes_servicio = Catalogos.listar_paquetes_servicio(t)
-    transacciones = Catalogos.listar_transacciones(t)
+#    transacciones = Catalogos.listar_transacciones(t)
     monedas = Catalogos.listar_monedas(t)
     estados = Catalogos.listar_estados(t)
+
     rutas = Catalogos.listar_rutas(t)
     usos_cfdi = Catalogos.listar_usos_cfdi(t)
     formas_pago = Catalogos.listar_formas_pago(t)
@@ -558,6 +565,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
     # Cargar subcanales si el cliente tiene un canal seleccionado
     subcanales = if cliente.ctecan_codigo_k do
       Catalogos.listar_subcanales(cliente.ctecan_codigo_k, t)
+      []
     else
       []
     end
@@ -574,6 +582,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
 
       localidades = if primera_dir.mapedo_codigo_k && primera_dir.mapmun_codigo_k do
         Catalogos.listar_localidades(primera_dir.mapedo_codigo_k, primera_dir.mapmun_codigo_k, t)
+
       else
         []
       end
@@ -599,7 +608,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
      |> assign(:subcanales, subcanales)
      |> assign(:regimenes, regimenes)
      |> assign(:paquetes_servicio, paquetes_servicio)
-     |> assign(:transacciones, transacciones)
+#     |> assign(:transacciones, transacciones)
      |> assign(:monedas, monedas)
      |> assign(:estados, estados)
      |> assign(:municipios, municipios)
@@ -611,6 +620,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
      |> assign(:regimenes_fiscales, regimenes_fiscales)
      |> assign(:cfdi_tab, "cfdi_32")
      |> assign(:direccion_tab, "datos")
+     |> assign(:open_direcciones, MapSet.new())
      |> assign(:complementos, [])
      |> assign(:paises, [{"México", "MEX"}])
      |> assign(:codigos_exportacion, [{"No aplica", "01"}, {"Definitiva", "02"}])}
@@ -731,7 +741,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
           # Actualizar cliente existente usando el token de la API
           case ClientesApi.editar_cliente(cliente_data, frog_token) do
             {:ok, _response} ->
-              IO.puts("Cliente actualizado exitosamente")
+              Prettycore.Clientes.invalidar_cache()
 
               {:noreply,
                socket
@@ -871,6 +881,19 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
   @impl true
   def handle_event("change_direccion_tab", %{"tab" => tab}, socket) do
     {:noreply, assign(socket, :direccion_tab, tab)}
+  end
+
+  @impl true
+  def handle_event("toggle_direccion", %{"index" => index_str}, socket) do
+    index = String.to_integer(index_str)
+    open = socket.assigns.open_direcciones
+
+    updated =
+      if MapSet.member?(open, index),
+        do: MapSet.delete(open, index),
+        else: MapSet.put(open, index)
+
+    {:noreply, assign(socket, :open_direcciones, updated)}
   end
 
   @impl true
