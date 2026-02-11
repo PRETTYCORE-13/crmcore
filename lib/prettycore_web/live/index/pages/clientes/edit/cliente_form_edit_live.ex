@@ -623,7 +623,10 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
      |> assign(:open_direcciones, MapSet.new())
      |> assign(:complementos, [])
      |> assign(:paises, [{"México", "MEX"}])
-     |> assign(:codigos_exportacion, [{"No aplica", "01"}, {"Definitiva", "02"}])}
+     |> assign(:codigos_exportacion, [{"No aplica", "01"}, {"Definitiva", "02"}])
+     |> assign(:show_json_modal, false)
+     |> assign(:json_preview, nil)
+     |> assign(:pending_changeset, nil)}
   end
 
   @impl true
@@ -723,49 +726,21 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
   @impl true
   def handle_event("save", %{"cliente_form" => params}, socket) do
     changeset = ClienteForm.changeset(%ClienteForm{}, params)
-    _cliente_id = socket.assigns[:cliente_id]
-
-    IO.inspect("actualizar", label: "MODO")
 
     case validate_and_extract(changeset) do
       {:ok, cliente_data} ->
-        # Usar frog_token de la sesión para autenticación API
-        frog_token = socket.assigns[:frog_token]
-
-        if is_nil(frog_token) do
-          {:noreply,
-           socket
-           |> put_flash(:error, "Sesión no válida. Por favor inicie sesión nuevamente.")
-           |> assign(:form, to_form(changeset))}
-        else
-          # Actualizar cliente existente usando el token de la API
-          case ClientesApi.editar_cliente(cliente_data, frog_token) do
-            {:ok, _response} ->
-              Prettycore.Clientes.invalidar_cache()
-
-              {:noreply,
-               socket
-               |> put_flash(:info, "Cliente actualizado exitosamente")
-               |> push_event("navigate-after-flash", %{to: "/admin/clientes", delay: 3000})}
-
-            {:error, {:http_error, status, body}} ->
-              error_msg = extract_error_message(body, status)
-              IO.puts("Error al actualizar cliente: #{error_msg}")
-
-              {:noreply,
-               socket
-               |> put_flash(:error, "Error al actualizar cliente: #{error_msg}")
-               |> assign(:form, to_form(changeset))}
-
-            {:error, reason} ->
-              IO.inspect("Error al actualizar cliente")
-
-              {:noreply,
-               socket
-               |> put_flash(:error, "Error de conexión: #{inspect(reason)}")
-               |> assign(:form, to_form(changeset))}
-          end
+        # Generar el JSON que se enviará y mostrarlo en modal de confirmación
+        json_string = ClientesApi.build_json_string(cliente_data)
+        json_pretty = case Jason.decode(json_string) do
+          {:ok, decoded} -> Jason.encode!(decoded, pretty: true)
+          _ -> json_string
         end
+
+        {:noreply,
+         socket
+         |> assign(:show_json_modal, true)
+         |> assign(:json_preview, json_pretty)
+         |> assign(:pending_changeset, changeset)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         missing_fields = extract_missing_fields(changeset)
@@ -776,6 +751,55 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
          |> put_flash(:error, error_message)
          |> assign(:form, to_form(changeset_with_action))}
     end
+  end
+
+  @impl true
+  def handle_event("confirm_save", _params, socket) do
+    changeset = socket.assigns.pending_changeset
+    {:ok, cliente_data} = validate_and_extract(changeset)
+    frog_token = socket.assigns[:frog_token]
+
+    socket = assign(socket, show_json_modal: false, json_preview: nil, pending_changeset: nil)
+
+    if is_nil(frog_token) do
+      {:noreply,
+       socket
+       |> put_flash(:error, "Sesión no válida. Por favor inicie sesión nuevamente.")
+       |> assign(:form, to_form(changeset))}
+    else
+      case ClientesApi.editar_cliente(cliente_data, frog_token) do
+        {:ok, _response} ->
+          Prettycore.Clientes.invalidar_cache()
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Cliente actualizado exitosamente")
+           |> push_event("navigate-after-flash", %{to: "/admin/clientes", delay: 3000})}
+
+        {:error, {:http_error, status, body}} ->
+          error_msg = extract_error_message(body, status)
+
+          {:noreply,
+           socket
+           |> put_flash(:error, "Error al actualizar cliente: #{error_msg}")
+           |> assign(:form, to_form(changeset))}
+
+        {:error, reason} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Error de conexión: #{inspect(reason)}")
+           |> assign(:form, to_form(changeset))}
+      end
+    end
+  end
+
+  @impl true
+  def handle_event("cancel_save", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:show_json_modal, false)
+     |> assign(:json_preview, nil)
+     |> assign(:pending_changeset, nil)}
   end
 
   @impl true
