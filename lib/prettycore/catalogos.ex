@@ -12,6 +12,11 @@ defmodule Prettycore.Catalogos do
   alias Prettycore.Api.Client, as: Api
   alias Prettycore.Api.Cache
   alias Prettycore.EncodingHelper
+  alias Prettycore.PsqlRepo
+  alias Prettycore.Map.Estado
+  alias Prettycore.Map.Municipio
+  alias Prettycore.Map.Localidad
+  import Ecto.Query
   require Logger
 
   @doc """
@@ -22,18 +27,65 @@ defmodule Prettycore.Catalogos do
     Logger.info("PRELOAD: Iniciando precarga de catálogos...")
     start = System.monotonic_time(:millisecond)
 
-    tasks = [
+    # Lote 1A: CTE_CLIENTE sola (es la más pesada, falla si comparte lote)
+    batch1a = [
+      Task.async(fn ->
+        case Api.get_all("CTE_CLIENTE", token) do
+          {:ok, data} -> :persistent_term.put(:cache_cte_cliente, data); :ok
+          {:error, _} -> :ok
+        end
+      end)
+    ]
+
+    run_batch(batch1a, "Lote 1A (clientes)")
+
+    # Lote 1B: Direcciones y empresa
+    batch1b = [
+      Task.async(fn ->
+        case Api.get_all("CTE_DIRECCION", token) do
+          {:ok, data} -> :persistent_term.put(:cache_cte_direccion, data); :ok
+          {:error, _} -> :ok
+        end
+      end),
+      Task.async(fn ->
+        case Api.get_all("SYS_EMPRESA", token) do
+          {:ok, [empresa | _]} ->
+            logo = Map.get(empresa, "SYSEMP_LOGOTIPO")
+            if logo && logo != "" do
+              formatted = if String.starts_with?(logo, "data:image"), do: logo, else: "data:image/png;base64,#{logo}"
+              :persistent_term.put(:company_logo_cache, formatted)
+            end
+          _ -> :ok
+        end
+      end)
+    ]
+
+    run_batch(batch1b, "Lote 1B (dirs/empresa)")
+
+    # Lote 2: Catálogos de formularios
+    batch2 = [
       Task.async(fn -> listar_tipos_cliente(token) end),
       Task.async(fn -> listar_canales(token) end),
       Task.async(fn -> listar_regimenes(token) end),
       Task.async(fn -> listar_cadenas(token) end),
-      Task.async(fn -> listar_paquetes_servicio(token) end),
+      Task.async(fn -> listar_paquetes_servicio(token) end)
+    ]
+
+    run_batch(batch2, "Lote 2 (catálogos 1)")
+
+    # Lote 3: Catálogos SAT y más
+    batch3 = [
       Task.async(fn -> listar_monedas(token) end),
-      Task.async(fn -> listar_estados(token) end),
       Task.async(fn -> listar_rutas(token) end),
       Task.async(fn -> listar_usos_cfdi(token) end),
       Task.async(fn -> listar_formas_pago(token) end),
-      Task.async(fn -> listar_metodos_pago(token) end),
+      Task.async(fn -> listar_metodos_pago(token) end)
+    ]
+
+    run_batch(batch3, "Lote 3 (catálogos 2)")
+
+    # Lote 4: Restantes
+    batch4 = [
       Task.async(fn -> listar_regimenes_fiscales(token) end),
       Task.async(fn ->
         Cache.fetch({:all_subcanales, token}, fn ->
@@ -41,16 +93,6 @@ defmodule Prettycore.Catalogos do
             {:ok, rows} -> rows; {:error, _} -> []
           end
         end)
-      end),
-      Task.async(fn ->
-        case Api.get_all("CTE_CLIENTE", token) do
-          {:ok, data} -> :persistent_term.put(:cache_cte_cliente, data); {:error, _} -> :ok
-        end
-      end),
-      Task.async(fn ->
-        case Api.get_all("CTE_DIRECCION", token) do
-          {:ok, data} -> :persistent_term.put(:cache_cte_direccion, data); {:error, _} -> :ok
-        end
       end),
       Task.async(fn ->
         case Api.get_all("SYS_USUARIO", token) do
@@ -67,39 +109,34 @@ defmodule Prettycore.Catalogos do
             :persistent_term.put(:cache_ruta_opts, opts)
           {:error, _} -> :ok
         end
-      end),
-      Task.async(fn ->
-        case Api.get_all("MAP_ESTADO", token) do
-          {:ok, data} -> :persistent_term.put(:cache_map_estado, data); {:error, _} -> :ok
-        end
-      end),
-      Task.async(fn ->
-        case Api.get_all("MAP_MUNICIPIO", token) do
-          {:ok, data} -> :persistent_term.put(:cache_map_municipio, data); {:error, _} -> :ok
-        end
-      end),
-      Task.async(fn ->
-        case Api.get_all("MAP_LOCALIDAD", token) do
-          {:ok, data} -> :persistent_term.put(:cache_map_localidad, data); {:error, _} -> :ok
-        end
-      end),
-      Task.async(fn ->
-        case Api.get_all("SYS_EMPRESA", token) do
-          {:ok, [empresa | _]} ->
-            logo = Map.get(empresa, "SYSEMP_LOGOTIPO")
-            if logo && logo != "" do
-              formatted = if String.starts_with?(logo, "data:image"), do: logo, else: "data:image/png;base64,#{logo}"
-              :persistent_term.put(:company_logo_cache, formatted)
-            end
-          _ -> :ok
-        end
       end)
     ]
 
-    Task.await_many(tasks, 60_000)
+    run_batch(batch4, "Lote 4 (restantes)")
+
     elapsed = System.monotonic_time(:millisecond) - start
-    Logger.info("PRELOAD: Catálogos precargados en #{elapsed}ms (#{length(tasks)} APIs en paralelo)")
+    Logger.info("PRELOAD: Catálogos precargados en #{elapsed}ms (4 lotes secuenciales)")
+
     :ok
+  end
+
+  defp run_batch(tasks, label) do
+    results = Task.yield_many(tasks, 60_000)
+
+    failed =
+      Enum.count(results, fn
+        {_task, {:ok, _}} -> false
+        {task, nil} ->
+          Task.shutdown(task, :brutal_kill)
+          true
+        {_task, {:exit, _}} -> true
+      end)
+
+    if failed > 0 do
+      Logger.warning("PRELOAD #{label}: #{failed}/#{length(tasks)} fallaron")
+    else
+      Logger.info("PRELOAD #{label}: #{length(tasks)} OK")
+    end
   end
 
   def listar_tipos_cliente(token \\ nil) do
@@ -215,74 +252,52 @@ defmodule Prettycore.Catalogos do
     end)
   end
 
-  def listar_estados(token \\ nil) do
-    Cache.fetch({:estados, token}, fn ->
-      case Api.get_estados(token) do
-        {:ok, rows} ->
-          rows
-          |> Enum.map(fn row -> {row["MAPEDO_DESCRIPCION"], to_string(row["MAPEDO_CODIGO_K"])} end)
-          |> Enum.sort_by(fn {nombre, _} -> nombre end)
-          |> EncodingHelper.convert_catalog_list()
-        {:error, _} -> []
-      end
-    end)
+  def listar_estados(_token \\ nil) do
+    Estado
+    |> order_by([e], e.descripcion)
+    |> PsqlRepo.all()
+    |> Enum.map(fn e -> {e.descripcion, to_string(e.codigo_k)} end)
   end
 
-  def listar_municipios(estado_codigo, token \\ nil)
+  def listar_municipios(estado_codigo, _token \\ nil)
 
-  def listar_municipios(estado_codigo, token) when is_integer(estado_codigo) do
-    listar_municipios(to_string(estado_codigo), token)
+  def listar_municipios(estado_codigo, _token) when is_integer(estado_codigo) do
+    listar_municipios(to_string(estado_codigo), nil)
   end
 
-  def listar_municipios(estado_codigo, token) when is_binary(estado_codigo) do
-    # Usar persistent_term (precargado en login) y filtrar en memoria
-    all_municipios =
-      case :persistent_term.get(:cache_map_municipio, nil) do
-        nil ->
-          case Api.get_all("MAP_MUNICIPIO", token) do
-            {:ok, data} -> :persistent_term.put(:cache_map_municipio, data); data
-            {:error, _} -> []
-          end
-        cached -> cached
-      end
+  def listar_municipios(estado_codigo, _token) when is_binary(estado_codigo) do
+    estado_int = String.to_integer(estado_codigo)
 
-    all_municipios
-    |> Enum.filter(fn row -> to_string(row["MAPEDO_CODIGO_K"]) == estado_codigo end)
-    |> Enum.map(fn row -> {row["MAPMUN_DESCRIPCION"], to_string(row["MAPMUN_CODIGO_K"])} end)
-    |> Enum.sort_by(fn {nombre, _} -> nombre end)
-    |> EncodingHelper.convert_catalog_list()
+    Municipio
+    |> where([m], m.estado_codigo_k == ^estado_int)
+    |> order_by([m], m.descripcion)
+    |> PsqlRepo.all()
+    |> Enum.map(fn m -> {m.descripcion, to_string(m.codigo_k)} end)
+  rescue
+    ArgumentError -> []
   end
 
   def listar_municipios(_, _), do: []
 
-  def listar_localidades(estado_codigo, municipio_codigo, token \\ nil)
+  def listar_localidades(estado_codigo, municipio_codigo, _token \\ nil)
 
-  def listar_localidades(estado_codigo, municipio_codigo, token)
+  def listar_localidades(estado_codigo, municipio_codigo, _token)
       when is_integer(estado_codigo) or is_integer(municipio_codigo) do
-    listar_localidades(to_string(estado_codigo), to_string(municipio_codigo), token)
+    listar_localidades(to_string(estado_codigo), to_string(municipio_codigo), nil)
   end
 
-  def listar_localidades(estado_codigo, municipio_codigo, token)
+  def listar_localidades(estado_codigo, municipio_codigo, _token)
       when is_binary(estado_codigo) and is_binary(municipio_codigo) do
-    # Usar persistent_term (precargado en login) y filtrar en memoria
-    all_localidades =
-      case :persistent_term.get(:cache_map_localidad, nil) do
-        nil ->
-          case Api.get_all("MAP_LOCALIDAD", token) do
-            {:ok, data} -> :persistent_term.put(:cache_map_localidad, data); data
-            {:error, _} -> []
-          end
-        cached -> cached
-      end
+    estado_int = String.to_integer(estado_codigo)
+    municipio_int = String.to_integer(municipio_codigo)
 
-    all_localidades
-    |> Enum.filter(fn row ->
-      to_string(row["MAPEDO_CODIGO_K"]) == estado_codigo &&
-      to_string(row["MAPMUN_CODIGO_K"]) == municipio_codigo
-    end)
-    |> Enum.map(fn row -> {row["MAPLOC_DESCRIPCION"], to_string(row["MAPLOC_CODIGO_K"])} end)
-    |> Enum.sort_by(fn {nombre, _} -> nombre end)
-    |> EncodingHelper.convert_catalog_list()
+    Localidad
+    |> where([l], l.estado_codigo_k == ^estado_int and l.municipio_codigo_k == ^municipio_int)
+    |> order_by([l], l.descripcion)
+    |> PsqlRepo.all()
+    |> Enum.map(fn l -> {l.descripcion, to_string(l.codigo_k)} end)
+  rescue
+    ArgumentError -> []
   end
 
   def listar_localidades(_, _, _), do: []
@@ -368,39 +383,31 @@ defmodule Prettycore.Catalogos do
     end)
   end
 
-  def buscar_por_cp(codigo_postal, token \\ nil)
+  def buscar_por_cp(codigo_postal, _token \\ nil)
 
   def buscar_por_cp(codigo_postal, _token) when is_binary(codigo_postal) do
-    # Buscar en persistent_term (precargado en login) sin llamadas API
-    all_localidades = :persistent_term.get(:cache_map_localidad, [])
-    all_estados = :persistent_term.get(:cache_map_estado, [])
-    all_municipios = :persistent_term.get(:cache_map_municipio, [])
-
-    case Enum.find(all_localidades, fn l -> to_string(l["MAPLOC_CP_K"]) == codigo_postal end) do
+    case PsqlRepo.one(from l in Localidad, where: l.cp == ^codigo_postal, limit: 1) do
       nil ->
         {:error, :not_found}
 
       localidad ->
-        estado_codigo = to_string(localidad["MAPEDO_CODIGO_K"])
-        municipio_codigo = to_string(localidad["MAPMUN_CODIGO_K"])
+        estado = PsqlRepo.get(Estado, localidad.estado_codigo_k)
 
-        estado = Enum.find(all_estados, fn e -> to_string(e["MAPEDO_CODIGO_K"]) == estado_codigo end) || %{}
+        municipio =
+          PsqlRepo.one(
+            from m in Municipio,
+              where: m.estado_codigo_k == ^localidad.estado_codigo_k
+                and m.codigo_k == ^localidad.municipio_codigo_k
+          )
 
-        municipio = Enum.find(all_municipios, fn m ->
-          to_string(m["MAPEDO_CODIGO_K"]) == estado_codigo &&
-          to_string(m["MAPMUN_CODIGO_K"]) == municipio_codigo
-        end) || %{}
-
-        %{
-          estado_codigo: estado_codigo,
-          estado_nombre: estado["MAPEDO_DESCRIPCION"],
-          municipio_codigo: municipio_codigo,
-          municipio_nombre: municipio["MAPMUN_DESCRIPCION"],
-          localidad_codigo: to_string(localidad["MAPLOC_CODIGO_K"]),
-          localidad_nombre: localidad["MAPLOC_DESCRIPCION"]
-        }
-        |> EncodingHelper.convert_map()
-        |> then(&{:ok, &1})
+        {:ok, %{
+          estado_codigo: to_string(localidad.estado_codigo_k),
+          estado_nombre: estado && estado.descripcion,
+          municipio_codigo: to_string(localidad.municipio_codigo_k),
+          municipio_nombre: municipio && municipio.descripcion,
+          localidad_codigo: to_string(localidad.codigo_k),
+          localidad_nombre: localidad.descripcion
+        }}
     end
   end
 

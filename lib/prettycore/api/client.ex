@@ -123,29 +123,20 @@ defmodule Prettycore.Api.Client do
   def get_monedas(token \\ nil), do: get_all("CFG_MONEDA", token)
   def get_rutas(token \\ nil), do: get_all("VTA_RUTA", token)
 
-  # --- Ubicaciones ---
-
-  @spec get_estados(any()) ::
-          {:error,
-           {:connection_error,
-            %{:__exception__ => true, :__struct__ => atom(), optional(atom()) => any()}}
-           | {:http_error, non_neg_integer(), any()}}
-          | {:ok, any()}
-  def get_estados(token \\ nil), do: get_all("MAP_ESTADO", token)
-  def get_municipios(estado_codigo, token \\ nil), do: get_filtered("MAP_MUNICIPIO", %{"MAPEDO_CODIGO_K" => estado_codigo}, token)
-  def get_localidades(estado_codigo, municipio_codigo, token \\ nil) do
-    get_filtered("MAP_LOCALIDAD", %{
-      "MAPEDO_CODIGO_K" => estado_codigo,
-      "MAPMUN_CODIGO_K" => municipio_codigo
-    }, token)
-  end
-
   # --- SAT ---
 
   def get_usos_cfdi(token \\ nil), do: get_all("CFG_USOCFDISAT", token)
   def get_formas_pago(token \\ nil), do: get_all("CFG_FORMAPAGO_SAT", token)
   def get_metodos_pago(token \\ nil), do: get_all("CFG_METODOPAGO", token)
   def get_regimenes_fiscales(token \\ nil), do: get_all("CFG_REGIMENFISCAL_SAT", token)
+
+  # --- Estadísticas ---
+
+  def get_estadisticas(cliente_codigo, dir_codigo, token \\ nil) do
+    url = "#{@base_url}/Estadisticas"
+    data = %{"CTECLI_CODIGO_K" => cliente_codigo, "CTEDIR_CODIGO_K" => dir_codigo}
+    do_post(url, data, token)
+  end
 
   # --- Clientes ---
 

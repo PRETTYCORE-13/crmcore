@@ -77,7 +77,11 @@ defmodule PrettycoreWeb.Clientes do
      |> assign(:sysudn_opts, sysudn_opts)
      |> assign(:ruta_opts, ruta_opts)
      |> assign(:stats_modal_open, false)
-     |> assign(:stats_modal_ref, nil)}
+     |> assign(:stats_modal_ref, nil)
+     |> assign(:stats_data, nil)
+     |> assign(:stats_loading, false)
+     |> assign(:stats_clasificaciones, %{})
+     |> assign(:reloading, false)}
   end
 
   @impl true
@@ -229,6 +233,16 @@ defmodule PrettycoreWeb.Clientes do
           {[], default_meta, "Error al cargar clientes. Por favor intenta de nuevo."}
       end
 
+    # Construir clasificaciones directamente desde los datos de CTE_CLIENTE (sin llamadas extra)
+    stats_clasificaciones =
+      clientes
+      |> Enum.reduce(%{}, fn cliente, acc ->
+        case cliente.clasificacion do
+          c when is_binary(c) and c != "" -> Map.put(acc, cliente.codigo, String.trim(c))
+          _ -> Map.put(acc, cliente.codigo, "SIN RANGO")
+        end
+      end)
+
     {:noreply,
      socket
      |> assign(:clientes, clientes)
@@ -237,7 +251,24 @@ defmodule PrettycoreWeb.Clientes do
      |> assign(:loading, false)
      |> assign(:error, error)
      |> assign(:visible_columns, visible_columns)
-     |> assign(:filter_form, filter_form)}
+     |> assign(:filter_form, filter_form)
+     |> assign(:stats_clasificaciones, stats_clasificaciones)
+     |> assign(:reloading, false)}
+  end
+
+  ## Handle event para recargar todos los datos de la página
+  @impl true
+  def handle_event("reload_data", _params, socket) do
+    # Limpiar cachés de clientes y direcciones
+    :persistent_term.erase(:cache_cte_cliente)
+    :persistent_term.erase(:cache_cte_direccion)
+
+    # Mostrar modal de recarga
+    socket = assign(socket, :reloading, true)
+
+    # Re-navegar a la misma página para recargar todo
+    query_string = URI.encode_query(flatten_params(socket.assigns.params))
+    {:noreply, push_patch(socket, to: "/admin/clientes?#{query_string}")}
   end
 
   ## Handle event para toggle de filtros
@@ -341,11 +372,41 @@ def handle_event("edit_cliente", %{"codigo" => codigo, "dir" => dir}, socket) do
 end
 
   ## Handle event para abrir modal de estadísticas
+  def handle_event("open_stats_modal", %{"codigo" => codigo, "dir" => dir}, socket) do
+    token = Prettycore.Api.Client.service_token()
+
+    # Abrir modal inmediatamente con loading
+    socket =
+      socket
+      |> assign(:stats_modal_open, true)
+      |> assign(:stats_modal_ref, codigo)
+      |> assign(:stats_loading, true)
+      |> assign(:stats_data, nil)
+
+    # Fetch estadísticas de la API
+    case Clientes.get_estadisticas(codigo, dir, token) do
+      {:ok, data} ->
+        # Guardar clasificación por cliente para mostrar en la tabla
+        clasificaciones = socket.assigns[:stats_clasificaciones] || %{}
+        clasificaciones = if data.clasificacion, do: Map.put(clasificaciones, codigo, data.clasificacion), else: clasificaciones
+
+        {:noreply,
+         socket
+         |> assign(:stats_data, data)
+         |> assign(:stats_loading, false)
+         |> assign(:stats_clasificaciones, clasificaciones)}
+
+      {:error, _reason} ->
+        {:noreply,
+         socket
+         |> assign(:stats_data, nil)
+         |> assign(:stats_loading, false)}
+    end
+  end
+
+  # Fallback si no viene dir
   def handle_event("open_stats_modal", %{"codigo" => codigo}, socket) do
-    {:noreply,
-     socket
-     |> assign(:stats_modal_open, true)
-     |> assign(:stats_modal_ref, codigo)}
+    handle_event("open_stats_modal", %{"codigo" => codigo, "dir" => "1"}, socket)
   end
 
   ## Handle event para cerrar modal de estadísticas
@@ -353,7 +414,9 @@ end
     {:noreply,
      socket
      |> assign(:stats_modal_open, false)
-     |> assign(:stats_modal_ref, nil)}
+     |> assign(:stats_modal_ref, nil)
+     |> assign(:stats_data, nil)
+     |> assign(:stats_loading, false)}
   end
 
   ## Navegación centralizada con CASE (modelo recomendado)
@@ -454,6 +517,33 @@ end
       "Sin Crédito" -> "bg-rose-500 text-white"
       _ -> "bg-gray-500 text-white"
     end
+  end
+
+  ## Helper para obtener color/estilo de clasificación del cliente
+  defp clasificacion_color("ORO"), do: "bg-yellow-400 text-yellow-900"
+  defp clasificacion_color("PLATA"), do: "bg-gray-300 text-gray-800"
+  defp clasificacion_color("BRONCE"), do: "bg-amber-600 text-white"
+  defp clasificacion_color("EXITO"), do: "bg-cyan-400 text-cyan-900"
+  defp clasificacion_color("SIN RANGO"), do: "bg-gray-100 text-gray-400"
+  defp clasificacion_color(_), do: "bg-gray-200 text-gray-600"
+
+  ## Helper para obtener la imagen de clasificación
+  defp clasificacion_imagen("ORO"), do: "https://prettycore.xyz/IMAGENES/LINGOTE.png"
+  defp clasificacion_imagen("PLATA"), do: "https://prettycore.xyz/IMAGENES/PLATA.png"
+  defp clasificacion_imagen("BRONCE"), do: "https://prettycore.xyz/IMAGENES/BRONCE.png"
+  defp clasificacion_imagen("EXITO"), do: "https://prettycore.xyz/IMAGENES/DIAMANTE.png"
+  defp clasificacion_imagen(_), do: nil
+
+  ## Helper para formatear números con comas de miles
+  defp format_number(value) do
+    formatted = :erlang.float_to_binary(value / 1, decimals: 2)
+    [int_part, dec_part] = String.split(formatted, ".")
+    int_with_commas =
+      int_part
+      |> String.reverse()
+      |> String.replace(~r/(\d{3})(?=\d)/, "\\1,")
+      |> String.reverse()
+    "#{int_with_commas}.#{dec_part}"
   end
 
   ## Helper para aplanar params anidados

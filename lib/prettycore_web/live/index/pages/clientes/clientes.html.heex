@@ -1,3 +1,21 @@
+    <!-- MODAL DE RECARGA -->
+    <%= if @reloading do %>
+      <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center gap-4 max-w-sm mx-4">
+          <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+            <svg class="w-8 h-8 text-gray-600 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <div class="text-center">
+            <h3 class="text-lg font-bold text-gray-900">Recargando datos</h3>
+            <p class="text-sm text-gray-500 mt-1">Por favor espere un momento...</p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
     <section class="flex flex-col gap-4 sm:gap-6 p-3 sm:p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
       <!-- HEADER MODERNO -->
       <header class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
@@ -24,6 +42,19 @@
                 </span>
               </div>
             </div>
+
+            <!-- Botón Recargar -->
+            <button
+              type="button"
+              phx-click="reload_data"
+              class="inline-flex items-center gap-1.5 px-3 py-2 sm:px-4 sm:py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-sm sm:text-base"
+              title="Recargar datos"
+            >
+              <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              <span class="hidden sm:inline">Recargar</span>
+            </button>
 
             <!-- Botón Nuevo Cliente -->
             <.link
@@ -845,6 +876,7 @@
         <button
           phx-click="open_stats_modal"
           phx-value-codigo={cliente.codigo}
+          phx-value-dir={cliente.ctedir_codigo_k || "1"}
           class="w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 group hover:shadow-lg hover:scale-105 bg-teal-500 hover:bg-teal-600"
           title="Estadísticas"
         >
@@ -852,6 +884,11 @@
             <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
           </svg>
         </button>
+        <!-- Badge clasificación (se muestra después de consultar estadísticas) -->
+        <%= if Map.get(@stats_clasificaciones, cliente.codigo) do %>
+          <% clasif = String.upcase(Map.get(@stats_clasificaciones, cliente.codigo)) %>
+          <img src={clasificacion_imagen(clasif)} alt={clasif} title={"Clasificación: #{clasif}"} class="h-10" />
+        <% end %>
       </div>
 
                   <!-- UDN -->
@@ -1134,23 +1171,40 @@
                 <p class="text-white/60 text-xs">Resumen de indicadores clave</p>
               </div>
             </div>
-            <button
-              phx-click="close_stats_modal"
-              class="text-white/60 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div class="flex items-center gap-3">
+              <!-- Badge de clasificación -->
+              <%= if @stats_data && @stats_data.clasificacion do %>
+                <% clasif = String.upcase(@stats_data.clasificacion) %>
+                <img src={clasificacion_imagen(clasif)} alt={clasif} title={"Clasificación: #{clasif}"} class="h-12" />
+              <% end %>
+              <button
+                phx-click="close_stats_modal"
+                class="text-white/60 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <!-- Body: Dashboard -->
           <div class="p-4 sm:p-6 space-y-4">
 
+            <%= if @stats_loading do %>
+              <div class="flex items-center justify-center py-12">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
+                <span class="ml-3 text-sm text-gray-500">Cargando estadísticas...</span>
+              </div>
+            <% else %>
+
             <!-- Fila 1: Venta Anual + Cartera -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
               <!-- VENTA ANUAL -->
+              <% total_venta = if @stats_data, do: @stats_data.total_venta_anual, else: 0.0 %>
+              <% venta_meses = if @stats_data, do: @stats_data.venta_anual, else: [] %>
+              <% max_venta_mes = if venta_meses != [], do: Enum.max_by(venta_meses, fn v -> v["Venta"] || 0 end)["Venta"] || 1, else: 1 %>
               <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-2">
@@ -1161,33 +1215,31 @@
                     </div>
                     <h3 class="text-sm font-semibold text-gray-700">Venta Anual</h3>
                   </div>
-                  <span class="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">2026</span>
+                  <span class="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full"><%= length(venta_meses) %> meses</span>
                 </div>
-                <p class="text-2xl font-bold text-gray-900 mb-1">$0.00</p>
-                <p class="text-xs text-gray-500">Sin datos disponibles</p>
+                <p class="text-2xl font-bold text-gray-900 mb-1">$<%= format_number(total_venta) %></p>
+                <p class="text-xs text-gray-500"><%= if total_venta > 0, do: "#{length(venta_meses)} meses con actividad", else: "Sin datos disponibles" %></p>
                 <!-- Mini barras visuales -->
-                <div class="mt-3 flex items-end gap-1 h-10">
-                  <div class="flex-1 bg-emerald-100 rounded-t" style="height: 20%"></div>
-                  <div class="flex-1 bg-emerald-200 rounded-t" style="height: 35%"></div>
-                  <div class="flex-1 bg-emerald-200 rounded-t" style="height: 25%"></div>
-                  <div class="flex-1 bg-emerald-300 rounded-t" style="height: 50%"></div>
-                  <div class="flex-1 bg-emerald-300 rounded-t" style="height: 45%"></div>
-                  <div class="flex-1 bg-emerald-400 rounded-t" style="height: 60%"></div>
-                  <div class="flex-1 bg-emerald-400 rounded-t" style="height: 70%"></div>
-                  <div class="flex-1 bg-emerald-500 rounded-t" style="height: 55%"></div>
-                  <div class="flex-1 bg-emerald-500 rounded-t" style="height: 80%"></div>
-                  <div class="flex-1 bg-emerald-600 rounded-t" style="height: 90%"></div>
-                  <div class="flex-1 bg-emerald-600 rounded-t" style="height: 100%"></div>
-                  <div class="flex-1 bg-emerald-300 rounded-t" style="height: 40%"></div>
-                </div>
-                <div class="flex justify-between mt-1">
-                  <span class="text-[9px] text-gray-400">Ene</span>
-                  <span class="text-[9px] text-gray-400">Jun</span>
-                  <span class="text-[9px] text-gray-400">Dic</span>
-                </div>
+                <%= if venta_meses != [] do %>
+                  <div class="mt-3 flex items-end gap-1 h-10">
+                    <%= for mes <- venta_meses do %>
+                      <% pct = if max_venta_mes > 0, do: (mes["Venta"] || 0) / max_venta_mes * 100, else: 0 %>
+                      <div class="flex-1 bg-emerald-400 rounded-t" style={"height: #{max(pct, 5)}%"}></div>
+                    <% end %>
+                  </div>
+                  <div class="flex justify-between mt-1">
+                    <span class="text-[9px] text-gray-400"><%= if List.first(venta_meses), do: String.slice(List.first(venta_meses)["mes"] || "", 0, 7), else: "" %></span>
+                    <span class="text-[9px] text-gray-400"><%= if List.last(venta_meses), do: String.slice(List.last(venta_meses)["mes"] || "", 0, 7), else: "" %></span>
+                  </div>
+                <% end %>
               </div>
 
               <!-- CARTERA -->
+              <% vigente = if @stats_data, do: @stats_data.cartera_vigente, else: 0.0 %>
+              <% vencida = if @stats_data, do: @stats_data.cartera_vencida, else: 0.0 %>
+              <% total_cartera = vigente + vencida %>
+              <% pct_vigente = if total_cartera > 0, do: vigente / total_cartera * 100, else: 0 %>
+              <% pct_vencida = if total_cartera > 0, do: vencida / total_cartera * 100, else: 0 %>
               <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-2">
@@ -1200,26 +1252,26 @@
                   </div>
                   <span class="text-xs text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-full">Saldo</span>
                 </div>
-                <p class="text-2xl font-bold text-gray-900 mb-1">$0.00</p>
-                <p class="text-xs text-gray-500">Sin adeudos registrados</p>
+                <p class="text-2xl font-bold text-gray-900 mb-1">$<%= format_number(total_cartera) %></p>
+                <p class="text-xs text-gray-500"><%= if total_cartera > 0, do: "Saldo pendiente", else: "Sin adeudos registrados" %></p>
                 <!-- Indicadores de cartera -->
                 <div class="mt-3 space-y-2">
                   <div>
                     <div class="flex justify-between text-xs mb-1">
                       <span class="text-gray-500">Vigente</span>
-                      <span class="font-medium text-green-600">$0.00</span>
+                      <span class="font-medium text-green-600">$<%= format_number(vigente) %></span>
                     </div>
                     <div class="w-full bg-gray-100 rounded-full h-2">
-                      <div class="bg-green-400 h-2 rounded-full" style="width: 0%"></div>
+                      <div class="bg-green-400 h-2 rounded-full" style={"width: #{pct_vigente}%"}></div>
                     </div>
                   </div>
                   <div>
                     <div class="flex justify-between text-xs mb-1">
                       <span class="text-gray-500">Vencida</span>
-                      <span class="font-medium text-red-500">$0.00</span>
+                      <span class="font-medium text-red-500">$<%= format_number(vencida) %></span>
                     </div>
                     <div class="w-full bg-gray-100 rounded-full h-2">
-                      <div class="bg-red-400 h-2 rounded-full" style="width: 0%"></div>
+                      <div class="bg-red-400 h-2 rounded-full" style={"width: #{pct_vencida}%"}></div>
                     </div>
                   </div>
                 </div>
@@ -1230,6 +1282,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
               <!-- COOLERS -->
+              <% enfriadores = if @stats_data, do: @stats_data.enfriadores, else: 0 %>
               <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-2">
@@ -1238,45 +1291,19 @@
                         <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="4" y1="10" x2="20" y2="10" /><line x1="10" y1="2" x2="10" y2="10" />
                       </svg>
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-700">Coolers</h3>
+                    <h3 class="text-sm font-semibold text-gray-700">Enfriadores</h3>
                   </div>
                   <span class="text-xs text-sky-600 font-medium bg-sky-50 px-2 py-0.5 rounded-full">Equipos</span>
                 </div>
                 <div class="flex items-baseline gap-2 mb-1">
-                  <p class="text-2xl font-bold text-gray-900">0</p>
+                  <p class="text-2xl font-bold text-gray-900"><%= enfriadores %></p>
                   <p class="text-sm text-gray-500">unidades</p>
                 </div>
-                <p class="text-xs text-gray-500">Sin equipos asignados</p>
-                <!-- Visual de coolers -->
-                <div class="mt-3 grid grid-cols-4 gap-2">
-                  <div class="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-2 flex flex-col items-center justify-center">
-                    <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                      <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="4" y1="10" x2="20" y2="10" />
-                    </svg>
-                    <span class="text-[9px] text-gray-400 mt-1">---</span>
-                  </div>
-                  <div class="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-2 flex flex-col items-center justify-center">
-                    <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                      <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="4" y1="10" x2="20" y2="10" />
-                    </svg>
-                    <span class="text-[9px] text-gray-400 mt-1">---</span>
-                  </div>
-                  <div class="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-2 flex flex-col items-center justify-center">
-                    <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                      <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="4" y1="10" x2="20" y2="10" />
-                    </svg>
-                    <span class="text-[9px] text-gray-400 mt-1">---</span>
-                  </div>
-                  <div class="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-2 flex flex-col items-center justify-center">
-                    <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                      <rect x="4" y="2" width="16" height="20" rx="2" /><line x1="4" y1="10" x2="20" y2="10" />
-                    </svg>
-                    <span class="text-[9px] text-gray-400 mt-1">---</span>
-                  </div>
-                </div>
+                <p class="text-xs text-gray-500"><%= if enfriadores > 0, do: "Equipos asignados", else: "Sin equipos asignados" %></p>
               </div>
 
-              <!-- ULTIMA VENTA -->
+              <!-- ULTIMA VENTA (pedido) -->
+              <% pedido = if @stats_data, do: @stats_data.pedido, else: nil %>
               <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex items-center gap-2">
@@ -1285,34 +1312,43 @@
                         <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
                       </svg>
                     </div>
-                    <h3 class="text-sm font-semibold text-gray-700">Ultima Venta</h3>
+                    <h3 class="text-sm font-semibold text-gray-700">Ultimo Pedido</h3>
                   </div>
                   <span class="text-xs text-purple-600 font-medium bg-purple-50 px-2 py-0.5 rounded-full">Reciente</span>
                 </div>
-                <p class="text-2xl font-bold text-gray-900 mb-1">---</p>
-                <p class="text-xs text-gray-500">Sin ventas registradas</p>
-                <!-- Detalle de ultima venta -->
-                <div class="mt-3 bg-gray-50 rounded-lg p-3 space-y-2">
-                  <div class="flex justify-between text-xs">
-                    <span class="text-gray-500">Fecha</span>
-                    <span class="font-medium text-gray-700">---</span>
+                <%= if pedido do %>
+                  <p class="text-2xl font-bold text-gray-900 mb-1">$<%= format_number(pedido["Valor"] || 0) %></p>
+                  <p class="text-xs text-gray-500"><%= pedido["REFERENCIA"] %></p>
+                  <div class="mt-3 bg-gray-50 rounded-lg p-3 space-y-2">
+                    <div class="flex justify-between text-xs">
+                      <span class="text-gray-500">Fecha</span>
+                      <span class="font-medium text-gray-700"><%= String.slice(pedido["LIQUID_FECHAENT"] || "---", 0, 10) %></span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                      <span class="text-gray-500">Referencia</span>
+                      <span class="font-medium text-gray-700"><%= pedido["REFERENCIA"] || "---" %></span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                      <span class="text-gray-500">Productos</span>
+                      <span class="font-medium text-gray-700"><%= pedido["PRODUCTOS"] || 0 %></span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                      <span class="text-gray-500">Cajas</span>
+                      <span class="font-medium text-gray-700"><%= format_number(pedido["Cajas"] || 0) %></span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                      <span class="text-gray-500">Descuento</span>
+                      <span class="font-medium text-gray-700">$<%= format_number(pedido["Descuento"] || 0) %></span>
+                    </div>
                   </div>
-                  <div class="flex justify-between text-xs">
-                    <span class="text-gray-500">Folio</span>
-                    <span class="font-medium text-gray-700">---</span>
-                  </div>
-                  <div class="flex justify-between text-xs">
-                    <span class="text-gray-500">Monto</span>
-                    <span class="font-medium text-gray-700">$0.00</span>
-                  </div>
-                  <div class="flex justify-between text-xs">
-                    <span class="text-gray-500">Productos</span>
-                    <span class="font-medium text-gray-700">0</span>
-                  </div>
-                </div>
+                <% else %>
+                  <p class="text-2xl font-bold text-gray-900 mb-1">---</p>
+                  <p class="text-xs text-gray-500">Sin pedidos registrados</p>
+                <% end %>
               </div>
             </div>
 
+            <% end %>
           </div>
         </div>
       </div>

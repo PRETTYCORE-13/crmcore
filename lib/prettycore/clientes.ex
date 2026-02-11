@@ -10,6 +10,81 @@ defmodule Prettycore.Clientes do
 
   alias Prettycore.Api.Client, as: Api
 
+  @doc """
+  Obtiene estadísticas de un cliente/dirección desde la API Estadisticas.
+
+  Retorna un mapa con :pedido, :venta_anual, :cartera, :enfriadores
+  """
+  def get_estadisticas(cliente_codigo, dir_codigo, token \\ nil) do
+    case Api.get_estadisticas(cliente_codigo, dir_codigo, token) do
+      {:ok, [data | _]} when is_map(data) ->
+        pedidos = Map.get(data, "pedido", [])
+        venta_anual = Map.get(data, "VentaAnual", [])
+        cartera = Map.get(data, "Cartera", [])
+        enfriadores = Map.get(data, "Enfriadores", [])
+
+        ultimo_pedido = List.first(pedidos)
+
+        total_venta_anual =
+          venta_anual
+          |> Enum.map(fn v -> parse_decimal(v["Venta"]) end)
+          |> Enum.sum()
+
+        cartera_data = List.first(cartera) || %{}
+        vigente = parse_decimal(cartera_data["VIGENTE"])
+        vencido = parse_decimal(cartera_data["VENCIDO"])
+
+        enfriadores_count =
+          case List.first(enfriadores) do
+            %{"Enfriadores" => n} -> n
+            _ -> 0
+          end
+
+        clasificacion_data = Map.get(data, "Clasificacion", [])
+        clasificacion =
+          case List.first(clasificacion_data) do
+            %{"Clasificacion" => c} when is_binary(c) -> parse_clasificacion(c)
+            _ -> nil
+          end
+
+        {:ok, %{
+          pedido: ultimo_pedido,
+          venta_anual: venta_anual,
+          total_venta_anual: total_venta_anual,
+          cartera_vigente: vigente,
+          cartera_vencida: vencido,
+          enfriadores: enfriadores_count,
+          clasificacion: clasificacion
+        }}
+
+      {:ok, _} ->
+        {:ok, %{
+          pedido: nil,
+          venta_anual: [],
+          total_venta_anual: 0.0,
+          cartera_vigente: 0.0,
+          cartera_vencida: 0.0,
+          enfriadores: 0,
+          clasificacion: nil
+        }}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  defp parse_decimal(nil), do: 0.0
+  defp parse_decimal(v) when is_float(v), do: v
+  defp parse_decimal(v) when is_integer(v), do: v * 1.0
+  defp parse_decimal(v) when is_binary(v) do
+    case Float.parse(v) do
+      {f, _} -> f
+      :error -> 0.0
+    end
+  end
+  defp parse_decimal(%Decimal{} = d), do: Decimal.to_float(d)
+  defp parse_decimal(_), do: 0.0
+
   @doc "Invalida el caché de clientes y direcciones para forzar recarga desde API"
   def invalidar_cache do
     :persistent_term.erase(:cache_cte_cliente)
@@ -268,12 +343,12 @@ defmodule Prettycore.Clientes do
     end
   end
 
-  defp get_estado_nombre(estado_codigo, token \\ nil)
+  defp get_estado_nombre(estado_codigo, _token \\ nil)
   defp get_estado_nombre(nil, _token), do: nil
-  defp get_estado_nombre(estado_codigo, token) do
-    case Api.get_filtered("MAP_ESTADO", %{"MAPEDO_CODIGO_K" => estado_codigo}, token) do
-      {:ok, [estado | _]} -> estado["MAPEDO_DESCRIPCION"]
-      _ -> nil
+  defp get_estado_nombre(estado_codigo, _token) do
+    case Prettycore.PsqlRepo.get(Prettycore.Map.Estado, estado_codigo) do
+      nil -> nil
+      estado -> estado.descripcion
     end
   end
 
@@ -294,18 +369,8 @@ defmodule Prettycore.Clientes do
     page = String.to_integer(params["page"] || "1")
     page_size = String.to_integer(params["page_size"] || "20")
 
-    # Obtener estados con caché (nunca cambian)
-    todos_estados =
-      case :persistent_term.get(:cache_map_estado, nil) do
-        nil ->
-          case Api.get_all("MAP_ESTADO", token) do
-            {:ok, data} ->
-              :persistent_term.put(:cache_map_estado, data)
-              data
-            {:error, _} -> []
-          end
-        cached -> cached
-      end
+    # Obtener estados desde PostgreSQL local
+    todos_estados = Prettycore.PsqlRepo.all(Prettycore.Map.Estado)
 
     # Obtener clientes y direcciones con caché (se invalida al guardar)
     clientes_data =
@@ -336,7 +401,7 @@ defmodule Prettycore.Clientes do
 
       # Indexar estados por código para búsqueda rápida
       estados_por_codigo = Map.new(todos_estados, fn e ->
-        {e["MAPEDO_CODIGO_K"], e["MAPEDO_DESCRIPCION"]}
+        {e.codigo_k, e.descripcion}
       end)
 
       # Filtrar solo clientes activos y procesar
@@ -435,7 +500,8 @@ defmodule Prettycore.Clientes do
       colonia: dir["CTEDIR_COLONIA"],
       calle: dir["CTEDIR_CALLE"],
       map_x: safe_to_string(dir["MAP_X"]),
-      map_y: safe_to_string(dir["MAP_Y"])
+      map_y: safe_to_string(dir["MAP_Y"]),
+      clasificacion: parse_clasificacion(cliente["Clasificacion"])
     }
   end
 
@@ -632,4 +698,17 @@ defmodule Prettycore.Clientes do
       ctedir_creditoobs: dir["CTEDIR_CREDITOOBS"]
     }
   end
+
+  defp parse_clasificacion(nil), do: nil
+  defp parse_clasificacion(value) when is_binary(value) do
+    upper = String.upcase(value)
+    cond do
+      String.contains?(upper, "LINGOTE") -> "ORO"
+      String.contains?(upper, "DIAMANTE") -> "EXITO"
+      String.contains?(upper, "BRONCE") -> "BRONCE"
+      String.contains?(upper, "PLATA") -> "PLATA"
+      true -> String.trim(value)
+    end
+  end
+  defp parse_clasificacion(_), do: nil
 end

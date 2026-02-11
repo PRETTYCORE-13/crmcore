@@ -39,7 +39,8 @@
       "Bash(curl:*)",
       "Bash(git log:*)",
       "Bash(git commit:*)",
-      "Bash(mix deps.compile:*)"
+      "Bash(mix deps.compile:*)",
+      "Bash(mix seed_map_data:*)"
     ],
     "deny": [],
     "ask": []
