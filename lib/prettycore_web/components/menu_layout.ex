@@ -4,8 +4,8 @@ defmodule PrettycoreWeb.MenuLayout do
 
   @menu [
     %{id: "inicio", label: "Inicio"},
-    %{id: "programacion", label: "Programación"},
-    %{id: "workorder", label: "Orden T"},
+  #  %{id: "programacion", label: "Programación"},
+  #  %{id: "workorder", label: "Orden T"},
     %{id: "clientes", label: "Clientes"}
   ]
 

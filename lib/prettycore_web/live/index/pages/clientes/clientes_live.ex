@@ -16,11 +16,12 @@ defmodule PrettycoreWeb.Clientes do
       field :sysudn, :string
       field :ruta_desde, :string
       field :ruta_hasta, :string
+      field :clasificacion, :string
     end
 
     def changeset(params, attrs) do
       params
-      |> cast(attrs, [:search, :sysudn, :ruta_desde, :ruta_hasta])
+      |> cast(attrs, [:search, :sysudn, :ruta_desde, :ruta_hasta, :clasificacion])
     end
   end
 
@@ -81,7 +82,8 @@ defmodule PrettycoreWeb.Clientes do
      |> assign(:stats_data, nil)
      |> assign(:stats_loading, false)
      |> assign(:stats_clasificaciones, %{})
-     |> assign(:reloading, false)}
+     |> assign(:reloading, false)
+     |> assign(:clasificacion_filter_open, false)}
   end
 
   @impl true
@@ -201,7 +203,8 @@ defmodule PrettycoreWeb.Clientes do
       search: params["search"],
       sysudn: params["sysudn"],
       ruta_desde: params["ruta_desde"],
-      ruta_hasta: params["ruta_hasta"]
+      ruta_hasta: params["ruta_hasta"],
+      clasificacion: params["clasificacion"]
     }
 
     filter_form = to_form(FilterParams.changeset(filter_params, %{}))
@@ -280,6 +283,23 @@ defmodule PrettycoreWeb.Clientes do
   # Prevenir submit del formulario de filtros al presionar Enter
   def handle_event("filter_submit", _params, socket) do
     {:noreply, socket}
+  end
+
+  def handle_event("toggle_clasificacion_filter", _params, socket) do
+    {:noreply, assign(socket, :clasificacion_filter_open, !socket.assigns.clasificacion_filter_open)}
+  end
+
+  def handle_event("filter_clasificacion", %{"clasificacion" => clasificacion}, socket) do
+    new_params =
+      socket.assigns.params
+      |> Map.put("clasificacion", clasificacion)
+      |> Map.put("page", "1")
+
+    query_string = URI.encode_query(flatten_params(new_params))
+    {:noreply,
+     socket
+     |> assign(:clasificacion_filter_open, false)
+     |> push_patch(to: "/admin/clientes?#{query_string}")}
   end
 
   ## Handle event para aplicar filtros

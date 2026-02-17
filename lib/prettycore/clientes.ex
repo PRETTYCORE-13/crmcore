@@ -366,6 +366,7 @@ defmodule Prettycore.Clientes do
     vtarut_codigo_k_ini = get_param_or_default(params["ruta_desde"], "001")
     vtarut_codigo_k_fin = get_param_or_default(params["ruta_hasta"], "99999")
     search_term = params["search"]
+    clasificacion_filter = params["clasificacion"]
     page = String.to_integer(params["page"] || "1")
     page_size = String.to_integer(params["page_size"] || "20")
 
@@ -441,6 +442,20 @@ defmodule Prettycore.Clientes do
         end)
       else
         clientes_procesados
+      end
+
+      # Aplicar filtro de clasificación
+      clientes_filtrados = if clasificacion_filter && clasificacion_filter != "" do
+        filter_upper = String.upcase(clasificacion_filter)
+        Enum.filter(clientes_filtrados, fn c ->
+          clasif = c.clasificacion
+          cond do
+            is_nil(clasif) or clasif == "" -> filter_upper == "SIN RANGO"
+            true -> String.upcase(String.trim(clasif)) == filter_upper
+          end
+        end)
+      else
+        clientes_filtrados
       end
 
       # Aplicar paginación manual
@@ -521,50 +536,14 @@ defmodule Prettycore.Clientes do
       {:ok, %{cliente: %{...}, direcciones: [...]}}
   """
   def get_cliente_by_codigo(codigo, token \\ nil) do
-    # Usar persistent_term (precargado en login) en lugar de llamadas API
-    todos_clientes =
-      case :persistent_term.get(:cache_cte_cliente, nil) do
-        nil ->
-          case Api.get_all("CTE_CLIENTE", token) do
-            {:ok, data} -> :persistent_term.put(:cache_cte_cliente, data); data
-            {:error, reason} -> {:error, reason}
-          end
-        cached -> cached
-      end
+    case Prettycore.ClientesApi.info_cliente(codigo, token) do
+      {:ok, %{cliente: cliente_raw, direcciones: dirs_raw}} ->
+        cliente_normalizado = normalize_cliente(cliente_raw)
+        dirs = Enum.map(dirs_raw, &normalize_direccion/1)
+        {:ok, %{cliente: cliente_normalizado, direcciones: dirs}}
 
-    todas_direcciones =
-      case :persistent_term.get(:cache_cte_direccion, nil) do
-        nil ->
-          case Api.get_all("CTE_DIRECCION", token) do
-            {:ok, data} -> :persistent_term.put(:cache_cte_direccion, data); data
-            {:error, reason} -> {:error, reason}
-          end
-        cached -> cached
-      end
-
-    with todos_clientes when is_list(todos_clientes) <- todos_clientes,
-         todas_direcciones when is_list(todas_direcciones) <- todas_direcciones do
-
-      # Buscar el cliente por código
-      cliente = Enum.find(todos_clientes, fn c -> c["CTECLI_CODIGO_K"] == codigo end)
-
-      case cliente do
-        nil ->
-          {:error, :not_found}
-
-        cliente ->
-          # Filtrar solo las direcciones de este cliente
-          dirs = todas_direcciones
-            |> Enum.filter(fn d -> d["CTECLI_CODIGO_K"] == codigo end)
-            |> Enum.map(&normalize_direccion/1)
-
-          cliente_normalizado = normalize_cliente(cliente)
-
-          {:ok, %{cliente: cliente_normalizado, direcciones: dirs}}
-      end
-    else
-      {:error, reason} -> {:error, reason}
-      _ -> {:error, :not_found}
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -631,7 +610,22 @@ defmodule Prettycore.Clientes do
       s_guidlog: cliente["S_GUIDLOG"],
       s_usuario: cliente["S_USUARIO"],
       s_usuariodb: cliente["S_USUARIODB"],
-      s_guidnot: cliente["S_GUIDNOT"]
+      s_guidnot: cliente["S_GUIDNOT"],
+      ctecli_timbracb: cliente["CTECLI_TIMBRACB"],
+      sysemp_codigo_k: cliente["SYSEMP_CODIGO_K"],
+      ctecli_novalidavencimiento: cliente["CTECLI_NOVALIDAVENCIMIENTO"],
+      ctecli_compatibilidad: cliente["CTECLI_COMPATIBILIDAD"],
+      satexp_codigo_k: cliente["SATEXP_CODIGO_K"],
+      cfgreg_codigo_k: cliente["CFGREG_CODIGO_K"],
+      ctecli_cfdi_ver: cliente["CTECLI_CFDI_VER"],
+      ctecli_nombre: cliente["CTECLI_NOMBRE"],
+      ctecli_aplicaregalo: cliente["CTECLI_APLICAREGALO"],
+      ctecli_prvporteofac: cliente["CTECLI_PRVPORTEOFAC"],
+      ctecli_noaceptafracciones: cliente["CTECLI_NOACEPTAFRACCIONES"],
+      cteseg_codigo_k: cliente["CTESEG_CODIGO_K"],
+      ctecli_ecommerce: cliente["CTECLI_ECOMMERCE"],
+      catind_codigo_k: cliente["CATIND_CODIGO_K"],
+      catpfi_codigo_k: cliente["CATPFI_CODIGO_K"]
     }
   end
 

@@ -98,7 +98,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
+          <div class="grid grid-cols-3 sm:flex gap-2 sm:gap-3">
             <!-- Filtros Rápidos -->
             <.input
               field={@filter_form[:ruta_desde]}
@@ -115,6 +115,49 @@
               options={@sysudn_opts}
               class="w-full sm:w-auto px-3 sm:px-4 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-600 focus:border-transparent transition-all text-sm"
             />
+
+            <!-- Filtro Clasificación -->
+            <div class="relative">
+              <button
+                type="button"
+                phx-click="toggle_clasificacion_filter"
+                class={"flex items-center gap-2 px-3 py-2 rounded-xl border transition-all text-sm " <> if @clasificacion_filter_open, do: "bg-gray-900 border-gray-900 shadow-lg", else: "bg-gray-50 border-gray-300 hover:border-gray-400"}
+              >
+                <img src="https://prettycore.xyz/IMAGENES/Logo%20Prettycore%20(8).png" alt="Clasificación" class="h-6 w-6 object-contain" />
+                <%= if @filter_form[:clasificacion].value && @filter_form[:clasificacion].value != "" do %>
+                  <span class={"font-semibold " <> if @clasificacion_filter_open, do: "text-white", else: "text-gray-700"}>
+                    <%= String.upcase(@filter_form[:clasificacion].value) %>
+                  </span>
+                <% end %>
+              </button>
+
+              <%= if @clasificacion_filter_open do %>
+                <div class="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden" phx-click-away="toggle_clasificacion_filter">
+                  <button type="button" phx-click="filter_clasificacion" phx-value-clasificacion="" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-sm text-gray-600 border-b border-gray-100">
+                    Todas
+                  </button>
+                  <button type="button" phx-click="filter_clasificacion" phx-value-clasificacion="ORO" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-yellow-50 transition-colors">
+                    <img src="https://prettycore.xyz/IMAGENES/LINGOTE.png" alt="ORO" class="h-7" />
+                    <span class="font-semibold text-sm text-yellow-700">ORO</span>
+                  </button>
+                  <button type="button" phx-click="filter_clasificacion" phx-value-clasificacion="EXITO" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-cyan-50 transition-colors">
+                    <img src="https://prettycore.xyz/IMAGENES/DIAMANTE.png" alt="EXITO" class="h-7" />
+                    <span class="font-semibold text-sm text-cyan-700">EXITO</span>
+                  </button>
+                  <button type="button" phx-click="filter_clasificacion" phx-value-clasificacion="PLATA" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-100 transition-colors">
+                    <img src="https://prettycore.xyz/IMAGENES/PLATA.png" alt="PLATA" class="h-7" />
+                    <span class="font-semibold text-sm text-gray-700">PLATA</span>
+                  </button>
+                  <button type="button" phx-click="filter_clasificacion" phx-value-clasificacion="BRONCE" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-amber-50 transition-colors">
+                    <img src="https://prettycore.xyz/IMAGENES/BRONCE.png" alt="BRONCE" class="h-7" />
+                    <span class="font-semibold text-sm text-amber-700">BRONCE</span>
+                  </button>
+                  <button type="button" phx-click="filter_clasificacion" phx-value-clasificacion="SIN RANGO" class="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors text-sm text-gray-400 border-t border-gray-100">
+                    SIN RANGO
+                  </button>
+                </div>
+              <% end %>
+            </div>
           </div>
         </.form>
       </header>

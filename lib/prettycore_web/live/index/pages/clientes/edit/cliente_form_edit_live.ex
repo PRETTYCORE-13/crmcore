@@ -289,6 +289,18 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
       field(:ctecli_noaceptafracciones, :integer, default: 0)
       field(:ctecli_cxcliq, :integer, default: 0)
 
+      # Campos adicionales de InfoCliente
+      field(:ctecli_compatibilidad, :string)
+      field(:ctecli_nombre, :string)
+      field(:ctecli_prvporteofac, :string)
+      field(:ctecli_ecommerce, :string)
+      field(:ctecli_contacto, :string)
+      field(:ctecli_fereceptor, :string)
+      field(:ctecli_complemento, :string)
+      field(:ctecli_creditoobs, :string)
+      field(:ctecli_regtrib, :string)
+      field(:ctecli_observaciones, :string)
+
       # Sistema (valores automáticos)
       field(:s_maqedo, :integer, default: 0)
 
@@ -362,7 +374,18 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
         :ctecli_aplicaregalo,
         :ctecli_noaceptafracciones,
         :ctecli_cxcliq,
-        :s_maqedo
+        :s_maqedo,
+        # Campos adicionales InfoCliente
+        :ctecli_compatibilidad,
+        :ctecli_nombre,
+        :ctecli_prvporteofac,
+        :ctecli_ecommerce,
+        :ctecli_contacto,
+        :ctecli_fereceptor,
+        :ctecli_complemento,
+        :ctecli_creditoobs,
+        :ctecli_regtrib,
+        :ctecli_observaciones
       ])
       |> cast_embed(:direcciones, required: false)
       |> put_default_fechaalta()
@@ -528,6 +551,24 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
           ctecli_facgrupo: cliente_db.ctecli_facgrupo,
           ctecli_cxcliq: cliente_db.ctecli_cxcliq,
           s_maqedo: cliente_db.s_maqedo,
+          ctecli_timbracb: cliente_db.ctecli_timbracb,
+          sysemp_codigo_k: cliente_db.sysemp_codigo_k,
+          ctecli_novalidavencimiento: cliente_db.ctecli_novalidavencimiento,
+          ctecli_compatibilidad: Map.get(cliente_db, :ctecli_compatibilidad),
+          satexp_codigo_k: cliente_db.satexp_codigo_k,
+          cfgreg_codigo_k: cliente_db.cfgreg_codigo_k,
+          ctecli_cfdi_ver: if(cliente_db.ctecli_cfdi_ver, do: to_string(cliente_db.ctecli_cfdi_ver), else: nil),
+          ctecli_nombre: Map.get(cliente_db, :ctecli_nombre),
+          ctecli_aplicaregalo: cliente_db.ctecli_aplicaregalo,
+          ctecli_prvporteofac: Map.get(cliente_db, :ctecli_prvporteofac),
+          ctecli_noaceptafracciones: cliente_db.ctecli_noaceptafracciones,
+          ctecli_ecommerce: Map.get(cliente_db, :ctecli_ecommerce),
+          ctecli_contacto: Map.get(cliente_db, :ctecli_contacto),
+          ctecli_fereceptor: Map.get(cliente_db, :ctecli_fereceptor),
+          ctecli_complemento: Map.get(cliente_db, :ctecli_complemento),
+          ctecli_creditoobs: Map.get(cliente_db, :ctecli_creditoobs),
+          ctecli_regtrib: Map.get(cliente_db, :ctecli_regtrib),
+          ctecli_observaciones: Map.get(cliente_db, :ctecli_observaciones),
           direcciones: direcciones_form
         }
 
@@ -570,19 +611,20 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
       []
     end
 
-    # Cargar municipios y localidades si la primera dirección tiene estado y municipio
+    # Cargar municipios y localidades si la primera dirección tiene estado y municipio válidos
     {municipios, localidades} = if length(cliente.direcciones) > 0 do
       primera_dir = Enum.at(cliente.direcciones, 0)
+      edo = primera_dir.mapedo_codigo_k
+      mun = primera_dir.mapmun_codigo_k
 
-      municipios = if primera_dir.mapedo_codigo_k do
-        Catalogos.listar_municipios(primera_dir.mapedo_codigo_k, t)
+      municipios = if edo && edo != 0 && edo != "0" do
+        Catalogos.listar_municipios(edo, t)
       else
         []
       end
 
-      localidades = if primera_dir.mapedo_codigo_k && primera_dir.mapmun_codigo_k do
-        Catalogos.listar_localidades(primera_dir.mapedo_codigo_k, primera_dir.mapmun_codigo_k, t)
-
+      localidades = if edo && edo != 0 && edo != "0" && mun && mun != 0 && mun != "0" do
+        Catalogos.listar_localidades(edo, mun, t)
       else
         []
       end

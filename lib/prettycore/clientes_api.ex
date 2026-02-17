@@ -4,6 +4,7 @@ defmodule Prettycore.ClientesApi do
 
   @url_New "http://ecore.ath.cx:1405/SP/EN_RESTHELPER/ClientesNew"
   @url_Edit "http://ecore.ath.cx:1405/SP/EN_RESTHELPER/ClientesEdit"
+  @url_Info "http://ecore.ath.cx:1405/SP/EN_RESTHELPER/InfoCliente"
 
   def crear_cliente(cliente_data, password) do
     json_string = build_json_string(cliente_data)
@@ -69,6 +70,49 @@ defmodule Prettycore.ClientesApi do
         IO.puts("\n========== ERROR DE CONEXIÓN ==========")
         IO.inspect(reason, label: "ERROR", pretty: true)
         IO.puts("========================================\n")
+        {:error, reason}
+    end
+  end
+
+  def info_cliente(codigo, token) do
+    body = Jason.encode!(%{"CTECLI_CODIGO_K" => codigo})
+
+    IO.puts("\n========== API InfoCliente ==========")
+    IO.puts("URL: #{@url_Info}")
+    IO.puts("Body: #{body}")
+    IO.puts("=====================================\n")
+
+    headers = [
+      {"authorization", "Bearer " <> token},
+      {"content-type", "application/json"}
+    ]
+
+    case Req.post(@url_Info, body: body, headers: headers, receive_timeout: 60_000) do
+      {:ok, %Req.Response{status: status, body: [cliente | _]}} when status in 200..299 ->
+        direcciones = Map.get(cliente, "Direcciones", [])
+        cliente_sin_dirs = Map.delete(cliente, "Direcciones")
+
+        IO.puts("\n========== InfoCliente OK (#{status}) ==========")
+        IO.puts("Cliente: #{cliente_sin_dirs["CTECLI_CODIGO_K"]} - #{cliente_sin_dirs["CTECLI_RAZONSOCIAL"]}")
+        IO.puts("Direcciones: #{length(direcciones)}")
+        IO.puts("================================================\n")
+
+        {:ok, %{cliente: cliente_sin_dirs, direcciones: direcciones}}
+
+      {:ok, %Req.Response{status: status, body: []}} when status in 200..299 ->
+        IO.puts("\n========== InfoCliente: NO ENCONTRADO ==========\n")
+        {:error, :not_found}
+
+      {:ok, %Req.Response{status: status, body: resp_body}} ->
+        IO.puts("\n========== InfoCliente ERROR (#{status}) ==========")
+        IO.inspect(resp_body, label: "ERROR BODY", pretty: true)
+        IO.puts("==================================================\n")
+        {:error, {:http_error, status, resp_body}}
+
+      {:error, reason} ->
+        IO.puts("\n========== InfoCliente ERROR CONEXIÓN ==========")
+        IO.inspect(reason, label: "ERROR", pretty: true)
+        IO.puts("================================================\n")
         {:error, reason}
     end
   end

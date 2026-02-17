@@ -48,9 +48,9 @@ defmodule PrettycoreWeb.Router do
       pipe_through :browser
 
       live "/platform", Inicio
-      live "/programacion", Programacion
-      live "/programacion/sql", HerramientaSql
-      live "/workorder", WorkOrderLive
+  #    live "/programacion", Programacion
+  #    live "/programacion/sql", HerramientaSql
+  #    live "/workorder", WorkOrderLive
       live "/clientes", Clientes
       live "/clientes/new", ClienteFormNewLive
       live "/clientes/new/:tab", ClienteFormNewLive
