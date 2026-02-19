@@ -2,9 +2,9 @@ defmodule Prettycore.ClientesApi do
 
   alias Prettycore.EncodingUtils
 
-  @url_New "http://ecore.ath.cx:1405/SP/EN_RESTHELPER/ClientesNew"
-  @url_Edit "http://ecore.ath.cx:1405/SP/EN_RESTHELPER/ClientesEdit"
-  @url_Info "http://ecore.ath.cx:1405/SP/EN_RESTHELPER/InfoCliente"
+  @url_New "https://api.ecore.ninja:1950//SP/EN_RESTHELPER/ClientesNew"
+  @url_Edit "https://api.ecore.ninja:1950//SP/EN_RESTHELPER/ClientesEdit"
+  @url_Info "https://api.ecore.ninja:1950//SP/EN_RESTHELPER/InfoCliente"
 
   def crear_cliente(cliente_data, password) do
     json_string = build_json_string(cliente_data)

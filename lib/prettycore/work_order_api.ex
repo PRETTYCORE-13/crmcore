@@ -1,7 +1,7 @@
 defmodule Prettycore.WorkorderApi do
   @moduledoc false
 
-  @url "http://ecore.ath.cx:1405/SP/EN_RESTHELPER/workorderEstado"
+  @url "https://api.ecore.ninja:1950//SP/EN_RESTHELPER/workorderEstado"
 
   # estado: 1 = aceptar, 0 = rechazar
   # AHORA RECIBE TAMBIÉN EL password DEL SELECT

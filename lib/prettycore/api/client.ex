@@ -2,7 +2,7 @@ defmodule Prettycore.Api.Client do
   @moduledoc """
   Cliente HTTP centralizado para consumir la API REST EN_RESTHELPER.
 
-  Base URL: http://ecore.ath.cx:1405/SP/EN_RESTHELPER/
+  Base URL: https://api.ecore.ninja:1950/SP/EN_RESTHELPER/
 
   Todas las tablas soportadas:
   - CTE_CLIENTE, CTE_DIRECCION
@@ -15,7 +15,7 @@ defmodule Prettycore.Api.Client do
   """
   require Logger
 
-  @base_url "http://ecore.ath.cx:1405/SP/EN_RESTHELPER"
+  @base_url "https://api.ecore.ninja:1950/SP/EN_RESTHELPER"
   @timeout 30_000
   @service_token "IFcRzSfaBG6ycnpWzThyfEdKHglK14tlZylvRhOhlQ1fDHobmveKk6JowcU/BhCquBlqQv7zkrLIUYvFZmQZqHdqNiLptzCBf5wT826XpY4="
 
@@ -163,7 +163,7 @@ defmodule Prettycore.Api.Client do
     data = %{"FG_USUARIO" => frog_usuario}
 
     # Token fijo para autenticar el endpoint REST_USUARIO
-    auth_token = "IFcRzSfaBG6ycnpWzThyfEdKHglK14tlZylvRhOhlQ1fDHobmveKk6JowcU/BhCquBlqQv7zkrLIUYvFZmQZqHdqNiLptzCBf5wT826XpY4="
+    auth_token = "rgO+ZKO4/4plIzLgghs/fkSCPjwZu4kDRKtXJYaiDMWRUTDOi4Baqrt3bxaXxdcuzXCC1Nr2ol+jL623KWLnZA=="
 
     headers = [
       {"accept", "application/json"},
