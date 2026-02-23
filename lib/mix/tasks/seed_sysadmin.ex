@@ -4,10 +4,7 @@ defmodule Mix.Tasks.SeedSysadmin do
   @shortdoc "Crea el usuario SYSADMIN en PostgreSQL si no existe"
 
   def run(_args) do
-    [:postgrex, :ecto, :ecto_sql]
-    |> Enum.each(&Application.ensure_all_started/1)
-
-    Prettycore.PsqlRepo.start_link([])
+    Application.ensure_all_started(:prettycore)
 
     alias Prettycore.Auth
 
