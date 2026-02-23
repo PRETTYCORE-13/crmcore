@@ -121,7 +121,7 @@ defmodule Prettycore.Catalogos do
   end
 
   defp run_batch(tasks, label) do
-    results = Task.yield_many(tasks, 60_000)
+    results = Task.yield_many(tasks, 20_000)
 
     failed =
       Enum.count(results, fn

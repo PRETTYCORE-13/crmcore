@@ -15,7 +15,7 @@ defmodule Prettycore.Api.Client do
   """
   require Logger
 
-  @timeout 30_000
+  @timeout 15_000
 
   @doc "URL base de la API leída desde system_config en la DB"
   def base_url do
