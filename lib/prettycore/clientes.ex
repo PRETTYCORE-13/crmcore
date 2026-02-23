@@ -516,7 +516,7 @@ defmodule Prettycore.Clientes do
       calle: dir["CTEDIR_CALLE"],
       map_x: safe_to_string(dir["MAP_X"]),
       map_y: safe_to_string(dir["MAP_Y"]),
-      clasificacion: parse_clasificacion(cliente["Clasificacion"])
+      clasificacion: parse_clasificacion(dir["Clasificacion"])
     }
   end
 
