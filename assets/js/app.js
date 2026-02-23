@@ -191,7 +191,7 @@ const NavigateAfterFlash = {
   }
 };
 
-const isLocalhost = window.location.hostname === "localhost" || window.location.hostname.contains("localhost");
+const isLocalhost = window.location.hostname === "localhost" || window.location.hostname.includes("localhost");
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
