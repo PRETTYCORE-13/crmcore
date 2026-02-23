@@ -183,7 +183,7 @@ defmodule Prettycore.Api.Client do
     body = Jason.encode!(data)
 
     {elapsed_us, http_result} = :timer.tc(fn ->
-      Req.post(url, body: body, headers: headers, receive_timeout: @timeout)
+      Req.post(url, body: body, headers: headers, receive_timeout: @timeout, retry: false)
     end)
 
     elapsed_ms = div(elapsed_us, 1000)
@@ -234,7 +234,7 @@ defmodule Prettycore.Api.Client do
     headers = build_headers(auth_token)
 
     {elapsed_us, result} = :timer.tc(fn ->
-      Req.get(url, headers: headers, receive_timeout: @timeout)
+      Req.get(url, headers: headers, receive_timeout: @timeout, retry: false)
     end)
 
     elapsed_ms = div(elapsed_us, 1000)
@@ -259,7 +259,7 @@ defmodule Prettycore.Api.Client do
     body = Jason.encode!(data)
 
     {elapsed_us, result} = :timer.tc(fn ->
-      Req.post(url, body: body, headers: headers, receive_timeout: @timeout)
+      Req.post(url, body: body, headers: headers, receive_timeout: @timeout, retry: false)
     end)
 
     elapsed_ms = div(elapsed_us, 1000)
@@ -284,7 +284,7 @@ defmodule Prettycore.Api.Client do
     body = Jason.encode!(data)
 
     {elapsed_us, result} = :timer.tc(fn ->
-      Req.put(url, body: body, headers: headers, receive_timeout: @timeout)
+      Req.put(url, body: body, headers: headers, receive_timeout: @timeout, retry: false)
     end)
 
     elapsed_ms = div(elapsed_us, 1000)
@@ -308,7 +308,7 @@ defmodule Prettycore.Api.Client do
     headers = build_headers(auth_token)
 
     {elapsed_us, result} = :timer.tc(fn ->
-      Req.delete(url, headers: headers, receive_timeout: @timeout)
+      Req.delete(url, headers: headers, receive_timeout: @timeout, retry: false)
     end)
 
     elapsed_ms = div(elapsed_us, 1000)
