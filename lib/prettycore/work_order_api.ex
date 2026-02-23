@@ -1,7 +1,7 @@
 defmodule Prettycore.WorkorderApi do
   @moduledoc false
 
-  @url "https://api.ecore.ninja:1950//SP/EN_RESTHELPER/workorderEstado"
+  alias Prettycore.Api.Client
 
   # estado: 1 = aceptar, 0 = rechazar
   # AHORA RECIBE TAMBIÉN EL password DEL SELECT
@@ -19,7 +19,7 @@ defmodule Prettycore.WorkorderApi do
       {"content-type", "application/json"}
     ]
 
-    case Req.post(@url, json: body, headers: headers) do
+    case Req.post(Client.base_url() <> "/workorderEstado", json: body, headers: headers) do
       {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
         {:ok, resp_body}
 

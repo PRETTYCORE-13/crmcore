@@ -1,21 +1,4 @@
 import Config
-
-# Configure your database
-config :prettycore, :tds,
-  hostname: System.get_env("DB_HOSTNAME", "localhost"),
-  port: String.to_integer(System.get_env("DB_PORT", "1433")),
-  username: System.get_env("DB_USERNAME"),
-  password: System.get_env("DB_PASSWORD"),
-  database: System.get_env("DB_DATABASE"),
-  pool_size: String.to_integer(System.get_env("DB_POOL_SIZE", "10")),
-  # Encryption settings (use true for Azure/SSL)
-  encrypt: System.get_env("DB_ENCRYPT", "false") == "true",
-  trust_server_certificate: System.get_env("DB_TRUST_SERVER_CERTIFICATE", "true") == "true",
-  timeout: 15_000,
-  idle_timeout: 5_000,
-  show_sensitive_data_on_connection_error: true
-
-
   # Configuración de PostgreSQL para autenticación (Render)
 
 config :prettycore, Prettycore.PsqlRepo,

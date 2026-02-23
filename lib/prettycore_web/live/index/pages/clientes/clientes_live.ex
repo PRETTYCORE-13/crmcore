@@ -393,7 +393,7 @@ end
 
   ## Handle event para abrir modal de estadísticas
   def handle_event("open_stats_modal", %{"codigo" => codigo, "dir" => dir}, socket) do
-    token = Prettycore.Api.Client.service_token()
+    token = socket.assigns[:frog_token]
 
     # Abrir modal inmediatamente con loading
     socket =

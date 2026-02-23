@@ -60,6 +60,17 @@ defmodule PrettycoreWeb.Router do
     end
   end
 
+  ## ÁREA SYSADMIN: interfaz separada, sin APIs externas
+  live_session :sysadmin,
+    on_mount: [{PrettycoreWeb.SysAdminAuthOnMount, :ensure_sysadmin}] do
+    scope "/sysadmin", PrettycoreWeb.SysAdmin do
+      pipe_through :browser
+
+      live "/", ConfiguracionLive
+      live "/configuracion", ConfiguracionLive
+    end
+  end
+
   ## Rutas para descarga de Excel (protegidas pero no LiveView)
   scope "/admin", PrettycoreWeb do
     pipe_through :browser

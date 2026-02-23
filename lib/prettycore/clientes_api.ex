@@ -1,10 +1,7 @@
 defmodule Prettycore.ClientesApi do
 
   alias Prettycore.EncodingUtils
-
-  @url_New "https://api.ecore.ninja:1950//SP/EN_RESTHELPER/ClientesNew"
-  @url_Edit "https://api.ecore.ninja:1950//SP/EN_RESTHELPER/ClientesEdit"
-  @url_Info "https://api.ecore.ninja:1950//SP/EN_RESTHELPER/InfoCliente"
+  alias Prettycore.Api.Client
 
   def crear_cliente(cliente_data, password) do
     json_string = build_json_string(cliente_data)
@@ -18,7 +15,7 @@ defmodule Prettycore.ClientesApi do
       {"content-type", "application/json"}
     ]
 
-    case Req.post(@url_New, body: json_string, headers: headers, receive_timeout: 60_000) do
+    case Req.post(Client.base_url() <> "/ClientesNew", body: json_string, headers: headers, receive_timeout: 60_000) do
       {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
         IO.puts("\n========== RESPUESTA EXITOSA (#{status}) ==========")
         IO.inspect(resp_body, label: "RESPONSE BODY", pretty: true, limit: :infinity)
@@ -53,7 +50,7 @@ defmodule Prettycore.ClientesApi do
     ]
 
 
-    case Req.post(@url_Edit, body: json_string, headers: headers, receive_timeout: 60_000) do
+    case Req.post(Client.base_url() <> "/ClientesEdit", body: json_string, headers: headers, receive_timeout: 60_000) do
       {:ok, %Req.Response{status: status, body: resp_body}} when status in 200..299 ->
         IO.puts("\n========== RESPUESTA EXITOSA (#{status}) ==========")
         IO.inspect(resp_body, label: "RESPONSE BODY", pretty: true, limit: :infinity)
@@ -78,7 +75,7 @@ defmodule Prettycore.ClientesApi do
     body = Jason.encode!(%{"CTECLI_CODIGO_K" => codigo})
 
     IO.puts("\n========== API InfoCliente ==========")
-    IO.puts("URL: #{@url_Info}")
+    IO.puts("URL: #{Client.base_url()}/InfoCliente")
     IO.puts("Body: #{body}")
     IO.puts("=====================================\n")
 
@@ -87,7 +84,7 @@ defmodule Prettycore.ClientesApi do
       {"content-type", "application/json"}
     ]
 
-    case Req.post(@url_Info, body: body, headers: headers, receive_timeout: 60_000) do
+    case Req.post(Client.base_url() <> "/InfoCliente", body: body, headers: headers, receive_timeout: 60_000) do
       {:ok, %Req.Response{status: status, body: [cliente | _]}} when status in 200..299 ->
         direcciones = Map.get(cliente, "Direcciones", [])
         cliente_sin_dirs = Map.delete(cliente, "Direcciones")

@@ -12,17 +12,31 @@ defmodule PrettycoreWeb.SessionController do
         user_id = Map.get(user_struct, :id, user)
         email = Map.get(user_struct, :email, user)
         username = Map.get(user_struct, :username, user)
+        role = Map.get(user_struct, :role, "user")
 
-        # Obtener token FROG si el usuario tiene usuario_frog configurado
-        frog_token = get_frog_token(user_struct)
+        # SYSADMIN: sin FROG token, sin pantalla de carga, interfaz propia
+        if role == "sysadmin" do
+          conn
+          |> put_session(:user_id, user_id)
+          |> put_session(:user_email, email)
+          |> put_session(:user_name, username)
+          |> put_session(:role, "sysadmin")
+          |> put_session(:frog_token, nil)
+          |> configure_session(renew: true)
+          |> redirect(to: ~p"/sysadmin")
+        else
+          # Obtener token FROG si el usuario tiene usuario_frog configurado
+          frog_token = get_frog_token(user_struct)
 
-        conn
-        |> put_session(:user_id, user_id)
-        |> put_session(:user_email, email)
-        |> put_session(:user_name, username)
-        |> put_session(:frog_token, frog_token)
-        |> configure_session(renew: true)
-        |> redirect(to: ~p"/admin/loading")
+          conn
+          |> put_session(:user_id, user_id)
+          |> put_session(:user_email, email)
+          |> put_session(:user_name, username)
+          |> put_session(:role, role)
+          |> put_session(:frog_token, frog_token)
+          |> configure_session(renew: true)
+          |> redirect(to: ~p"/admin/loading")
+        end
 
       {:error, :invalid_credentials} ->
         conn

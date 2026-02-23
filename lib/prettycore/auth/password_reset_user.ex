@@ -5,7 +5,7 @@ defmodule Prettycore.Auth.PasswordResetUser do
   Este módulo consume datos desde la API REST en lugar de
   consultas directas a SQL Server.
 
-  Base URL: https://api.ecore.ninja:1950//SP/EN_RESTHELPER/
+  Base URL: https://s2.ecore.ninja:1522/SP/EN_RESTHELPER/
   """
 
   alias Prettycore.Api.Client, as: Api

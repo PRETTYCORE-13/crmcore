@@ -2,7 +2,7 @@ defmodule Prettycore.Api.Client do
   @moduledoc """
   Cliente HTTP centralizado para consumir la API REST EN_RESTHELPER.
 
-  Base URL: https://api.ecore.ninja:1950/SP/EN_RESTHELPER/
+  Base URL: https://s2.ecore.ninja:1522/SP/EN_RESTHELPER/
 
   Todas las tablas soportadas:
   - CTE_CLIENTE, CTE_DIRECCION
@@ -15,12 +15,24 @@ defmodule Prettycore.Api.Client do
   """
   require Logger
 
-  @base_url "https://api.ecore.ninja:1950/SP/EN_RESTHELPER"
   @timeout 30_000
-  @service_token "IFcRzSfaBG6ycnpWzThyfEdKHglK14tlZylvRhOhlQ1fDHobmveKk6JowcU/BhCquBlqQv7zkrLIUYvFZmQZqHdqNiLptzCBf5wT826XpY4="
 
-  @doc "Token de servicio para llamadas sin sesión de usuario"
-  def service_token, do: @service_token
+  @doc "URL base de la API leída desde system_config en la DB"
+  def base_url do
+    case Prettycore.SysAdmin.get_config() do
+      %{url: url} when is_binary(url) and url != "" ->
+        String.trim_trailing(url, "/") <> "/SP/EN_RESTHELPER"
+      _ -> "https://s2.ecore.ninja:1522/SP/EN_RESTHELPER"
+    end
+  end
+
+  @doc "Token de servicio leído desde system_config en la DB"
+  def service_token do
+    case Prettycore.SysAdmin.get_config() do
+      %{token: token} when is_binary(token) and token != "" -> token
+      _ -> ""
+    end
+  end
 
   # ============================================================
   # PUBLIC API - GET (SELECT)
@@ -37,7 +49,7 @@ defmodule Prettycore.Api.Client do
       {:ok, [%{"CTETPO_CODIGO_K" => "100", ...}, ...]}
   """
   def get_all(table, auth_token \\ nil) when is_binary(table) do
-    url = "#{@base_url}/#{table}"
+    url = "#{base_url()}/#{table}"
     do_get(url, auth_token)
   end
 
@@ -50,7 +62,7 @@ defmodule Prettycore.Api.Client do
       {:ok, [%{...}, ...]}
   """
   def get_filtered(table, filters, auth_token \\ nil) when is_binary(table) and is_map(filters) do
-    url = "#{@base_url}/#{table}"
+    url = "#{base_url()}/#{table}"
     do_post(url, filters, auth_token)
   end
 
@@ -74,7 +86,7 @@ defmodule Prettycore.Api.Client do
   Ejecuta una consulta SQL personalizada vía API (si está soportado).
   """
   def query(sql, auth_token \\ nil) when is_binary(sql) do
-    url = "#{@base_url}/query"
+    url = "#{base_url()}/query"
     do_post(url, %{sql: sql}, auth_token)
   end
 
@@ -86,7 +98,7 @@ defmodule Prettycore.Api.Client do
   Crea un nuevo registro en una tabla.
   """
   def create(table, data, auth_token \\ nil) do
-    url = "#{@base_url}/#{table}"
+    url = "#{base_url()}/#{table}"
     do_post(url, data, auth_token)
   end
 
@@ -94,7 +106,7 @@ defmodule Prettycore.Api.Client do
   Actualiza un registro existente.
   """
   def update(table, data, auth_token \\ nil) do
-    url = "#{@base_url}/#{table}"
+    url = "#{base_url()}/#{table}"
     do_put(url, data, auth_token)
   end
 
@@ -102,7 +114,7 @@ defmodule Prettycore.Api.Client do
   Elimina un registro.
   """
   def delete(table, pk_field, pk_value, auth_token \\ nil) do
-    url = "#{@base_url}/#{table}?#{pk_field}=#{URI.encode_www_form(to_string(pk_value))}"
+    url = "#{base_url()}/#{table}?#{pk_field}=#{URI.encode_www_form(to_string(pk_value))}"
     do_delete(url, auth_token)
   end
 
@@ -133,7 +145,7 @@ defmodule Prettycore.Api.Client do
   # --- Estadísticas ---
 
   def get_estadisticas(cliente_codigo, dir_codigo, token \\ nil) do
-    url = "#{@base_url}/Estadisticas"
+    url = "#{base_url()}/Estadisticas"
     data = %{"CTECLI_CODIGO_K" => cliente_codigo, "CTEDIR_CODIGO_K" => dir_codigo}
     do_post(url, data, token)
   end
@@ -159,16 +171,13 @@ defmodule Prettycore.Api.Client do
   Recibe: {"SYSUSR_PASSWORD": "password_para_api"}
   """
   def get_frog_credentials(frog_usuario) when is_binary(frog_usuario) do
-    url = "#{@base_url}/REST_USUARIO"
+    url = "#{base_url()}/REST_USUARIO"
     data = %{"FG_USUARIO" => frog_usuario}
-
-    # Token fijo para autenticar el endpoint REST_USUARIO
-    auth_token = "rgO+ZKO4/4plIzLgghs/fkSCPjwZu4kDRKtXJYaiDMWRUTDOi4Baqrt3bxaXxdcuzXCC1Nr2ol+jL623KWLnZA=="
 
     headers = [
       {"accept", "application/json"},
       {"content-type", "application/json"},
-      {"authorization", "Bearer #{auth_token}"}
+      {"authorization", "Bearer #{service_token()}"}
     ]
 
     body = Jason.encode!(data)
@@ -319,12 +328,7 @@ defmodule Prettycore.Api.Client do
     end
   end
 
-  defp build_headers(nil) do
-    [
-      {"accept", "application/json"},
-      {"content-type", "application/json"}
-    ]
-  end
+  defp build_headers(nil), do: build_headers(service_token())
 
   defp build_headers(auth_token) do
     [

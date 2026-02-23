@@ -16,7 +16,7 @@
       </div>
     <% end %>
 
-    <section class="flex flex-col gap-4 sm:gap-6 p-3 sm:p-6 max-w-7xl mx-auto bg-gray-50 min-h-screen">
+    <section class="flex flex-col gap-4 sm:gap-6 p-3 sm:p-4 w-full bg-gray-50 min-h-screen">
       <!-- HEADER MODERNO -->
       <header class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
         <div class="flex flex-wrap items-center justify-between gap-3 mb-4 sm:mb-6">
@@ -132,7 +132,7 @@
               </button>
 
               <%= if @clasificacion_filter_open do %>
-                <div class="absolute top-full left-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden" phx-click-away="toggle_clasificacion_filter">
+                <div class="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden" phx-click-away="toggle_clasificacion_filter">
                   <button type="button" phx-click="filter_clasificacion" phx-value-clasificacion="" class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-sm text-gray-600 border-b border-gray-100">
                     Todas
                   </button>
