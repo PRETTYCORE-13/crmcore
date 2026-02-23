@@ -24,19 +24,25 @@ if config_env() == :prod do
 
 
 database_url =
-    (System.get_env("DATABASE_URL") ||
+    System.get_env("DATABASE_URL") ||
       raise """
       environment variable DATABASE_URL is missing.
       For example: ecto://USER:PASS@HOST/DATABASE
-      """)
-    |> String.replace(~r/^ecto:\/\//, "postgres://")
+      """
+
+  db_uri = URI.parse(database_url)
+  [db_username, db_password] = String.split(db_uri.userinfo || "postgres:postgres", ":", parts: 2)
+  db_name = String.trim_leading(db_uri.path || "/prettycore", "/")
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
 config :prettycore, Prettycore.PsqlRepo,
-    ssl: true,
-    ssl_opts: [verify: :verify_none],
-    url: database_url,
+    ssl: [verify: :verify_none],
+    hostname: db_uri.host,
+    port: db_uri.port || 5432,
+    username: db_username,
+    password: db_password,
+    database: db_name,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6,
     parameters: [client_encoding: "UTF8"]
