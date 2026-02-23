@@ -9,7 +9,31 @@ defmodule Prettycore.Release do
     load_app()
 
     for repo <- repos() do
-      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      {:ok, _, _} = Ecto.Migrator.with_repo(repo, fn repo ->
+        Ecto.Migrator.run(repo, :up, all: true)
+        seed_sysadmin(repo)
+      end)
+    end
+  end
+
+  defp seed_sysadmin(repo) do
+    alias Prettycore.Auth.AuthUser
+
+    case repo.get_by(AuthUser, username: "SYSADMIN") do
+      nil ->
+        changeset = AuthUser.changeset(%AuthUser{}, %{
+          username: "SYSADMIN",
+          password: "PRETTYCORE13",
+          role: "sysadmin",
+          active: true
+        })
+        case repo.insert(changeset) do
+          {:ok, user} -> IO.puts("✓ Usuario SYSADMIN creado con ID: #{user.id}")
+          {:error, cs} -> IO.puts("✗ Error al crear SYSADMIN: #{inspect(cs.errors)}")
+        end
+
+      _user ->
+        IO.puts("→ Usuario SYSADMIN ya existe, no se modifica.")
     end
   end
 
