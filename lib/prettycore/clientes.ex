@@ -263,7 +263,8 @@ defmodule Prettycore.Clientes do
       s_guidlog: cliente["S_GUIDLOG"],
       s_usuario: cliente["S_USUARIO"],
       s_usuariodb: cliente["S_USUARIODB"],
-      s_guidnot: cliente["S_GUIDNOT"]
+      s_guidnot: cliente["S_GUIDNOT"],
+      clasificacion: parse_clasificacion(cliente["Clasificacion"])
     }
   end
 
@@ -362,7 +363,6 @@ defmodule Prettycore.Clientes do
       end
 
     with registros when is_list(registros) <- registros_data do
-
       # Indexar estados por código para búsqueda rápida
       estados_por_codigo = Map.new(todos_estados, fn e ->
         {e.codigo_k, e.descripcion}

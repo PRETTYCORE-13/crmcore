@@ -19,6 +19,7 @@ defmodule Prettycore.Catalogos do
   import Ecto.Query
   require Logger
 
+  @spec precargar_catalogos(any()) :: :ok
   @doc """
   Precarga TODOS los catálogos al caché en paralelo.
   Se llama una vez al iniciar sesión.

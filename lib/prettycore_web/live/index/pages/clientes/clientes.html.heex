@@ -927,9 +927,10 @@
             <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
           </svg>
         </button>
-        <!-- Badge clasificación (se muestra después de consultar estadísticas) -->
-        <%= if Map.get(@stats_clasificaciones, cliente.codigo) do %>
-          <% clasif = String.upcase(Map.get(@stats_clasificaciones, cliente.codigo)) %>
+        <!-- Badge clasificación (desde CTE_CLIENTES, actualizado por estadísticas) -->
+        <% clasif_val = Map.get(@stats_clasificaciones, cliente.codigo) || cliente.clasificacion %>
+        <%= if clasif_val && clasif_val != "SIN RANGO" do %>
+          <% clasif = String.upcase(clasif_val) %>
           <img src={clasificacion_imagen(clasif)} alt={clasif} title={"Clasificación: #{clasif}"} class="h-10" />
         <% end %>
       </div>
