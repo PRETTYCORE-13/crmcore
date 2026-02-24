@@ -470,6 +470,8 @@ defmodule Prettycore.Clientes do
         total_pages: total_pages,
         has_previous_page?: page > 1,
         has_next_page?: page < total_pages,
+        previous_page: if(page > 1, do: page - 1, else: nil),
+        next_page: if(page < total_pages, do: page + 1, else: nil),
         flop: %Flop{page: page, page_size: page_size}
       }
 

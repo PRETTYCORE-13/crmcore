@@ -6,7 +6,8 @@
 .pc-platform {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100vh;       /* fallback */
+  height: 100dvh;      /* Safari iOS: excluye barra del browser */
   background: #f5f5f5;
 }
 
@@ -372,7 +373,8 @@
     position: fixed;
     top: 0;
     left: 0;
-    height: 100vh;
+    height: 100vh;     /* fallback */
+    height: 100dvh;    /* Safari iOS: excluye barra del browser */
     width: 240px;
     z-index: 50;
     transform: translateX(-100%);
