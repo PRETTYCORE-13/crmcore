@@ -128,7 +128,7 @@ defmodule Prettycore.Clientes do
       [%{...}, ...]
   """
   def list_clientes_completo(sysudn_codigo_k, vtarut_codigo_k_ini, vtarut_codigo_k_fin, token \\ nil) do
-    case Api.get_all("CTE_CLIENTES", token) do
+    case Api.get_all("CTE_CLIENTES", nil) do
       {:ok, registros} ->
         registros
         |> Enum.filter(fn r -> r["S_MAQEDO"] == 10 || r["S_MAQEDO"] == "10" end)
@@ -355,7 +355,7 @@ defmodule Prettycore.Clientes do
     registros_data =
       case :persistent_term.get(:cache_cte_clientes, nil) do
         nil ->
-          case Api.get_all("CTE_CLIENTES", token) do
+          case Api.get_all("CTE_CLIENTES", nil) do
             {:ok, data} -> :persistent_term.put(:cache_cte_clientes, data); data
             {:error, reason} -> {:error, reason}
           end

@@ -32,7 +32,7 @@ defmodule Prettycore.Catalogos do
     batch1b = [
       Task.async(fn ->
         if :persistent_term.get(:cache_cte_clientes, nil) == nil do
-          case Api.get_all("CTE_CLIENTES", token) do
+          case Api.get_all("CTE_CLIENTES", nil) do
             {:ok, data} -> :persistent_term.put(:cache_cte_clientes, data); :ok
             {:error, _} -> :ok
           end
