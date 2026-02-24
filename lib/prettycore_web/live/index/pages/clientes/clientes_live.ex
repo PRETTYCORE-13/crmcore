@@ -262,9 +262,8 @@ defmodule PrettycoreWeb.Clientes do
   ## Handle event para recargar todos los datos de la página
   @impl true
   def handle_event("reload_data", _params, socket) do
-    # Limpiar cachés de clientes y direcciones
-    :persistent_term.erase(:cache_cte_cliente)
-    :persistent_term.erase(:cache_cte_direccion)
+    # Limpiar caché de clientes
+    :persistent_term.erase(:cache_cte_clientes)
 
     # Mostrar modal de recarga
     socket = assign(socket, :reloading, true)

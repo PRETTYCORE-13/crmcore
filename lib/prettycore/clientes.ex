@@ -87,8 +87,7 @@ defmodule Prettycore.Clientes do
 
   @doc "Invalida el caché de clientes y direcciones para forzar recarga desde API"
   def invalidar_cache do
-    :persistent_term.erase(:cache_cte_cliente)
-    :persistent_term.erase(:cache_cte_direccion)
+    :persistent_term.erase(:cache_cte_clientes)
   end
 
   # Función helper para convertir Latin-1 a UTF-8
@@ -129,50 +128,29 @@ defmodule Prettycore.Clientes do
       [%{...}, ...]
   """
   def list_clientes_completo(sysudn_codigo_k, vtarut_codigo_k_ini, vtarut_codigo_k_fin, token \\ nil) do
-    # Obtener clientes activos y TODAS las direcciones en paralelo (2 llamadas en lugar de cientos)
-    clientes_task = Task.async(fn ->
-      Api.get_filtered("CTE_CLIENTE", %{"S_MAQEDO" => "10"}, token)
-    end)
-
-    direcciones_task = Task.async(fn ->
-      Api.get_all("CTE_DIRECCION", token)
-    end)
-
-    # Esperar ambas tareas
-    clientes_result = Task.await(clientes_task, 60_000)
-    direcciones_result = Task.await(direcciones_task, 60_000)
-
-    case {clientes_result, direcciones_result} do
-      {{:ok, clientes}, {:ok, todas_direcciones}} ->
-        # Agrupar direcciones por código de cliente para acceso rápido
-        direcciones_por_cliente = Enum.group_by(todas_direcciones, & &1["CTECLI_CODIGO_K"])
-
-        clientes
-        |> Enum.map(fn cliente ->
-          codigo_cliente = cliente["CTECLI_CODIGO_K"]
-          # Obtener direcciones de este cliente del mapa (sin llamada API)
-          direcciones = Map.get(direcciones_por_cliente, codigo_cliente, [])
-
-          # Filtrar por rutas
-          direcciones_filtradas = Enum.filter(direcciones, fn dir ->
-            ruta_pre = dir["VTARUT_CODIGO_K_PRE"] || ""
-            ruta_ent = dir["VTARUT_CODIGO_K_ENT"] || ""
-            ruta_aut = dir["VTARUT_CODIGO_K_AUT"] || ""
+    case Api.get_all("CTE_CLIENTES", token) do
+      {:ok, registros} ->
+        registros
+        |> Enum.filter(fn r -> r["S_MAQEDO"] == 10 || r["S_MAQEDO"] == "10" end)
+        |> Enum.group_by(& &1["CTECLI_CODIGO_K"])
+        |> Enum.flat_map(fn {_codigo, registros_cliente} ->
+          filtrados = Enum.filter(registros_cliente, fn r ->
+            ruta_pre = r["VTARUT_CODIGO_K_PRE"] || ""
+            ruta_ent = r["VTARUT_CODIGO_K_ENT"] || ""
+            ruta_aut = r["VTARUT_CODIGO_K_AUT"] || ""
 
             (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
             (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
             (ruta_aut >= vtarut_codigo_k_ini and ruta_aut <= vtarut_codigo_k_fin)
           end)
 
-          # Si tiene direcciones filtradas, incluir cliente
-          if Enum.any?(direcciones_filtradas) do
-            dir = List.first(direcciones_filtradas) || %{}
-            build_cliente_completo(cliente, dir, sysudn_codigo_k)
+          if Enum.any?(filtrados) do
+            r = List.first(filtrados)
+            [build_cliente_completo(r, r, sysudn_codigo_k)]
           else
-            nil
+            []
           end
         end)
-        |> Enum.reject(&is_nil/1)
         |> Enum.map(&fix_map_encoding/1)
 
       _ ->
@@ -300,42 +278,41 @@ defmodule Prettycore.Clientes do
   Lista clientes resumidos (solo info básica para tabla)
   """
   def list_clientes_resumen(sysudn_codigo_k, vtarut_codigo_k_ini, vtarut_codigo_k_fin) do
-    case Api.get_filtered("CTE_CLIENTE", %{"S_MAQEDO" => "10"}) do
-      {:ok, clientes} ->
-        clientes
-        |> Enum.map(fn cliente ->
-          direcciones = get_direcciones_cliente(cliente["CTECLI_CODIGO_K"])
-
-          direcciones_filtradas = Enum.filter(direcciones, fn dir ->
-            ruta_pre = dir["VTARUT_CODIGO_K_PRE"] || ""
-            ruta_ent = dir["VTARUT_CODIGO_K_ENT"] || ""
-            ruta_aut = dir["VTARUT_CODIGO_K_AUT"] || ""
+    case Api.get_all("CTE_CLIENTES") do
+      {:ok, registros} ->
+        registros
+        |> Enum.filter(fn r -> r["S_MAQEDO"] == 10 || r["S_MAQEDO"] == "10" end)
+        |> Enum.group_by(& &1["CTECLI_CODIGO_K"])
+        |> Enum.flat_map(fn {_codigo, registros_cliente} ->
+          filtrados = Enum.filter(registros_cliente, fn r ->
+            ruta_pre = r["VTARUT_CODIGO_K_PRE"] || ""
+            ruta_ent = r["VTARUT_CODIGO_K_ENT"] || ""
+            ruta_aut = r["VTARUT_CODIGO_K_AUT"] || ""
 
             (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
             (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
             (ruta_aut >= vtarut_codigo_k_ini and ruta_aut <= vtarut_codigo_k_fin)
           end)
 
-          if Enum.any?(direcciones_filtradas) do
-            dir = List.first(direcciones_filtradas) || %{}
-            %{
-              codigo: cliente["CTECLI_CODIGO_K"],
-              razon_social: cliente["CTECLI_RAZONSOCIAL"],
-              nombre_comercial: cliente["CTECLI_DENCOMERCIA"],
-              rfc: cliente["CTECLI_RFC"],
-              telefono: dir["CTEDIR_TELEFONO"],
-              estado: get_estado_nombre(dir["MAPEDO_CODIGO_K"]),
-              colonia: dir["CTEDIR_COLONIA"],
-              calle: dir["CTEDIR_CALLE"],
-              preventa: dir["VTARUT_CODIGO_K_PRE"],
-              entrega: dir["VTARUT_CODIGO_K_ENT"],
-              autoventa: dir["VTARUT_CODIGO_K_AUT"]
-            }
+          if Enum.any?(filtrados) do
+            r = List.first(filtrados)
+            [%{
+              codigo: r["CTECLI_CODIGO_K"],
+              razon_social: r["CTECLI_RAZONSOCIAL"],
+              nombre_comercial: r["CTECLI_DENCOMERCIA"],
+              rfc: r["CTECLI_RFC"],
+              telefono: r["CTEDIR_TELEFONO"],
+              estado: get_estado_nombre(r["MAPEDO_CODIGO_K"]),
+              colonia: r["CTEDIR_COLONIA"],
+              calle: r["CTEDIR_CALLE"],
+              preventa: r["VTARUT_CODIGO_K_PRE"],
+              entrega: r["VTARUT_CODIGO_K_ENT"],
+              autoventa: r["VTARUT_CODIGO_K_AUT"]
+            }]
           else
-            nil
+            []
           end
         end)
-        |> Enum.reject(&is_nil/1)
         |> Enum.map(&fix_map_encoding/1)
 
       {:error, _} ->
@@ -373,62 +350,46 @@ defmodule Prettycore.Clientes do
     # Obtener estados desde PostgreSQL local
     todos_estados = Prettycore.PsqlRepo.all(Prettycore.Map.Estado)
 
-    # Obtener clientes y direcciones con caché (se invalida al guardar)
-    clientes_data =
-      case :persistent_term.get(:cache_cte_cliente, nil) do
+    # Obtener clientes con caché (se invalida al guardar)
+    registros_data =
+      case :persistent_term.get(:cache_cte_clientes, nil) do
         nil ->
-          case Api.get_all("CTE_CLIENTE", token) do
-            {:ok, data} -> :persistent_term.put(:cache_cte_cliente, data); data
+          case Api.get_all("CTE_CLIENTES", token) do
+            {:ok, data} -> :persistent_term.put(:cache_cte_clientes, data); data
             {:error, reason} -> {:error, reason}
           end
         cached -> cached
       end
 
-    direcciones_data =
-      case :persistent_term.get(:cache_cte_direccion, nil) do
-        nil ->
-          case Api.get_all("CTE_DIRECCION", token) do
-            {:ok, data} -> :persistent_term.put(:cache_cte_direccion, data); data
-            {:error, reason} -> {:error, reason}
-          end
-        cached -> cached
-      end
-
-    with clientes when is_list(clientes) <- clientes_data,
-         todas_direcciones when is_list(todas_direcciones) <- direcciones_data do
-
-      # Indexar direcciones por código de cliente para búsqueda rápida
-      direcciones_por_cliente = Enum.group_by(todas_direcciones, & &1["CTECLI_CODIGO_K"])
+    with registros when is_list(registros) <- registros_data do
 
       # Indexar estados por código para búsqueda rápida
       estados_por_codigo = Map.new(todos_estados, fn e ->
         {e.codigo_k, e.descripcion}
       end)
 
-      # Filtrar solo clientes activos y procesar
-      clientes_procesados = clientes
-      |> Enum.filter(fn c -> c["S_MAQEDO"] == 10 || c["S_MAQEDO"] == "10" end)
-      |> Enum.map(fn cliente ->
-        direcciones = Map.get(direcciones_por_cliente, cliente["CTECLI_CODIGO_K"], [])
-
-        direcciones_filtradas = Enum.filter(direcciones, fn dir ->
-          ruta_pre = dir["VTARUT_CODIGO_K_PRE"] || ""
-          ruta_ent = dir["VTARUT_CODIGO_K_ENT"] || ""
-          ruta_aut = dir["VTARUT_CODIGO_K_AUT"] || ""
+      # Filtrar clientes activos, agrupar por código y procesar
+      clientes_procesados = registros
+      |> Enum.filter(fn r -> r["S_MAQEDO"] == 10 || r["S_MAQEDO"] == "10" end)
+      |> Enum.group_by(& &1["CTECLI_CODIGO_K"])
+      |> Enum.flat_map(fn {_codigo, registros_cliente} ->
+        filtrados = Enum.filter(registros_cliente, fn r ->
+          ruta_pre = r["VTARUT_CODIGO_K_PRE"] || ""
+          ruta_ent = r["VTARUT_CODIGO_K_ENT"] || ""
+          ruta_aut = r["VTARUT_CODIGO_K_AUT"] || ""
 
           (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
           (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
           (ruta_aut >= vtarut_codigo_k_ini and ruta_aut <= vtarut_codigo_k_fin)
         end)
 
-        if Enum.any?(direcciones_filtradas) do
-          dir = List.first(direcciones_filtradas) || %{}
-          build_cliente_flop(cliente, dir, sysudn_codigo_k, estados_por_codigo)
+        if Enum.any?(filtrados) do
+          r = List.first(filtrados)
+          [build_cliente_flop(r, r, sysudn_codigo_k, estados_por_codigo)]
         else
-          nil
+          []
         end
       end)
-      |> Enum.reject(&is_nil/1)
 
       # Aplicar búsqueda si existe
       clientes_filtrados = if search_term && search_term != "" do

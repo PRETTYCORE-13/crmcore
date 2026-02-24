@@ -27,28 +27,12 @@ defmodule Prettycore.Catalogos do
     Logger.info("PRELOAD: Iniciando precarga de catálogos...")
     start = System.monotonic_time(:millisecond)
 
-    # Lote 1A: CTE_CLIENTE - solo carga si no está en caché (evita OOM en logins concurrentes)
-    batch1a = [
-      Task.async(fn ->
-        if :persistent_term.get(:cache_cte_cliente, nil) == nil do
-          case Api.get_all("CTE_CLIENTE", token) do
-            {:ok, data} -> :persistent_term.put(:cache_cte_cliente, data); :ok
-            {:error, _} -> :ok
-          end
-        else
-          :ok
-        end
-      end)
-    ]
-
-    run_batch(batch1a, "Lote 1A (clientes)")
-
-    # Lote 1B: Direcciones y empresa - CTE_DIRECCION solo si no está en caché
+    # Lote 1B: CTE_CLIENTES (combina clientes+direcciones) y empresa
     batch1b = [
       Task.async(fn ->
-        if :persistent_term.get(:cache_cte_direccion, nil) == nil do
-          case Api.get_all("CTE_DIRECCION", token) do
-            {:ok, data} -> :persistent_term.put(:cache_cte_direccion, data); :ok
+        if :persistent_term.get(:cache_cte_clientes, nil) == nil do
+          case Api.get_all("CTE_CLIENTES", token) do
+            {:ok, data} -> :persistent_term.put(:cache_cte_clientes, data); :ok
             {:error, _} -> :ok
           end
         else
@@ -68,7 +52,7 @@ defmodule Prettycore.Catalogos do
       end)
     ]
 
-    run_batch(batch1b, "Lote 1B (dirs/empresa)")
+    run_batch(batch1b, "Lote 1B (clientes/empresa)")
 
     # Lote 2: Catálogos de formularios
     batch2 = [
