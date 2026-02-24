@@ -363,15 +363,6 @@ defmodule Prettycore.Clientes do
       end
 
     with registros when is_list(registros) <- registros_data do
-      # DEBUG RANGOS: distribución de Clasificacion en CTE_CLIENTES
-      rangos =
-        registros
-        |> Enum.group_by(fn r -> r["Clasificacion"] end)
-        |> Enum.map(fn {k, v} -> {k || "nil", length(v)} end)
-        |> Enum.sort_by(fn {_, count} -> -count end)
-      require Logger
-      Logger.info("RANGOS CTE_CLIENTES (#{length(registros)} registros): #{inspect(rangos)}")
-
       # Indexar estados por código para búsqueda rápida
       estados_por_codigo = Map.new(todos_estados, fn e ->
         {e.codigo_k, e.descripcion}
@@ -663,7 +654,7 @@ defmodule Prettycore.Clientes do
     }
   end
 
-  defp parse_clasificacion(nil), do: nil
+  defp parse_clasificacion(nil), do: "BRONCE"
   defp parse_clasificacion(value) when is_binary(value) do
     upper = String.upcase(value)
     cond do
