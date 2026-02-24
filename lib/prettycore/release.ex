@@ -19,21 +19,32 @@ defmodule Prettycore.Release do
   defp seed_sysadmin(repo) do
     alias Prettycore.Auth.AuthUser
 
-    case repo.get_by(AuthUser, username: "SYSADMIN") do
-      nil ->
-        changeset = AuthUser.changeset(%AuthUser{}, %{
-          username: "SYSADMIN",
-          password: "PRETTYCORE13",
-          role: "sysadmin",
-          active: true
-        })
-        case repo.insert(changeset) do
-          {:ok, user} -> IO.puts("✓ Usuario SYSADMIN creado con ID: #{user.id}")
-          {:error, cs} -> IO.puts("✗ Error al crear SYSADMIN: #{inspect(cs.errors)}")
-        end
+    existing = repo.get_by(AuthUser, username: "SYSADMIN")
 
-      _user ->
-        IO.puts("→ Usuario SYSADMIN ya existe, no se modifica.")
+    {changeset, action} =
+      case existing do
+        nil ->
+          cs = AuthUser.changeset(%AuthUser{}, %{
+            username: "SYSADMIN",
+            password: "PRETTYCORE13",
+            role: "sysadmin",
+            active: true
+          })
+          {cs, :insert}
+
+        user ->
+          cs = user
+               |> AuthUser.password_changeset(%{password: "PRETTYCORE13"})
+               |> Ecto.Changeset.put_change(:active, true)
+               |> Ecto.Changeset.put_change(:role, "sysadmin")
+          {cs, :update}
+      end
+
+    result = if action == :insert, do: repo.insert(changeset), else: repo.update(changeset)
+
+    case result do
+      {:ok, user} -> IO.puts("✓ SYSADMIN #{action} OK — ID: #{user.id}")
+      {:error, cs} -> IO.puts("✗ SYSADMIN #{action} ERROR: #{inspect(cs.errors)}")
     end
   end
 
