@@ -1216,9 +1216,9 @@
               </div>
             </div>
             <div class="flex items-center gap-3">
-              <!-- Badge de clasificación -->
-              <%= if @stats_data && @stats_data.clasificacion do %>
-                <% clasif = String.upcase(@stats_data.clasificacion) %>
+              <!-- Badge de clasificación (desde CTE_CLIENTES, no Estadísticas) -->
+              <%= if @stats_modal_clasificacion && @stats_modal_clasificacion != "SIN RANGO" do %>
+                <% clasif = String.upcase(@stats_modal_clasificacion) %>
                 <img src={clasificacion_imagen(clasif)} alt={clasif} title={"Clasificación: #{clasif}"} class="h-12" />
               <% end %>
               <button

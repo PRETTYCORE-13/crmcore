@@ -43,7 +43,7 @@ defmodule Prettycore.Clientes do
         clasificacion_data = Map.get(data, "Clasificacion", [])
         clasificacion =
           case List.first(clasificacion_data) do
-            %{"Clasificacion" => c} when is_binary(c) -> parse_clasificacion(c)
+            %{"Clasificacion" => c} when is_binary(c) and c != "" -> parse_clasificacion(c)
             _ -> nil
           end
 

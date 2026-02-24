@@ -89,6 +89,7 @@ defmodule PrettycoreWeb.Clientes do
      |> assign(:ruta_opts, ruta_opts)
      |> assign(:stats_modal_open, false)
      |> assign(:stats_modal_ref, nil)
+     |> assign(:stats_modal_clasificacion, nil)
      |> assign(:stats_data, nil)
      |> assign(:stats_loading, false)
      |> assign(:stats_clasificaciones, %{})
@@ -246,15 +247,9 @@ defmodule PrettycoreWeb.Clientes do
           {[], default_meta, "Error al cargar clientes. Por favor intenta de nuevo."}
       end
 
-    # Construir clasificaciones directamente desde los datos de CTE_CLIENTE (sin llamadas extra)
-    stats_clasificaciones =
-      clientes
-      |> Enum.reduce(%{}, fn cliente, acc ->
-        case cliente.clasificacion do
-          c when is_binary(c) and c != "" -> Map.put(acc, cliente.codigo, String.trim(c))
-          _ -> Map.put(acc, cliente.codigo, "SIN RANGO")
-        end
-      end)
+    # Preservar clasificaciones actualizadas por estadísticas (solo stats_modal las modifica)
+    # No reconstruir desde CTE_CLIENTES para no sobreescribir valores reales
+    existing_stats = socket.assigns[:stats_clasificaciones] || %{}
 
     {:noreply,
      socket
@@ -265,7 +260,7 @@ defmodule PrettycoreWeb.Clientes do
      |> assign(:error, error)
      |> assign(:visible_columns, visible_columns)
      |> assign(:filter_form, filter_form)
-     |> assign(:stats_clasificaciones, stats_clasificaciones)
+     |> assign(:stats_clasificaciones, existing_stats)
      |> assign(:reloading, false)}
   end
 
@@ -276,8 +271,10 @@ defmodule PrettycoreWeb.Clientes do
     :persistent_term.erase(:cache_cte_clientes)
     :persistent_term.erase(:cache_cte_clientes_ts)
 
-    # Mostrar modal de recarga
-    socket = assign(socket, :reloading, true)
+    # Mostrar modal de recarga y resetear clasificaciones
+    socket = socket
+      |> assign(:reloading, true)
+      |> assign(:stats_clasificaciones, %{})
 
     # Re-navegar a la misma página para recargar todo
     query_string = URI.encode_query(flatten_params(socket.assigns.params))
@@ -405,26 +402,33 @@ end
   def handle_event("open_stats_modal", %{"codigo" => codigo, "dir" => dir}, socket) do
     token = socket.assigns[:frog_token]
 
+    # Buscar clasificación del cliente desde CTE_CLIENTES (para el badge del modal)
+    cliente_clasificacion =
+      socket.assigns[:clientes]
+      |> Enum.find(fn c -> c.codigo == codigo end)
+      |> case do
+        %{clasificacion: c} when is_binary(c) and c != "" -> c
+        _ -> nil
+      end
+
     # Abrir modal inmediatamente con loading
     socket =
       socket
       |> assign(:stats_modal_open, true)
       |> assign(:stats_modal_ref, codigo)
+      |> assign(:stats_modal_clasificacion, cliente_clasificacion)
       |> assign(:stats_loading, true)
       |> assign(:stats_data, nil)
 
     # Fetch estadísticas de la API
     case Clientes.get_estadisticas(codigo, dir, token) do
       {:ok, data} ->
-        # Guardar clasificación por cliente para mostrar en la tabla
-        clasificaciones = socket.assigns[:stats_clasificaciones] || %{}
-        clasificaciones = if data.clasificacion, do: Map.put(clasificaciones, codigo, data.clasificacion), else: clasificaciones
-
+        # El badge de la tabla viene de CTE_CLIENTES (cliente.clasificacion), NO de Estadísticas
+        # Estadísticas muestra su propia clasificación solo dentro del modal
         {:noreply,
          socket
          |> assign(:stats_data, data)
-         |> assign(:stats_loading, false)
-         |> assign(:stats_clasificaciones, clasificaciones)}
+         |> assign(:stats_loading, false)}
 
       {:error, _reason} ->
         {:noreply,
@@ -445,6 +449,7 @@ end
      socket
      |> assign(:stats_modal_open, false)
      |> assign(:stats_modal_ref, nil)
+     |> assign(:stats_modal_clasificacion, nil)
      |> assign(:stats_data, nil)
      |> assign(:stats_loading, false)}
   end
