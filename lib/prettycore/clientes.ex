@@ -88,6 +88,7 @@ defmodule Prettycore.Clientes do
   @doc "Invalida el caché de clientes y direcciones para forzar recarga desde API"
   def invalidar_cache do
     :persistent_term.erase(:cache_cte_clientes)
+    :persistent_term.erase(:cache_cte_clientes_ts)
   end
 
   # Función helper para convertir Latin-1 a UTF-8
@@ -363,7 +364,10 @@ defmodule Prettycore.Clientes do
       case :persistent_term.get(:cache_cte_clientes, nil) do
         nil ->
           case Api.get_all("CTE_CLIENTES", nil) do
-            {:ok, data} -> :persistent_term.put(:cache_cte_clientes, data); data
+            {:ok, data} ->
+              :persistent_term.put(:cache_cte_clientes, data)
+              :persistent_term.put(:cache_cte_clientes_ts, System.monotonic_time(:millisecond))
+              data
             {:error, reason} -> {:error, reason}
           end
         cached -> cached

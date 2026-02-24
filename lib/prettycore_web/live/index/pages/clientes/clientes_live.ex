@@ -31,8 +31,15 @@ defmodule PrettycoreWeb.Clientes do
     alias Prettycore.Api.Client, as: Api
     token = socket.assigns[:frog_token]
 
-    # Siempre borrar caché al entrar a la página (entry + F5)
-    if connected?(socket), do: :persistent_term.erase(:cache_cte_clientes)
+    # Invalidar caché si tiene más de 5 minutos (TTL)
+    if connected?(socket) do
+      last_fetch = :persistent_term.get(:cache_cte_clientes_ts, 0)
+      age_ms = System.monotonic_time(:millisecond) - last_fetch
+      if age_ms > 300_000 do
+        :persistent_term.erase(:cache_cte_clientes)
+        :persistent_term.erase(:cache_cte_clientes_ts)
+      end
+    end
 
     # Obtener UDNs con caché
     sysudn_opts =
@@ -265,8 +272,9 @@ defmodule PrettycoreWeb.Clientes do
   ## Handle event para recargar todos los datos de la página
   @impl true
   def handle_event("reload_data", _params, socket) do
-    # Limpiar caché de clientes
+    # Limpiar caché de clientes (forzar re-fetch inmediato)
     :persistent_term.erase(:cache_cte_clientes)
+    :persistent_term.erase(:cache_cte_clientes_ts)
 
     # Mostrar modal de recarga
     socket = assign(socket, :reloading, true)

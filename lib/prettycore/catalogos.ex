@@ -57,34 +57,34 @@ defmodule Prettycore.Catalogos do
 
     run_batch(batch1b, "Lote 1B (clientes/empresa)")
 
-    # Lote 2: Catálogos de formularios
+    # Lote 2: Catálogos de formularios (service token - frog_token no tiene permisos)
     batch2 = [
-      Task.async(fn -> listar_tipos_cliente(token) end),
-      Task.async(fn -> listar_canales(token) end),
-      Task.async(fn -> listar_regimenes(token) end),
-      Task.async(fn -> listar_cadenas(token) end),
-      Task.async(fn -> listar_paquetes_servicio(token) end)
+      Task.async(fn -> listar_tipos_cliente(nil) end),
+      Task.async(fn -> listar_canales(nil) end),
+      Task.async(fn -> listar_regimenes(nil) end),
+      Task.async(fn -> listar_cadenas(nil) end),
+      Task.async(fn -> listar_paquetes_servicio(nil) end)
     ]
 
     run_batch(batch2, "Lote 2 (catálogos 1)")
 
-    # Lote 3: Catálogos SAT y más
+    # Lote 3: Catálogos SAT y más (service token)
     batch3 = [
-      Task.async(fn -> listar_monedas(token) end),
-      Task.async(fn -> listar_rutas(token) end),
-      Task.async(fn -> listar_usos_cfdi(token) end),
-      Task.async(fn -> listar_formas_pago(token) end),
-      Task.async(fn -> listar_metodos_pago(token) end)
+      Task.async(fn -> listar_monedas(nil) end),
+      Task.async(fn -> listar_rutas(nil) end),
+      Task.async(fn -> listar_usos_cfdi(nil) end),
+      Task.async(fn -> listar_formas_pago(nil) end),
+      Task.async(fn -> listar_metodos_pago(nil) end)
     ]
 
     run_batch(batch3, "Lote 3 (catálogos 2)")
 
-    # Lote 4: Restantes
+    # Lote 4: Restantes (service token)
     batch4 = [
-      Task.async(fn -> listar_regimenes_fiscales(token) end),
+      Task.async(fn -> listar_regimenes_fiscales(nil) end),
       Task.async(fn ->
-        Cache.fetch({:all_subcanales, token}, fn ->
-          case Api.get_all("CTE_SUBCANAL", token) do
+        Cache.fetch({:all_subcanales, nil}, fn ->
+          case Api.get_all("CTE_SUBCANAL", nil) do
             {:ok, rows} -> rows; {:error, _} -> []
           end
         end)
@@ -98,7 +98,7 @@ defmodule Prettycore.Catalogos do
         end
       end),
       Task.async(fn ->
-        case Api.get_all("VTA_RUTA", token) do
+        case Api.get_all("VTA_RUTA", nil) do
           {:ok, rutas} ->
             opts = rutas |> Enum.map(& &1["VTARUT_CODIGO_K"]) |> Enum.reject(&(&1 in [nil, ""])) |> Enum.uniq() |> Enum.sort()
             :persistent_term.put(:cache_ruta_opts, opts)
@@ -169,10 +169,10 @@ defmodule Prettycore.Catalogos do
 
   def listar_subcanales(canal_codigo, token \\ nil)
 
-  def listar_subcanales(canal_codigo, token) when is_binary(canal_codigo) do
-    # Traer TODOS los subcanales una vez y filtrar en memoria
-    all_subcanales = Cache.fetch({:all_subcanales, token}, fn ->
-      case Api.get_all("CTE_SUBCANAL", token) do
+  def listar_subcanales(canal_codigo, _token) when is_binary(canal_codigo) do
+    # Traer TODOS los subcanales una vez y filtrar en memoria (service token)
+    all_subcanales = Cache.fetch({:all_subcanales, nil}, fn ->
+      case Api.get_all("CTE_SUBCANAL", nil) do
         {:ok, rows} -> rows
         {:error, _} -> []
       end
