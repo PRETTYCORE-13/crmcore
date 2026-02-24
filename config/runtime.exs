@@ -20,7 +20,7 @@ if System.get_env("PHX_SERVER") do
   config :prettycore, PrettycoreWeb.Endpoint, server: true
 end
 
-if config_env() == :prod d
+if config_env() == :prod do
 
 
 database_url =
