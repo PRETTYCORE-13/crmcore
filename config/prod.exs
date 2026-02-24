@@ -17,17 +17,17 @@ config :swoosh, local: false
 # Do not print debug messages in production
 config :logger, level: :info
 
-config :prettycore, Prettycore.Mailer,
-  adapter: Swoosh.Adapters.SMTP,
-  relay: "smtp.gmail.com",
-  username: "servicios.ennovacore@gmail.com",
-  password: System.get_env("SMTP_PASSWORD") || "tazo oiia qvtf obtu",
-  ssl: true,
-  tls: :always,
-  auth: :always,
-  port: 465,
-  retries: 2,
-  no_mx_lookups: false
+#config :prettycore, Prettycore.Mailer,
+#  adapter: Swoosh.Adapters.SMTP,
+#  relay: "smtp.gmail.com",
+#  username: "servicios.ennovacore@gmail.com",
+#  password: System.get_env("SMTP_PASSWORD") || "tazo oiia qvtf obtu",
+#  ssl: true,
+#  tls: :always,
+#  auth: :always,
+#  port: 465,
+#  retries: 2,
+#  no_mx_lookups: false
 
 # Runtime production configuration, including reading
 # of environment variables, is done on config/runtime.exs.
