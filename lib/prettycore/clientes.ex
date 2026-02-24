@@ -135,9 +135,9 @@ defmodule Prettycore.Clientes do
         |> Enum.group_by(& &1["CTECLI_CODIGO_K"])
         |> Enum.flat_map(fn {_codigo, registros_cliente} ->
           filtrados = Enum.filter(registros_cliente, fn r ->
-            ruta_pre = r["VTARUT_CODIGO_K_PRE"] || ""
-            ruta_ent = r["VTARUT_CODIGO_K_ENT"] || ""
-            ruta_aut = r["VTARUT_CODIGO_K_AUT"] || ""
+            ruta_pre = to_string(r["VTARUT_CODIGO_K_PRE"] || "")
+            ruta_ent = to_string(r["VTARUT_CODIGO_K_ENT"] || "")
+            ruta_aut = to_string(r["VTARUT_CODIGO_K_AUT"] || "")
 
             (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
             (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
@@ -286,9 +286,9 @@ defmodule Prettycore.Clientes do
         |> Enum.group_by(& &1["CTECLI_CODIGO_K"])
         |> Enum.flat_map(fn {_codigo, registros_cliente} ->
           filtrados = Enum.filter(registros_cliente, fn r ->
-            ruta_pre = r["VTARUT_CODIGO_K_PRE"] || ""
-            ruta_ent = r["VTARUT_CODIGO_K_ENT"] || ""
-            ruta_aut = r["VTARUT_CODIGO_K_AUT"] || ""
+            ruta_pre = to_string(r["VTARUT_CODIGO_K_PRE"] || "")
+            ruta_ent = to_string(r["VTARUT_CODIGO_K_ENT"] || "")
+            ruta_aut = to_string(r["VTARUT_CODIGO_K_AUT"] || "")
 
             (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
             (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
@@ -340,9 +340,16 @@ defmodule Prettycore.Clientes do
   - search: Búsqueda por código, razón social o RFC
   """
   def list_clientes_with_flop(params \\ %{}, token \\ nil) do
-    sysudn_codigo_k = get_param_or_default(params["sysudn"], "100")
-    vtarut_codigo_k_ini = get_param_or_default(params["ruta_desde"], "001")
-    vtarut_codigo_k_fin = get_param_or_default(params["ruta_hasta"], "99999")
+    sysudn_filter = get_param_or_default(params["sysudn"], nil)
+    sysudn_codigo_k = sysudn_filter || "100"
+    ruta_desde = get_param_or_default(params["ruta_desde"], nil)
+    ruta_hasta = get_param_or_default(params["ruta_hasta"], nil)
+    # Si solo se selecciona ruta_desde, hacer match exacto (no rango abierto)
+    {vtarut_codigo_k_ini, vtarut_codigo_k_fin} = case {ruta_desde, ruta_hasta} do
+      {nil, _}     -> {nil, nil}
+      {desde, nil} -> {desde, desde}
+      {desde, fin} -> {desde, fin}
+    end
     search_term = params["search"]
     clasificacion_filter = params["clasificacion"]
     page = String.to_integer(params["page"] || "1")
@@ -368,20 +375,41 @@ defmodule Prettycore.Clientes do
         {e.codigo_k, e.descripcion}
       end)
 
+      # Mapa ruta→udn para filtro de UDN
+      ruta_udn_map = :persistent_term.get(:cache_ruta_udn_map, %{})
+
       # Filtrar clientes activos, agrupar por código y procesar
       clientes_procesados = registros
       |> Enum.filter(fn r -> r["S_MAQEDO"] == 10 || r["S_MAQEDO"] == "10" end)
       |> Enum.group_by(& &1["CTECLI_CODIGO_K"])
       |> Enum.flat_map(fn {_codigo, registros_cliente} ->
-        filtrados = Enum.filter(registros_cliente, fn r ->
-          ruta_pre = r["VTARUT_CODIGO_K_PRE"] || ""
-          ruta_ent = r["VTARUT_CODIGO_K_ENT"] || ""
-          ruta_aut = r["VTARUT_CODIGO_K_AUT"] || ""
+        filtrados = if vtarut_codigo_k_ini do
+          Enum.filter(registros_cliente, fn r ->
+            ruta_pre = to_string(r["VTARUT_CODIGO_K_PRE"] || "")
+            ruta_ent = to_string(r["VTARUT_CODIGO_K_ENT"] || "")
+            ruta_aut = to_string(r["VTARUT_CODIGO_K_AUT"] || "")
 
-          (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
-          (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
-          (ruta_aut >= vtarut_codigo_k_ini and ruta_aut <= vtarut_codigo_k_fin)
-        end)
+            (ruta_pre >= vtarut_codigo_k_ini and ruta_pre <= vtarut_codigo_k_fin) or
+            (ruta_ent >= vtarut_codigo_k_ini and ruta_ent <= vtarut_codigo_k_fin) or
+            (ruta_aut >= vtarut_codigo_k_ini and ruta_aut <= vtarut_codigo_k_fin)
+          end)
+        else
+          registros_cliente
+        end
+
+        filtrados = if sysudn_filter do
+          Enum.filter(filtrados, fn r ->
+            ruta_pre = to_string(r["VTARUT_CODIGO_K_PRE"] || "")
+            ruta_ent = to_string(r["VTARUT_CODIGO_K_ENT"] || "")
+            ruta_aut = to_string(r["VTARUT_CODIGO_K_AUT"] || "")
+
+            Map.get(ruta_udn_map, ruta_pre) == sysudn_filter or
+            Map.get(ruta_udn_map, ruta_ent) == sysudn_filter or
+            Map.get(ruta_udn_map, ruta_aut) == sysudn_filter
+          end)
+        else
+          filtrados
+        end
 
         if Enum.any?(filtrados) do
           r = List.first(filtrados)

@@ -31,13 +31,15 @@ defmodule Prettycore.Catalogos do
     # Lote 1B: CTE_CLIENTES (combina clientes+direcciones) y empresa
     batch1b = [
       Task.async(fn ->
-        if :persistent_term.get(:cache_cte_clientes, nil) == nil do
-          case Api.get_all("CTE_CLIENTES", nil) do
-            {:ok, data} -> :persistent_term.put(:cache_cte_clientes, data); :ok
-            {:error, _} -> :ok
-          end
-        else
-          :ok
+        Logger.info("PRELOAD CTE_CLIENTES: consultando API...")
+        case Api.get_all("CTE_CLIENTES", nil) do
+          {:ok, data} ->
+            Logger.info("PRELOAD CTE_CLIENTES: #{length(data)} registros cargados")
+            :persistent_term.put(:cache_cte_clientes, data)
+            :ok
+          {:error, reason} ->
+            Logger.error("PRELOAD CTE_CLIENTES: error #{inspect(reason)}")
+            :ok
         end
       end),
       Task.async(fn ->
@@ -100,6 +102,13 @@ defmodule Prettycore.Catalogos do
           {:ok, rutas} ->
             opts = rutas |> Enum.map(& &1["VTARUT_CODIGO_K"]) |> Enum.reject(&(&1 in [nil, ""])) |> Enum.uniq() |> Enum.sort()
             :persistent_term.put(:cache_ruta_opts, opts)
+            # Mapa ruta→udn para filtro de UDN en clientes
+            ruta_udn_map = Enum.reduce(rutas, %{}, fn r, acc ->
+              ruta = to_string(r["VTARUT_CODIGO_K"] || "")
+              udn = to_string(r["SYSUDN_CODIGO_K"] || "")
+              if ruta != "" and udn != "", do: Map.put(acc, ruta, udn), else: acc
+            end)
+            :persistent_term.put(:cache_ruta_udn_map, ruta_udn_map)
           {:error, _} -> :ok
         end
       end)

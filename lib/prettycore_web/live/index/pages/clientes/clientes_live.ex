@@ -31,6 +31,9 @@ defmodule PrettycoreWeb.Clientes do
     alias Prettycore.Api.Client, as: Api
     token = socket.assigns[:frog_token]
 
+    # Siempre borrar caché al entrar a la página (entry + F5)
+    if connected?(socket), do: :persistent_term.erase(:cache_cte_clientes)
+
     # Obtener UDNs con caché
     sysudn_opts =
       case :persistent_term.get(:cache_sysudn_opts, nil) do

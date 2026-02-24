@@ -46,6 +46,7 @@ defmodule PrettycoreWeb.SessionController do
   end
 
   def delete(conn, _params) do
+    :persistent_term.erase(:cache_cte_clientes)
     conn
     |> configure_session(drop: true)
     |> redirect(to: ~p"/")
