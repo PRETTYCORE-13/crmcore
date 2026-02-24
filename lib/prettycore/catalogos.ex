@@ -27,8 +27,26 @@ defmodule Prettycore.Catalogos do
     Logger.info("PRELOAD: Iniciando precarga de catálogos...")
     start = System.monotonic_time(:millisecond)
 
-    # Lote 1B: Solo empresa (CTE_CLIENTE y CTE_DIRECCION se cargan on-demand en clientes_live)
+    # Lote 1A: CTE_CLIENTE sola (es la más pesada, corre en su propio lote)
+    batch1a = [
+      Task.async(fn ->
+        case Api.get_all("CTE_CLIENTE", token) do
+          {:ok, data} -> :persistent_term.put(:cache_cte_cliente, data); :ok
+          {:error, _} -> :ok
+        end
+      end)
+    ]
+
+    run_batch(batch1a, "Lote 1A (clientes)")
+
+    # Lote 1B: Direcciones y empresa
     batch1b = [
+      Task.async(fn ->
+        case Api.get_all("CTE_DIRECCION", token) do
+          {:ok, data} -> :persistent_term.put(:cache_cte_direccion, data); :ok
+          {:error, _} -> :ok
+        end
+      end),
       Task.async(fn ->
         case Api.get_all("SYS_EMPRESA", token) do
           {:ok, [empresa | _]} ->
@@ -42,7 +60,7 @@ defmodule Prettycore.Catalogos do
       end)
     ]
 
-    run_batch(batch1b, "Lote 1B (empresa)")
+    run_batch(batch1b, "Lote 1B (dirs/empresa)")
 
     # Lote 2: Catálogos de formularios
     batch2 = [
