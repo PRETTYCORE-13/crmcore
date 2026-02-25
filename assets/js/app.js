@@ -30,7 +30,7 @@ import topbar from "../vendor/topbar"
 // ============================================================
 // IMPORTANTE: Reemplaza 'TU_API_KEY_AQUI' con tu API Key de Google Maps
 // Obtén una en: https://console.cloud.google.com/apis/credentials
-const GOOGLE_MAPS_API_KEY = 'AIzaSyD2BkDEODkzEI37G4wOR3rBgLTkKikGUig';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCoccXAGyYsvt46PKXYFAS2vPl2SVHU7yE';
 
 let googleMapsLoaded = false;
 let googleMapsLoadingPromise = null;
