@@ -16,7 +16,9 @@ defmodule Prettycore.Application do
       # Start to serve requests, typically the last entry
       PrettycoreWeb.Endpoint,
       # PostgreSQL para autenticación
-      Prettycore.PsqlRepo
+      Prettycore.PsqlRepo,
+      # Seed one-time de tablas geográficas (estados/municipios/localidades)
+      Prettycore.MapSeeder
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
