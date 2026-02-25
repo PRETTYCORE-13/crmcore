@@ -1057,87 +1057,105 @@
 
                 <!-- VISTA EXPANDIDA -->
                 <div class={[
-                  "transition-all duration-300 ease-in-out overflow-hidden bg-gradient-to-r from-slate-50 to-gray-50/30",
-                  if(is_expanded, do: "max-h-96 opacity-100", else: "max-h-0 opacity-0")
+                  "transition-all duration-300 ease-in-out overflow-hidden bg-slate-50/60",
+                  if(is_expanded, do: "max-h-[400px] opacity-100", else: "max-h-0 opacity-0")
                 ]}>
-                  <div class="px-4 py-4 space-y-3">
+                  <div class="px-4 py-4 border-t border-gray-100">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-4 gap-y-3 text-sm">
 
-                    <!-- SECCIÓN FINANCIERO -->
-                    <div class="flex items-center gap-2 text-sm">
-                      <span class="text-lg">💳</span>
-                      <span class="font-semibold text-gray-700">Financiero:</span>
-                      <div class="flex items-center gap-3 flex-wrap">
-                        <span class="text-gray-800">
-                          Días Crédito: <span class="font-bold text-gray-800"><%= cliente.diascredito %>d</span>
-                        </span>
-                        <span class="text-gray-400">|</span>
-                        <span class="text-gray-800">
-                          Límite: <span class="font-bold text-emerald-600">$<%= cond do
-                            is_nil(cliente.limite_credito) -> "0.00"
-                            is_struct(cliente.limite_credito, Decimal) -> :erlang.float_to_binary(Decimal.to_float(cliente.limite_credito), decimals: 2)
-                            is_float(cliente.limite_credito) -> :erlang.float_to_binary(cliente.limite_credito, decimals: 2)
-                            is_integer(cliente.limite_credito) -> :erlang.float_to_binary(cliente.limite_credito / 1, decimals: 2)
-                            true -> to_string(cliente.limite_credito)
-                          end %></span>
-                        </span>
-                        <span class="text-gray-400">|</span>
-                        <span class="text-gray-800">
-                          Lista: <span class="font-bold text-gray-800"><%= cliente.paquete_codigo %></span>
-                        </span>
-                        <span class="text-gray-400">|</span>
-                        <span class="text-gray-800">
-                          Frecuencia: <span class="font-bold text-gray-700"><%= cliente.frecuencia_codigo %></span>
-                        </span>
+                      <!-- Nombre comercial -->
+                      <div class="lg:col-span-2">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Nombre comercial</p>
+                        <p class="font-semibold text-gray-800 truncate"><%= cliente.nombre_comercial || "—" %></p>
                       </div>
-                    </div>
 
-                    <!-- SECCIÓN CONTACTO -->
-                    <div class="flex items-center gap-2 text-sm">
-                      <span class="text-lg">📧</span>
-                      <span class="font-semibold text-gray-700">Contacto:</span>
-                      <div class="flex items-center gap-3 flex-wrap">
+                      <!-- RFC -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">RFC</p>
+                        <p class="font-semibold text-gray-800"><%= cliente.rfc || "—" %></p>
+                      </div>
+
+                      <!-- Teléfono -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Teléfono</p>
+                        <p class="font-semibold text-gray-800"><%= cliente.telefono || "—" %></p>
+                      </div>
+
+                      <!-- Email -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Email</p>
                         <%= if cliente.email_receptor do %>
-                          <a href={"mailto:#{cliente.email_receptor}"} class="text-gray-800 hover:underline font-medium">
+                          <a href={"mailto:#{cliente.email_receptor}"} class="font-semibold text-blue-600 hover:underline truncate block text-sm">
                             <%= cliente.email_receptor %>
                           </a>
                         <% else %>
-                          <span class="text-amber-600 font-medium">Sin email</span>
+                          <p class="font-semibold text-amber-500 text-sm">Sin email</p>
                         <% end %>
-                        <span class="text-gray-400">|</span>
-                        <span class="text-gray-800">
-                          Forma Pago: <span class="font-bold"><%= cliente.forma_pago %></span>
-                        </span>
-                        <span class="text-gray-400">|</span>
-                        <span class="text-gray-800">
-                          Método Pago: <span class="font-bold"><%= cliente.metodo_pago %></span>
-                        </span>
                       </div>
-                    </div>
 
-                    <!-- BOTONES DE ACCIÓN -->
-                    <div class="flex gap-2 pt-2">
-                      <button
-                        type="button"
-                        phx-click="edit_client"
-                        phx-value-client-id={cliente.codigo}
-                        class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded transition-colors"
-                      >
-                        ✏️ Editar
-                      </button>
-                      <%= if cliente.email_receptor do %>
-                        <button
-                          type="button"
-                          phx-click="send_email"
-                          phx-value-email={cliente.email_receptor}
-                          class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors"
-                        >
-                          📧 Email
-                        </button>
-                      <% end %>
-                    </div>
+                      <!-- Calle -->
+                      <div class="lg:col-span-2">
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Calle</p>
+                        <p class="font-semibold text-gray-800 truncate"><%= cliente.calle || "—" %></p>
+                      </div>
+
+                      <!-- Colonia -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Colonia</p>
+                        <p class="font-semibold text-gray-800 truncate"><%= cliente.colonia || "—" %></p>
+                      </div>
+
+                      <!-- Estado -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Estado</p>
+                        <p class="font-semibold text-gray-800"><%= cliente.estado || "—" %></p>
+                      </div>
+
+                      <!-- Días crédito -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Días crédito</p>
+                        <p class="font-semibold text-gray-800"><%= cliente.diascredito %>d</p>
+                      </div>
+
+                      <!-- Límite crédito -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Límite crédito</p>
+                        <p class="font-semibold text-emerald-600">$<%= cond do
+                          is_nil(cliente.limite_credito) -> "0.00"
+                          is_struct(cliente.limite_credito, Decimal) -> :erlang.float_to_binary(Decimal.to_float(cliente.limite_credito), decimals: 2)
+                          is_float(cliente.limite_credito) -> :erlang.float_to_binary(cliente.limite_credito, decimals: 2)
+                          is_integer(cliente.limite_credito) -> :erlang.float_to_binary(cliente.limite_credito / 1, decimals: 2)
+                          true -> to_string(cliente.limite_credito)
+                        end %></p>
+                      </div>
+
+                      <!-- Lista -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Lista</p>
+                        <p class="font-semibold text-gray-800"><%= cliente.paquete_codigo || "—" %></p>
+                      </div>
+
+                      <!-- Frecuencia -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Frecuencia</p>
+                        <p class="font-semibold text-gray-800"><%= cliente.frecuencia_codigo || "—" %></p>
+                      </div>
+
+                      <!-- Forma pago -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Forma pago</p>
+                        <p class="font-semibold text-gray-800"><%= cliente.forma_pago || "—" %></p>
+                      </div>
+
+                      <!-- Método pago -->
+                      <div>
+                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Método pago</p>
+                        <p class="font-semibold text-gray-800"><%= cliente.metodo_pago || "—" %></p>
+                      </div>
+
                     </div>
                   </div>
-                  </div>
+                </div>
                 <% end %>
               </div>
             </div>
