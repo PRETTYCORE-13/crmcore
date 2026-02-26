@@ -282,6 +282,10 @@ defmodule Prettycore.Clientes do
   def list_clientes_resumen(sysudn_codigo_k, vtarut_codigo_k_ini, vtarut_codigo_k_fin) do
     case Api.get_all("CTE_CLIENTES") do
       {:ok, registros} ->
+        if first = List.first(registros) do
+          Logger.debug("CTE_CLIENTES sample keys: #{inspect(Map.keys(first))}")
+          Logger.debug("CTE_CLIENTES RFC sample: CTECLI_RFC=#{inspect(first["CTECLI_RFC"])}")
+        end
         registros
         |> Enum.filter(fn r -> r["S_MAQEDO"] == 10 || r["S_MAQEDO"] == "10" end)
         |> Enum.group_by(& &1["CTECLI_CODIGO_K"])

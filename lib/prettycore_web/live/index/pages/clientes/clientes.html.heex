@@ -787,7 +787,7 @@
             <div class="overflow-x-auto">
               <div class="min-w-max">
                 <!-- ENCABEZADOS DE COLUMNAS -->
-                <div class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-slate-900 to-slate-800 border-b-2 border-slate-700">
+                <div class="flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-slate-900 to-slate-800 border-b-2 border-slate-700">
                   <!-- Acciones Header -->
                   <div class="w-24 flex-shrink-0">
                     <span class="text-xs font-bold text-slate-300 uppercase tracking-wide">Acciones</span>
@@ -816,7 +816,7 @@
 
                   <!-- Nombre Header -->
                   <%= if @visible_columns["razon_social"] do %>
-                    <div class="flex-1 min-w-0">
+                    <div class="w-56 flex-shrink-0">
                       <span class="text-xs font-bold text-slate-200 uppercase tracking-wide">Nombre</span>
                     </div>
                   <% end %>
@@ -898,7 +898,7 @@
   <div class="border-b border-gray-200 last:border-b-0">
     <!-- VISTA COMPACTA: Una sola línea clickeable -->
     <div
-      class="flex items-center gap-3 px-4 py-2.5 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent cursor-pointer transition-all duration-200"
+      class="flex items-center gap-1 px-3 py-1.5 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-transparent cursor-pointer transition-all duration-200"
       phx-click="toggle_client_details"
       phx-value-codigo={cliente.codigo}
       phx-value-dir={cliente.ctedir_codigo_k}
@@ -960,7 +960,7 @@
 
                   <!-- NOMBRE -->
                   <%= if @visible_columns["razon_social"] do %>
-                    <div class="flex-1 min-w-0">
+                    <div class="w-56 flex-shrink-0 min-w-0">
                       <span class="text-sm font-medium text-gray-900 truncate block" title={cliente.razon_social}>
                         <%= cliente.razon_social %>
                       </span>
@@ -979,7 +979,7 @@
                   <!-- RFC -->
                   <%= if @visible_columns["rfc"] do %>
                     <div class="w-32 flex-shrink-0">
-                      <span class="text-xs font-mono text-gray-700"><%= cliente.rfc %></span>
+                      <span class="text-xs font-mono text-gray-700"><%= cliente.rfc || "—" %></span>
                     </div>
                   <% end %>
 
@@ -1060,100 +1060,75 @@
                   "transition-all duration-300 ease-in-out overflow-hidden bg-slate-50/60",
                   if(is_expanded, do: "max-h-[400px] opacity-100", else: "max-h-0 opacity-0")
                 ]}>
-                  <div class="px-3 py-3 border-t border-gray-100">
-                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-x-2 gap-y-2 text-sm">
+                  <div class="px-3 py-2 border-t border-gray-100 bg-gray-50/50">
+                    <dl class="flex flex-wrap gap-x-1 gap-y-0 text-sm divide-x divide-gray-200">
 
-                      <!-- Nombre comercial -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Nombre comercial</p>
-                        <p class="font-semibold text-gray-800 truncate"><%= cliente.nombre_comercial || "—" %></p>
+
+
+
+
+                      <div class="flex items-baseline gap-1 px-3">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase whitespace-nowrap">Tel:</dt>
+                        <dd class="font-semibold text-gray-800"><%= cliente.telefono || "—" %></dd>
                       </div>
 
-                      <!-- RFC -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">RFC</p>
-                        <p class="font-semibold text-gray-800"><%= cliente.rfc || "—" %></p>
-                      </div>
-
-                      <!-- Teléfono -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Teléfono</p>
-                        <p class="font-semibold text-gray-800"><%= cliente.telefono || "—" %></p>
-                      </div>
-
-                      <!-- Email -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Email</p>
+                      <div class="flex items-baseline gap-1 px-3">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase whitespace-nowrap">Email:</dt>
                         <%= if cliente.email_receptor do %>
-                          <a href={"mailto:#{cliente.email_receptor}"} class="font-semibold text-blue-600 hover:underline truncate block text-sm">
-                            <%= cliente.email_receptor %>
-                          </a>
+                          <dd><a href={"mailto:#{cliente.email_receptor}"} class="font-semibold text-blue-600 hover:underline truncate max-w-[160px] block" title={cliente.email_receptor}><%= cliente.email_receptor %></a></dd>
                         <% else %>
-                          <p class="font-semibold text-amber-500 text-sm">Sin email</p>
+                          <dd class="font-semibold text-amber-500">Sin email</dd>
                         <% end %>
                       </div>
 
-                      <!-- Calle -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Calle</p>
-                        <p class="font-semibold text-gray-800 truncate"><%= cliente.calle || "—" %></p>
+                      <div class="flex items-baseline gap-1 px-3">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase whitespace-nowrap">Calle:</dt>
+                        <dd class="font-semibold text-gray-800 truncate max-w-[140px]" title={cliente.calle}><%= cliente.calle || "—" %></dd>
                       </div>
 
-                      <!-- Colonia -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Colonia</p>
-                        <p class="font-semibold text-gray-800 truncate"><%= cliente.colonia || "—" %></p>
+                      <div class="flex items-baseline gap-1 px-3">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase whitespace-nowrap">Col:</dt>
+                        <dd class="font-semibold text-gray-800 truncate max-w-[120px]" title={cliente.colonia}><%= cliente.colonia || "—" %></dd>
                       </div>
 
-                      <!-- Estado -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Estado</p>
-                        <p class="font-semibold text-gray-800"><%= cliente.estado || "—" %></p>
+                      <div class="flex items-baseline gap-1 px-3">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase whitespace-nowrap">Edo:</dt>
+                        <dd class="font-semibold text-gray-800"><%= cliente.estado || "—" %></dd>
                       </div>
 
-                      <!-- Días crédito -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Días crédito</p>
-                        <p class="font-semibold text-gray-800"><%= cliente.diascredito %>d</p>
+                      <div class="flex items-baseline gap-1 px-3">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase whitespace-nowrap">Días:</dt>
+                        <dd class="font-semibold text-gray-800"><%= cliente.diascredito %>d</dd>
                       </div>
 
-                      <!-- Límite crédito -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Límite crédito</p>
-                        <p class="font-semibold text-emerald-600">$<%= cond do
+                      <div class="flex items-baseline gap-1 px-3">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase whitespace-nowrap">Límite:</dt>
+                        <dd class="font-semibold text-emerald-600">$<%= cond do
                           is_nil(cliente.limite_credito) -> "0.00"
                           is_struct(cliente.limite_credito, Decimal) -> :erlang.float_to_binary(Decimal.to_float(cliente.limite_credito), decimals: 2)
                           is_float(cliente.limite_credito) -> :erlang.float_to_binary(cliente.limite_credito, decimals: 2)
                           is_integer(cliente.limite_credito) -> :erlang.float_to_binary(cliente.limite_credito / 1, decimals: 2)
                           true -> to_string(cliente.limite_credito)
-                        end %></p>
+                        end %></dd>
                       </div>
 
-                      <!-- Lista -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Lista</p>
-                        <p class="font-semibold text-gray-800"><%= cliente.paquete_codigo || "—" %></p>
+
+                      <div class="flex items-baseline gap-1 px-3">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase whitespace-nowrap">Frec:</dt>
+                        <dd class="font-semibold text-gray-800"><%= cliente.frecuencia_codigo || "—" %></dd>
                       </div>
 
-                      <!-- Frecuencia -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Frecuencia</p>
-                        <p class="font-semibold text-gray-800"><%= cliente.frecuencia_codigo || "—" %></p>
+                      <div class="flex items-baseline gap-1 px-3">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase whitespace-nowrap">F.Pago:</dt>
+                        <dd class="font-semibold text-gray-800"><%= cliente.forma_pago || "—" %></dd>
                       </div>
 
-                      <!-- Forma pago -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Forma pago</p>
-                        <p class="font-semibold text-gray-800"><%= cliente.forma_pago || "—" %></p>
+                      <div class="flex items-baseline gap-1 px-3">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase whitespace-nowrap">M.Pago:</dt>
+                        <dd class="font-semibold text-gray-800"><%= cliente.metodo_pago || "—" %></dd>
                       </div>
 
-                      <!-- Método pago -->
-                      <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Método pago</p>
-                        <p class="font-semibold text-gray-800"><%= cliente.metodo_pago || "—" %></p>
-                      </div>
-
-                    </div>
+                    </dl>
                   </div>
                 </div>
   </div>
