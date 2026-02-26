@@ -668,7 +668,8 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
      |> assign(:codigos_exportacion, [{"No aplica", "01"}, {"Definitiva", "02"}])
      |> assign(:show_json_modal, false)
      |> assign(:json_preview, nil)
-     |> assign(:pending_changeset, nil)}
+     |> assign(:pending_changeset, nil)
+     |> assign(:permitir_edicion, Prettycore.SysAdmin.get_config().permitir_edicion != false)}
   end
 
   @impl true

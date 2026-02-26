@@ -15,17 +15,29 @@
           </div>
           <div class="flex gap-2 sm:gap-3">
             <.link navigate={~p"/admin/clientes"} class="flex-1 sm:flex-none text-center px-3 sm:px-5 py-2 sm:py-2.5 text-sm font-medium bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl transition-all duration-200 border border-white/30">
-              Cancelar
+              <%= if @permitir_edicion, do: "Cancelar", else: "Volver" %>
             </.link>
-            <button type="submit" form="cliente-form" class="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 text-sm font-semibold bg-white text-gray-900 hover:bg-white/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
-              Guardar
-            </button>
+            <%= if @permitir_edicion do %>
+              <button type="submit" form="cliente-form" class="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 text-sm font-semibold bg-white text-gray-900 hover:bg-white/90 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
+                Guardar
+              </button>
+            <% end %>
           </div>
         </div>
       </header>
 
+      <!-- Banner solo-lectura -->
+      <%= if !@permitir_edicion do %>
+        <div class="flex items-center gap-3 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3 text-sm text-amber-800">
+          <svg class="w-5 h-5 flex-shrink-0 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m0 0v2m0-2h2m-2 0H10m2-6V7m0 0V5m0 2h2m-2 0H10M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/>
+          </svg>
+          <span><strong>Modo visualización:</strong> La edición de clientes está deshabilitada por el administrador.</span>
+        </div>
+      <% end %>
+
       <!-- FORMULARIO CON TABS -->
-      <.form id="cliente-form" for={@form} phx-change="validate" phx-submit="save">
+      <.form id="cliente-form" for={@form} phx-change={if @permitir_edicion, do: "validate", else: nil} phx-submit={if @permitir_edicion, do: "save", else: nil}>
         <div class="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border border-gray-300">
           <!-- TABS NAVEGACIÓN MODERNA -->
           <div class="bg-gradient-to-r from-gray-100 to-gray-200 rounded-t-xl sm:rounded-t-2xl border-b-2 border-gray-300">
