@@ -94,7 +94,8 @@ defmodule PrettycoreWeb.Clientes do
      |> assign(:stats_loading, false)
      |> assign(:stats_clasificaciones, %{})
      |> assign(:reloading, false)
-     |> assign(:clasificacion_filter_open, false)}
+     |> assign(:clasificacion_filter_open, false)
+     |> assign(:permitir_edicion, Prettycore.SysAdmin.get_config().permitir_edicion != false)}
   end
 
   @impl true

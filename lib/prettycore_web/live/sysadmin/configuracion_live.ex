@@ -25,7 +25,9 @@ defmodule PrettycoreWeb.SysAdmin.ConfiguracionLive do
      |> assign(:show_confirm_modal, false)
      |> assign(:api_test_result, nil)
      |> assign(:api_testing, false)
-     |> assign(:pending_params, nil)}
+     |> assign(:pending_params, nil)
+     |> assign(:editing_mode, false)
+     |> assign(:permitir_edicion, config.permitir_edicion != false)}
   end
 
   @impl true
@@ -81,7 +83,8 @@ defmodule PrettycoreWeb.SysAdmin.ConfiguracionLive do
     foto      = String.trim(params["foto"]      || "")
     password  = String.trim(params["password"]  || "")
 
-    attrs = %{usuario: usuario, instancia: instancia, token: token, url: url, foto: foto}
+    attrs = %{usuario: usuario, instancia: instancia, token: token, url: url, foto: foto,
+              permitir_edicion: socket.assigns.permitir_edicion}
 
     case SysAdmin.save_config(attrs) do
       {:ok, _config} ->
@@ -141,6 +144,30 @@ defmodule PrettycoreWeb.SysAdmin.ConfiguracionLive do
   end
 
   @impl true
+  def handle_event("toggle_editing", _, socket) do
+    {:noreply, assign(socket, :editing_mode, !socket.assigns.editing_mode)}
+  end
+
+  @impl true
+  def handle_event("toggle_permitir_edicion", _, socket) do
+    {:noreply, assign(socket, :permitir_edicion, !socket.assigns.permitir_edicion)}
+  end
+
+  @impl true
+  def handle_event("cancelar_edicion", _, socket) do
+    config = SysAdmin.get_config()
+    {:noreply,
+     socket
+     |> assign(:usuario, config.usuario || "")
+     |> assign(:instancia, config.instancia || "")
+     |> assign(:token, config.token || "")
+     |> assign(:url, config.url || "")
+     |> assign(:foto, config.foto || "")
+     |> assign(:editing_mode, false)
+     |> assign(:error, nil)}
+  end
+
+  @impl true
   def handle_event("dismiss_saved", _, socket) do
     {:noreply, assign(socket, :saved, false)}
   end
@@ -189,6 +216,27 @@ defmodule PrettycoreWeb.SysAdmin.ConfiguracionLive do
 
         <form phx-submit="previsualizar" class="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100">
 
+          <!-- Toggle: Permitir edición a usuarios normales -->
+          <div class="p-5 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Editar</p>
+              <p class="text-xs text-gray-400 mt-0.5">
+                <%= if @permitir_edicion do %>
+                  Los usuarios pueden editar clientes.
+                <% else %>
+                  Los usuarios <strong>no</strong> pueden editar clientes.
+                <% end %>
+              </p>
+            </div>
+            <button type="button" phx-click="toggle_permitir_edicion"
+              class={"relative inline-flex h-7 w-14 flex-shrink-0 items-center rounded-full transition-colors duration-300 focus:outline-none " <> if @permitir_edicion, do: "bg-emerald-500", else: "bg-gray-300"}>
+              <span class={"inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 " <> if @permitir_edicion, do: "translate-x-8", else: "translate-x-1"}></span>
+              <span class={"absolute text-[10px] font-bold transition-all duration-300 select-none " <> if @permitir_edicion, do: "left-1.5 text-white", else: "right-1.5 text-gray-500"}>
+                <%= if @permitir_edicion, do: "SÍ", else: "NO" %>
+              </span>
+            </button>
+          </div>
+
           <div class="p-5">
             <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Usuario</label>
             <input type="text" name="usuario" value={@usuario} placeholder="Usuario de la API"
@@ -231,9 +279,13 @@ defmodule PrettycoreWeb.SysAdmin.ConfiguracionLive do
             <p class="mt-1 text-xs text-gray-400">Nueva contraseña del administrador.</p>
           </div>
 
-          <div class="p-5 bg-gray-50 rounded-b-2xl flex justify-end">
+          <div class="p-5 bg-gray-50 rounded-b-2xl flex justify-end gap-3">
+            <button type="button" phx-click="cancelar_edicion"
+              class="px-6 py-2 text-sm font-semibold rounded-xl border text-gray-700 bg-white border-gray-300 hover:bg-gray-100 transition-colors">
+              Cancelar
+            </button>
             <button type="submit"
-              class="px-6 py-2 bg-gray-900 text-white text-sm font-semibold rounded-xl hover:bg-black transition-colors">
+              class="px-6 py-2 text-sm font-semibold rounded-xl bg-gray-900 text-white hover:bg-black transition-colors">
               Guardar
             </button>
           </div>
