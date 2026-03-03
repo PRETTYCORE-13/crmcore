@@ -2,12 +2,18 @@
 defmodule PrettycoreWeb.LoginLive do
   use PrettycoreWeb, :live_view
 
-  def mount(_params, _session, socket) do
-    {:ok,
-     socket
-     |> assign(:username, "")
-     |> assign(:password, "")
-     |> assign(:error, nil)}
+  def mount(_params, session, socket) do
+    # Si ya hay sesión activa, redirigir al panel correspondiente
+    if session["user_id"] do
+      redirect_to = if session["role"] == "sysadmin", do: "/sysadmin", else: "/admin/platform"
+      {:ok, push_navigate(socket, to: redirect_to)}
+    else
+      {:ok,
+       socket
+       |> assign(:username, "")
+       |> assign(:password, "")
+       |> assign(:error, nil)}
+    end
   end
 
   def render(assigns) do

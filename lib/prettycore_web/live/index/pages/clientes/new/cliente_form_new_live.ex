@@ -1,7 +1,7 @@
 defmodule PrettycoreWeb.ClienteFormNewLive do
   use PrettycoreWeb, :live_view_admin
 
-  alias Prettycore.ClientesApi
+  alias Prettycore.Clientes.Api, as: ClientesApi
   alias Prettycore.Clientes
   alias Prettycore.Catalogos
 

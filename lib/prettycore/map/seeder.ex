@@ -1,4 +1,4 @@
-defmodule Prettycore.MapSeeder do
+defmodule Prettycore.Map.Seeder do
   @moduledoc """
   GenServer que siembra las tablas map_estados, map_municipios y map_localidades
   en PostgreSQL desde la API externa, una sola vez al arrancar la app.

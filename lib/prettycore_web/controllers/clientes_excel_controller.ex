@@ -1,7 +1,7 @@
 defmodule PrettycoreWeb.ClientesExcelController do
   use PrettycoreWeb, :controller
 
-  alias Prettycore.ClientesExcel
+  alias Prettycore.Clientes.Excel, as: ClientesExcel
 
   @doc """
   Descarga un archivo Excel con todos los clientes y columnas seleccionadas

@@ -18,7 +18,7 @@ defmodule Prettycore.Application do
       # PostgreSQL para autenticación
       Prettycore.PsqlRepo,
       # Seed one-time de tablas geográficas (estados/municipios/localidades)
-      Prettycore.MapSeeder
+      Prettycore.Map.Seeder
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

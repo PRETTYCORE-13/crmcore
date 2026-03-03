@@ -16,6 +16,21 @@
       </div>
     <% end %>
 
+    <!-- TOAST RECARGA EXITOSA -->
+    <%= if @reload_success do %>
+      <div class="fixed bottom-6 right-6 z-[9999] flex items-center gap-3 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-gray-700">
+        <div class="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold">Datos actualizados</p>
+          <p class="text-xs text-gray-400">La información se recargó exitosamente</p>
+        </div>
+      </div>
+    <% end %>
+
     <section class="flex flex-col gap-4 sm:gap-6 p-3 sm:p-4 w-full bg-gray-50 min-h-screen">
       <!-- HEADER MODERNO -->
       <header class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">

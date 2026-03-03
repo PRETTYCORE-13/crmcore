@@ -6,6 +6,7 @@ defmodule Prettycore.Auth do
 
   alias Prettycore.PsqlRepo
   alias Prettycore.Auth.AuthUser
+  alias Prettycore.Auth.UserSession
 
   # Cache simple en memoria para códigos de reset (en producción usar Redis/ETS)
   @reset_codes_table :password_reset_codes
@@ -76,6 +77,106 @@ defmodule Prettycore.Auth do
     user
     |> AuthUser.password_changeset(%{password: new_password})
     |> PsqlRepo.update()
+  end
+
+  # ============================================================
+  # USER SESSION TRACKING
+  # ============================================================
+
+  @doc "Registra una nueva sesión al hacer login."
+  def create_user_session(attrs) do
+    %UserSession{}
+    |> UserSession.changeset(attrs)
+    |> PsqlRepo.insert()
+  end
+
+  @doc "Obtiene una sesión por su token."
+  def get_user_session(session_token) when is_binary(session_token) do
+    PsqlRepo.get_by(UserSession, session_token: session_token)
+  end
+
+  def get_user_session(_), do: nil
+
+  @doc """
+  Verifica si la sesión fue cerrada a la fuerza y toca last_seen_at si es necesario.
+  Retorna :force_closed si el sysadmin la cerró, :ok en caso contrario.
+  """
+  def check_and_touch_session(session_token) when is_binary(session_token) do
+    case get_user_session(session_token) do
+      nil -> :ok
+      %{logged_out_at: lo} when not is_nil(lo) -> :force_closed
+      session ->
+        now = DateTime.utc_now()
+        threshold = DateTime.add(now, -5 * 60, :second)
+        stale = is_nil(session.last_seen_at) or
+                DateTime.compare(session.last_seen_at, threshold) == :lt
+
+        if stale do
+          session
+          |> Ecto.Changeset.change(last_seen_at: DateTime.truncate(now, :second))
+          |> PsqlRepo.update()
+        end
+
+        :ok
+    end
+  end
+
+  def check_and_touch_session(_), do: :ok
+
+  @doc "Marca la sesión como cerrada al hacer logout."
+  def close_user_session(nil), do: :ok
+  def close_user_session(session_token) when is_binary(session_token) do
+    case get_user_session(session_token) do
+      nil -> :ok
+      session ->
+        session
+        |> Ecto.Changeset.change(logged_out_at: DateTime.truncate(DateTime.utc_now(), :second))
+        |> PsqlRepo.update()
+    end
+  end
+
+  @doc "Fuerza el cierre de una sesión específica por su ID (desde sysadmin)."
+  def force_close_session(session_id) do
+    case PsqlRepo.get(UserSession, session_id) do
+      nil -> :ok
+      session ->
+        session
+        |> Ecto.Changeset.change(logged_out_at: DateTime.truncate(DateTime.utc_now(), :second))
+        |> PsqlRepo.update()
+    end
+  end
+
+  @doc "Fuerza el cierre de todas las sesiones abiertas (desde sysadmin)."
+  def force_close_all_open_sessions do
+    import Ecto.Query
+    now = DateTime.truncate(DateTime.utc_now(), :second)
+    PsqlRepo.update_all(
+      from(s in UserSession, where: is_nil(s.logged_out_at)),
+      set: [logged_out_at: now]
+    )
+  end
+
+  @doc "Lista todas las sesiones con datos del usuario, ordenadas por más recientes."
+  def list_user_sessions do
+    import Ecto.Query
+
+    PsqlRepo.all(
+      from s in UserSession,
+        join: u in AuthUser, on: s.user_id == u.id,
+        order_by: [desc: s.inserted_at],
+        select: %{
+          id: s.id,
+          username: u.username,
+          email: u.email,
+          ip_address: s.ip_address,
+          device_type: s.device_type,
+          browser: s.browser,
+          os: s.os,
+          inserted_at: s.inserted_at,
+          last_seen_at: s.last_seen_at,
+          logged_out_at: s.logged_out_at
+        }
+    )
   end
 
   # ============================================================

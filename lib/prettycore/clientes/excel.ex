@@ -1,4 +1,4 @@
-defmodule Prettycore.ClientesExcel do
+defmodule Prettycore.Clientes.Excel do
   @moduledoc """
   Genera archivos Excel con datos completos de clientes
   """

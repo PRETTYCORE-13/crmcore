@@ -1,4 +1,4 @@
-defmodule Prettycore.WorkorderApi do
+defmodule Prettycore.Workorders.Api do
   @moduledoc false
 
   alias Prettycore.Api.Client

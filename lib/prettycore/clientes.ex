@@ -95,9 +95,20 @@ defmodule Prettycore.Clientes do
   defp fix_encoding(nil), do: nil
 
   defp fix_encoding(str) when is_binary(str) do
-    case :unicode.characters_to_binary(str, :latin1, :utf8) do
-      {:error, _, _} -> str
-      result -> result
+    if String.valid?(str) do
+      # Valid UTF-8: try to reverse double-encoding
+      # (UTF-8 bytes misread as Latin-1, then re-encoded as UTF-8)
+      case :unicode.characters_to_binary(str, :utf8, :latin1) do
+        latin1_bytes when is_binary(latin1_bytes) ->
+          if String.valid?(latin1_bytes), do: latin1_bytes, else: str
+        _ -> str
+      end
+    else
+      # Raw Latin-1 bytes: convert to UTF-8
+      case :unicode.characters_to_binary(str, :latin1, :utf8) do
+        result when is_binary(result) -> result
+        _ -> str
+      end
     end
   end
 
@@ -426,6 +437,7 @@ defmodule Prettycore.Clientes do
           []
         end
       end)
+      |> Enum.map(&fix_map_encoding/1)
 
       # Aplicar búsqueda si existe
       clientes_filtrados = if search_term && search_term != "" do
@@ -535,7 +547,7 @@ defmodule Prettycore.Clientes do
       {:ok, %{cliente: %{...}, direcciones: [...]}}
   """
   def get_cliente_by_codigo(codigo, token \\ nil) do
-    case Prettycore.ClientesApi.info_cliente(codigo, token) do
+    case Prettycore.Clientes.Api.info_cliente(codigo, token) do
       {:ok, %{cliente: cliente_raw, direcciones: dirs_raw}} ->
         cliente_normalizado = normalize_cliente(cliente_raw)
         dirs = Enum.map(dirs_raw, &normalize_direccion/1)

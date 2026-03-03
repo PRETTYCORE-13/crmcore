@@ -94,6 +94,7 @@ defmodule PrettycoreWeb.Clientes do
      |> assign(:stats_loading, false)
      |> assign(:stats_clasificaciones, %{})
      |> assign(:reloading, false)
+     |> assign(:reload_success, false)
      |> assign(:clasificacion_filter_open, false)
      |> assign(:permitir_edicion, Prettycore.SysAdmin.get_config().permitir_edicion != false)}
   end
@@ -252,6 +253,9 @@ defmodule PrettycoreWeb.Clientes do
     # No reconstruir desde CTE_CLIENTES para no sobreescribir valores reales
     existing_stats = socket.assigns[:stats_clasificaciones] || %{}
 
+    was_reloading = socket.assigns[:reloading] == true
+    if was_reloading, do: Process.send_after(self(), :clear_reload_success, 3000)
+
     {:noreply,
      socket
      |> assign(:clientes, clientes)
@@ -262,7 +266,8 @@ defmodule PrettycoreWeb.Clientes do
      |> assign(:visible_columns, visible_columns)
      |> assign(:filter_form, filter_form)
      |> assign(:stats_clasificaciones, existing_stats)
-     |> assign(:reloading, false)}
+     |> assign(:reloading, false)
+     |> assign(:reload_success, was_reloading)}
   end
 
   ## Handle event para recargar todos los datos de la página
@@ -272,14 +277,24 @@ defmodule PrettycoreWeb.Clientes do
     :persistent_term.erase(:cache_cte_clientes)
     :persistent_term.erase(:cache_cte_clientes_ts)
 
-    # Mostrar modal de recarga y resetear clasificaciones
-    socket = socket
-      |> assign(:reloading, true)
-      |> assign(:stats_clasificaciones, %{})
+    # Mostrar spinner primero (separado del patch para que se renderice)
+    send(self(), :do_reload)
 
-    # Re-navegar a la misma página para recargar todo
+    {:noreply,
+     socket
+     |> assign(:reloading, true)
+     |> assign(:reload_success, false)
+     |> assign(:stats_clasificaciones, %{})}
+  end
+
+  @impl true
+  def handle_info(:do_reload, socket) do
     query_string = URI.encode_query(flatten_params(socket.assigns.params))
     {:noreply, push_patch(socket, to: "/admin/clientes?#{query_string}")}
+  end
+
+  def handle_info(:clear_reload_success, socket) do
+    {:noreply, assign(socket, :reload_success, false)}
   end
 
   ## Handle event para toggle de filtros
@@ -298,10 +313,17 @@ defmodule PrettycoreWeb.Clientes do
   end
 
   def handle_event("filter_clasificacion", %{"clasificacion" => clasificacion}, socket) do
+    filter_keys = ~w[search sysudn ruta_desde ruta_hasta clasificacion]
+
     new_params =
       socket.assigns.params
-      |> Map.put("clasificacion", clasificacion)
+      |> Map.drop(filter_keys)
       |> Map.put("page", "1")
+      |> then(fn p ->
+        if clasificacion not in [nil, ""],
+          do: Map.put(p, "clasificacion", clasificacion),
+          else: p
+      end)
 
     query_string = URI.encode_query(flatten_params(new_params))
     {:noreply,
@@ -310,15 +332,27 @@ defmodule PrettycoreWeb.Clientes do
      |> push_patch(to: "/admin/clientes?#{query_string}")}
   end
 
-  ## Handle event para aplicar filtros
+  ## Handle event para aplicar filtros (mutuamente excluyentes)
   def handle_event("set_filter", %{"filter_params" => filter_params}, socket) do
-    # Construir los nuevos params con los filtros
-    new_params =
-      socket.assigns.params
-      |> Map.merge(filter_params)
-      |> Map.put("page", "1")  # Reset a página 1 cuando se filtra
+    old_params = socket.assigns.params
+    filter_keys = ~w[search sysudn ruta_desde ruta_hasta clasificacion]
 
-    # Navegar con los nuevos filtros
+    # Detectar cuál filtro cambió comparando con los params actuales
+    changed_key = Enum.find(filter_keys, fn key ->
+      (filter_params[key] || "") != (old_params[key] || "")
+    end)
+
+    # Base: quitar todos los filtros de los params existentes
+    base_params = Map.drop(old_params, filter_keys) |> Map.put("page", "1")
+
+    # Construir nuevos params: solo con el filtro que cambió (si no está vacío)
+    new_params =
+      if changed_key && filter_params[changed_key] not in [nil, ""] do
+        Map.put(base_params, changed_key, filter_params[changed_key])
+      else
+        base_params
+      end
+
     query_string = URI.encode_query(flatten_params(new_params))
     {:noreply, push_patch(socket, to: "/admin/clientes?#{query_string}")}
   end

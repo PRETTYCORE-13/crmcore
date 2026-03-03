@@ -37,11 +37,9 @@ defmodule PrettycoreWeb.SysAdminLayout do
             <div>
               <div class="pc-sidebar-section-label">Admin</div>
               <nav class="pc-sidebar-nav">
-                <button
-                  type="button"
+                <.link
+                  navigate="/sysadmin/configuracion"
                   class={if @current_page == "configuracion", do: "pc-nav-item pc-nav-item-active", else: "pc-nav-item"}
-                  phx-click="nav"
-                  phx-value-id="configuracion"
                 >
                   <span class="pc-nav-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -50,7 +48,22 @@ defmodule PrettycoreWeb.SysAdminLayout do
                     </svg>
                   </span>
                   <span class="pc-nav-label">Configuración</span>
-                </button>
+                </.link>
+
+                <.link
+                  navigate="/sysadmin/sesiones"
+                  class={if @current_page == "sesiones", do: "pc-nav-item pc-nav-item-active", else: "pc-nav-item"}
+                >
+                  <span class="pc-nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                  </span>
+                  <span class="pc-nav-label">Sesiones</span>
+                </.link>
               </nav>
             </div>
 

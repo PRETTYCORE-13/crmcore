@@ -45,7 +45,13 @@
       "Bash(xargs grep -l \"configuracion\\\\|USUARIO\\\\|INSTANCIA\")",
       "Bash(xargs grep -l \"defmodule.*SysAdmin\")",
       "Bash(xargs grep -l \"system_config\")",
-      "Bash(xargs grep -l \"SysAdmin\\\\|sys_admin\")"
+      "Bash(xargs grep -l \"SysAdmin\\\\|sys_admin\")",
+      "Bash(ls -la lib/prettycore*/)",
+      "Bash(ls -la d:/prettycore/*.md d:/prettycore/notas* d:/prettycore/ter d:/prettycore/*.txt d:/prettycore/*.ex)",
+      "Bash(xargs grep -l \"LoginLive\")",
+      "Bash(xargs grep -l \"frog_token\\\\|get_frog_credentials\")",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(echo \"EXIT:$?\")"
     ],
     "deny": [],
     "ask": []

@@ -1,4 +1,4 @@
-defmodule Prettycore.ClientesApi do
+defmodule Prettycore.Clientes.Api do
 
   alias Prettycore.EncodingUtils
   alias Prettycore.Api.Client

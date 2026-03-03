@@ -2,7 +2,7 @@ defmodule PrettycoreWeb.WorkOrderLive do
   use PrettycoreWeb, :live_view_admin
 
   alias Prettycore.Workorders
-  alias Prettycore.WorkorderApi
+  alias Prettycore.Workorders.Api, as: WorkorderApi
 
   ## MOUNT
   @impl true

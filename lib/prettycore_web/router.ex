@@ -6,6 +6,7 @@ defmodule PrettycoreWeb.Router do
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
+    plug PrettycoreWeb.Plugs.TrackSession
     plug :fetch_live_flash
     plug :put_root_layout, {PrettycoreWeb.Layouts, :root}
     plug :protect_from_forgery
@@ -68,6 +69,7 @@ defmodule PrettycoreWeb.Router do
 
       live "/", ConfiguracionLive
       live "/configuracion", ConfiguracionLive
+      live "/sesiones", SesionesLive
     end
   end
 
