@@ -57,24 +57,33 @@ defmodule PrettycoreWeb.SessionController do
   # ── Helpers ──────────────────────────────────────────────────
 
   defp track_new_session(conn, user_id) do
-    session_token = Ecto.UUID.generate()
     ip = conn.remote_ip |> :inet.ntoa() |> to_string()
     user_agent = get_req_header(conn, "user-agent") |> List.first() || ""
-    parsed = parse_user_agent(user_agent)
-    now = DateTime.truncate(DateTime.utc_now(), :second)
 
-    Task.start(fn ->
-      Auth.create_user_session(%{
-        user_id: user_id,
-        session_token: session_token,
-        ip_address: ip,
-        user_agent: user_agent,
-        device_type: parsed.device_type,
-        browser: parsed.browser,
-        os: parsed.os,
-        last_seen_at: now
-      })
-    end)
+    # Deduplicar: si el móvil reintentó el POST por latencia, reusar la sesión existente
+    session_token =
+      case Auth.find_recent_session_token(user_id, ip, user_agent) do
+        nil ->
+          token = Ecto.UUID.generate()
+          parsed = parse_user_agent(user_agent)
+          now = DateTime.truncate(DateTime.utc_now(), :second)
+
+          Auth.create_user_session(%{
+            user_id: user_id,
+            session_token: token,
+            ip_address: ip,
+            user_agent: user_agent,
+            device_type: parsed.device_type,
+            browser: parsed.browser,
+            os: parsed.os,
+            last_seen_at: now
+          })
+
+          token
+
+        existing_token ->
+          existing_token
+      end
 
     put_session(conn, :session_token, session_token)
   end

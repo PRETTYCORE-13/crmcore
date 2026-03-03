@@ -135,6 +135,27 @@ defmodule Prettycore.Auth do
     end
   end
 
+  @doc """
+  Busca un session_token reciente (< 15s) del mismo usuario + IP + user_agent.
+  Sirve para deduplicar sesiones cuando el móvil reintenta el POST por latencia.
+  """
+  def find_recent_session_token(user_id, ip, user_agent) do
+    import Ecto.Query
+    cutoff = DateTime.utc_now() |> DateTime.add(-15, :second) |> DateTime.to_naive()
+
+    PsqlRepo.one(
+      from s in UserSession,
+        where: s.user_id == ^user_id
+          and s.ip_address == ^ip
+          and s.user_agent == ^user_agent
+          and is_nil(s.logged_out_at)
+          and s.inserted_at >= ^cutoff,
+        order_by: [desc: s.inserted_at],
+        limit: 1,
+        select: s.session_token
+    )
+  end
+
   @doc "Fuerza el cierre de una sesión específica por su ID (desde sysadmin)."
   def force_close_session(session_id) do
     case PsqlRepo.get(UserSession, session_id) do
