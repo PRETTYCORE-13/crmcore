@@ -798,8 +798,148 @@
               <p class="text-sm text-gray-500">No hay clientes para el filtro seleccionado.</p>
             </div>
           <% else %>
-            <!-- Contenedor scrolleable horizontal -->
-            <div class="overflow-x-auto">
+
+            <!-- ── VISTA MÓVIL: cards expandibles (solo en telefono) ── -->
+            <div class="sm:hidden divide-y divide-gray-200 bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <%= for cliente <- @clientes do %>
+                <% clasif_val = Map.get(@stats_clasificaciones, cliente.codigo) || cliente.clasificacion %>
+                <details class="group">
+                  <summary class="flex items-center gap-3 px-3 py-3 cursor-pointer list-none select-none">
+                    <!-- Botones de acción -->
+                    <div class="flex items-center gap-1.5 flex-shrink-0" phx-click-away="">
+                      <button
+                        phx-click="edit_cliente"
+                        phx-value-codigo={cliente.codigo}
+                        phx-value-dir={cliente.ctedir_codigo_k}
+                        class="w-8 h-8 flex items-center justify-center rounded-full bg-purple-600 hover:bg-purple-700"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        phx-click="open_stats_modal"
+                        phx-value-codigo={cliente.codigo}
+                        phx-value-dir={cliente.ctedir_codigo_k || "1"}
+                        class="w-8 h-8 flex items-center justify-center rounded-full bg-teal-500 hover:bg-teal-600"
+                      >
+                        <svg class="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
+                      </button>
+                      <%= if clasif_val && clasif_val != "SIN RANGO" do %>
+                        <img src={clasificacion_imagen(String.upcase(clasif_val))} alt={clasif_val} class="h-8" />
+                      <% end %>
+                    </div>
+                    <!-- Nombre comercial -->
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-semibold text-gray-900 truncate">
+                        <%= cliente.nombre_comercial || cliente.razon_social || "—" %>
+                      </p>
+                      <p class="text-xs text-gray-400"><%= cliente.codigo %></p>
+                    </div>
+                    <!-- Chevron -->
+                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </summary>
+                  <!-- Detalles expandidos -->
+                  <div class="px-3 pb-3 pt-1 bg-gray-50 border-t border-gray-100">
+                    <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                      <%= if @visible_columns["razon_social"] do %>
+                        <div class="col-span-2">
+                          <dt class="text-[10px] font-semibold text-gray-400 uppercase">Razón social</dt>
+                          <dd class="text-gray-800 font-medium"><%= cliente.razon_social || "—" %></dd>
+                        </div>
+                      <% end %>
+                      <%= if @visible_columns["udn"] do %>
+                        <div>
+                          <dt class="text-[10px] font-semibold text-gray-400 uppercase">UDN</dt>
+                          <dd class="text-gray-800 font-semibold"><%= cliente.udn %></dd>
+                        </div>
+                      <% end %>
+                      <%= if @visible_columns["ctedir_codigo_k"] do %>
+                        <div>
+                          <dt class="text-[10px] font-semibold text-gray-400 uppercase">Dir</dt>
+                          <dd class="text-gray-800"><%= cliente.ctedir_codigo_k %></dd>
+                        </div>
+                      <% end %>
+                      <%= if @visible_columns["rfc"] do %>
+                        <div>
+                          <dt class="text-[10px] font-semibold text-gray-400 uppercase">RFC</dt>
+                          <dd class="font-mono text-gray-800"><%= cliente.rfc || "—" %></dd>
+                        </div>
+                      <% end %>
+                      <%= if @visible_columns["estatus"] do %>
+                        <div>
+                          <dt class="text-[10px] font-semibold text-gray-400 uppercase">Estatus</dt>
+                          <dd><span class={estatus_badge_class(cliente.estatus)}><%= estatus_label(cliente.estatus) %></span></dd>
+                        </div>
+                      <% end %>
+                      <%= if @visible_columns["preventa"] do %>
+                        <div>
+                          <dt class="text-[10px] font-semibold text-gray-400 uppercase">Preventa</dt>
+                          <dd class="text-gray-800"><%= cliente.preventa || "—" %></dd>
+                        </div>
+                      <% end %>
+                      <%= if @visible_columns["entrega"] do %>
+                        <div>
+                          <dt class="text-[10px] font-semibold text-gray-400 uppercase">Entrega</dt>
+                          <dd class="text-gray-800"><%= cliente.entrega || "—" %></dd>
+                        </div>
+                      <% end %>
+                      <%= if @visible_columns["autoventa"] do %>
+                        <div>
+                          <dt class="text-[10px] font-semibold text-gray-400 uppercase">Autoventa</dt>
+                          <dd class="text-gray-800"><%= cliente.autoventa || "—" %></dd>
+                        </div>
+                      <% end %>
+                      <div>
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase">Tel</dt>
+                        <dd class="text-gray-800"><%= cliente.telefono || "—" %></dd>
+                      </div>
+                      <div>
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase">Email</dt>
+                        <%= if cliente.email_receptor do %>
+                          <dd><a href={"mailto:#{cliente.email_receptor}"} class="text-blue-600 truncate block max-w-[130px]"><%= cliente.email_receptor %></a></dd>
+                        <% else %>
+                          <dd class="text-amber-500 font-medium">Sin email</dd>
+                        <% end %>
+                      </div>
+                      <div class="col-span-2">
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase">Dirección</dt>
+                        <dd class="text-gray-800"><%= cliente.calle || "—" %>, <%= cliente.colonia || "" %>, <%= cliente.estado || "" %></dd>
+                      </div>
+                      <div>
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase">Crédito</dt>
+                        <dd class="text-emerald-600 font-semibold">$<%= cond do
+                          is_nil(cliente.limite_credito) -> "0.00"
+                          is_struct(cliente.limite_credito, Decimal) -> :erlang.float_to_binary(Decimal.to_float(cliente.limite_credito), decimals: 2)
+                          is_float(cliente.limite_credito) -> :erlang.float_to_binary(cliente.limite_credito, decimals: 2)
+                          is_integer(cliente.limite_credito) -> :erlang.float_to_binary(cliente.limite_credito / 1, decimals: 2)
+                          true -> to_string(cliente.limite_credito)
+                        end %></dd>
+                      </div>
+                      <div>
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase">Días crédito</dt>
+                        <dd class="text-gray-800"><%= cliente.diascredito %>d</dd>
+                      </div>
+                      <div>
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase">F.Pago</dt>
+                        <dd class="text-gray-800"><%= cliente.forma_pago || "—" %></dd>
+                      </div>
+                      <div>
+                        <dt class="text-[10px] font-semibold text-gray-400 uppercase">M.Pago</dt>
+                        <dd class="text-gray-800"><%= cliente.metodo_pago || "—" %></dd>
+                      </div>
+                    </dl>
+                  </div>
+                </details>
+              <% end %>
+            </div>
+
+            <!-- ── VISTA DESKTOP: tabla horizontal (oculta en móvil) ── -->
+            <div class="hidden sm:block overflow-x-auto">
               <div class="min-w-max">
                 <!-- ENCABEZADOS DE COLUMNAS -->
                 <div class="flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-slate-900 to-slate-800 border-b-2 border-slate-700">
