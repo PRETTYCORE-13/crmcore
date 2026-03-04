@@ -60,9 +60,10 @@ defmodule PrettycoreWeb.SessionController do
     ip = conn.remote_ip |> :inet.ntoa() |> to_string()
     user_agent = get_req_header(conn, "user-agent") |> List.first() || ""
 
-    # Deduplicar: si el móvil reintentó el POST por latencia, reusar la sesión existente
+    # Consolidar: cerrar duplicados del mismo dispositivo y reusar la sesión más reciente.
+    # Si no existe ninguna, crear una nueva.
     session_token =
-      case Auth.find_recent_session_token(user_id, ip, user_agent) do
+      case Auth.consolidate_device_sessions(user_id, ip, user_agent) do
         nil ->
           token = Ecto.UUID.generate()
           parsed = parse_user_agent(user_agent)

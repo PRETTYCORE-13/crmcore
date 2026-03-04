@@ -136,24 +136,39 @@ defmodule Prettycore.Auth do
   end
 
   @doc """
-  Busca un session_token reciente (< 15s) del mismo usuario + IP + user_agent.
-  Sirve para deduplicar sesiones cuando el móvil reintenta el POST por latencia.
+  Consolida sesiones abiertas del mismo dispositivo (user_id + ip + user_agent).
+  Cierra todos los duplicados y retorna el token de la sesión más reciente,
+  o nil si no existía ninguna (hay que crear una nueva).
   """
-  def find_recent_session_token(user_id, ip, user_agent) do
+  def consolidate_device_sessions(user_id, ip, user_agent) do
     import Ecto.Query
-    cutoff = DateTime.utc_now() |> DateTime.add(-15, :second) |> DateTime.to_naive()
 
-    PsqlRepo.one(
-      from s in UserSession,
-        where: s.user_id == ^user_id
-          and s.ip_address == ^ip
-          and s.user_agent == ^user_agent
-          and is_nil(s.logged_out_at)
-          and s.inserted_at >= ^cutoff,
-        order_by: [desc: s.inserted_at],
-        limit: 1,
-        select: s.session_token
-    )
+    open_sessions =
+      PsqlRepo.all(
+        from s in UserSession,
+          where: s.user_id == ^user_id
+            and s.ip_address == ^ip
+            and s.user_agent == ^user_agent
+            and is_nil(s.logged_out_at),
+          order_by: [desc: s.inserted_at]
+      )
+
+    case open_sessions do
+      [] ->
+        nil
+
+      [latest | duplicates] ->
+        if duplicates != [] do
+          now = DateTime.truncate(DateTime.utc_now(), :second)
+          dup_ids = Enum.map(duplicates, & &1.id)
+          PsqlRepo.update_all(
+            from(s in UserSession, where: s.id in ^dup_ids),
+            set: [logged_out_at: now]
+          )
+        end
+
+        latest.session_token
+    end
   end
 
   @doc "Fuerza el cierre de una sesión específica por su ID (desde sysadmin)."

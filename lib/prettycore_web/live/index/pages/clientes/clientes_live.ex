@@ -3,6 +3,7 @@ defmodule PrettycoreWeb.Clientes do
 
   import PrettycoreWeb.MenuLayout
   alias Prettycore.Clientes
+  alias Prettycore.ClientIntelligence
   import Ecto.Changeset
 
   # Esquema embedded para los filtros
@@ -353,6 +354,14 @@ defmodule PrettycoreWeb.Clientes do
         base_params
       end
 
+    # Trackear búsqueda/filtro si hay un valor significativo
+    if changed_key && filter_params[changed_key] not in [nil, ""] do
+      ClientIntelligence.track_event("*", socket.assigns[:current_user_id], "filtered", %{
+        field: changed_key,
+        value: filter_params[changed_key]
+      })
+    end
+
     query_string = URI.encode_query(flatten_params(new_params))
     {:noreply, push_patch(socket, to: "/admin/clientes?#{query_string}")}
   end
@@ -382,8 +391,7 @@ defmodule PrettycoreWeb.Clientes do
 
   ## Handle event para editar cliente
   def handle_event("edit_client", %{"client-id" => client_id}, socket) do
-    # Aquí puedes redirigir a la página de edición o abrir un modal
-    # Por ejemplo: push_navigate(socket, to: ~p"/admin/clientes/edit/#{client_id}")
+    ClientIntelligence.track_event(client_id, socket.assigns[:current_user_id], "viewed")
     {:noreply, push_navigate(socket, to: ~p"/admin/clientes/edit/#{client_id}")}
   end
 
@@ -420,8 +428,7 @@ defmodule PrettycoreWeb.Clientes do
   # En tu módulo PrettycoreWeb.Clientes
 
 def handle_event("edit_cliente", %{"codigo" => codigo, "dir" => dir}, socket) do
-  # Aquí puedes buscar el cliente por código y dir, o redirigir a una página de edición
-  # Por ejemplo, si tienes una ruta para editar clientes:
+  ClientIntelligence.track_event(codigo, socket.assigns[:current_user_id], "viewed")
   {:noreply, push_navigate(socket, to: ~p"/admin/clientes/edit/#{codigo}?dir=#{dir}")}
 
   # O si prefieres abrir un modal:
@@ -512,6 +519,8 @@ end
       "clientes" ->
         {:noreply, socket}  # ya estás aquí
 
+      "analisis" ->
+        {:noreply, push_navigate(socket, to: ~p"/admin/analisis")}
 
   #    "config" ->
   #      {:noreply, push_navigate(socket, to: ~p"/admin/configuracion")}

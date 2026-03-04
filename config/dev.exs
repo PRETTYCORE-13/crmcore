@@ -10,7 +10,11 @@ config :prettycore, Prettycore.PsqlRepo,
   ssl: if(System.get_env("DB_HOSTNAME_PSQL", "localhost") == "localhost", do: false, else: [verify: :verify_none]),
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10,
+  # Render cierra conexiones inactivas ~10min. Reducir pool y mantener vivas con pings.
+  pool_size: 5,
+  idle_interval: 10_000,     # ping cada 10s para evitar que Render cierre la conexión
+  queue_target: 5_000,       # esperar hasta 5s si el pool está ocupado
+  connect_timeout: 30_000,   # 30s para establecer conexión (DNS de Render puede tardar)
   parameters: [client_encoding: "UTF8"]
 
 

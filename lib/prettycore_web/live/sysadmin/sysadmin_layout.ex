@@ -19,6 +19,18 @@ defmodule PrettycoreWeb.SysAdminLayout do
       </div>
       <!-- Fila: Sidebar + Contenido -->
       <div class="pc-platform-row">
+        <!-- Mobile hamburger button -->
+        <button
+          type="button"
+          class="pc-mobile-menu-btn"
+          phx-click={mobile_toggle_js()}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+        <!-- Mobile overlay -->
+        <div class="pc-sidebar-overlay" phx-click={mobile_toggle_js()} />
         <!-- Sidebar -->
         <aside class="pc-platform-sidebar pc-platform-sidebar-open">
           <!-- HEADER -->
@@ -64,6 +76,19 @@ defmodule PrettycoreWeb.SysAdminLayout do
                   </span>
                   <span class="pc-nav-label">Sesiones</span>
                 </.link>
+
+                <.link
+                  navigate="/sysadmin/intelligence"
+                  class={if @current_page == "intelligence", do: "pc-nav-item pc-nav-item-active", else: "pc-nav-item"}
+                >
+                  <span class="pc-nav-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                    </svg>
+                  </span>
+                  <span class="pc-nav-label">Intelligence</span>
+                </.link>
+
               </nav>
             </div>
 
@@ -103,5 +128,10 @@ defmodule PrettycoreWeb.SysAdminLayout do
       </div>
     </div>
     """
+  end
+
+  defp mobile_toggle_js do
+    JS.toggle_class("pc-sidebar-visible", to: ".pc-platform-sidebar")
+    |> JS.toggle_class("pc-sidebar-overlay-visible", to: ".pc-sidebar-overlay")
   end
 end

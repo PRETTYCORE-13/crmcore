@@ -17,21 +17,60 @@ defmodule Prettycore.Api.Client do
 
   @timeout 15_000
 
-  @doc "URL base de la API leída desde system_config en la DB"
+  # TTL del caché de config en ms (5 minutos)
+  @config_cache_ttl 300_000
+
+  @doc "URL base de la API — cacheada 5 min para evitar N queries DB en operaciones bulk"
   def base_url do
-    case Prettycore.SysAdmin.get_config() do
+    case :persistent_term.get(:cache_api_base_url, nil) do
+      {url, ts} when is_binary(url) ->
+        if System.monotonic_time(:millisecond) - ts < @config_cache_ttl do
+          url
+        else
+          fetch_and_cache_base_url()
+        end
+      _ ->
+        fetch_and_cache_base_url()
+    end
+  end
+
+  @doc "Token de servicio — cacheado 5 min"
+  def service_token do
+    case :persistent_term.get(:cache_api_service_token, nil) do
+      {token, ts} when is_binary(token) ->
+        if System.monotonic_time(:millisecond) - ts < @config_cache_ttl do
+          token
+        else
+          fetch_and_cache_service_token()
+        end
+      _ ->
+        fetch_and_cache_service_token()
+    end
+  end
+
+  @doc "Invalida el caché de config (llamar tras guardar system_config)"
+  def invalidate_config_cache do
+    :persistent_term.erase(:cache_api_base_url)
+    :persistent_term.erase(:cache_api_service_token)
+  end
+
+  defp fetch_and_cache_base_url do
+    url = case Prettycore.SysAdmin.get_config() do
       %{url: url} when is_binary(url) and url != "" ->
         String.trim_trailing(url, "/") <> "/SP/EN_RESTHELPER"
       _ -> "https://s2.ecore.ninja:1522/SP/EN_RESTHELPER"
     end
+    :persistent_term.put(:cache_api_base_url, {url, System.monotonic_time(:millisecond)})
+    url
   end
 
-  @doc "Token de servicio leído desde system_config en la DB"
-  def service_token do
-    case Prettycore.SysAdmin.get_config() do
+  defp fetch_and_cache_service_token do
+    token = case Prettycore.SysAdmin.get_config() do
       %{token: token} when is_binary(token) and token != "" -> token
       _ -> ""
     end
+    :persistent_term.put(:cache_api_service_token, {token, System.monotonic_time(:millisecond)})
+    token
   end
 
   # ============================================================

@@ -2,6 +2,7 @@ defmodule PrettycoreWeb.ClientesExcelController do
   use PrettycoreWeb, :controller
 
   alias Prettycore.Clientes.Excel, as: ClientesExcel
+  alias Prettycore.ClientIntelligence
 
   @doc """
   Descarga un archivo Excel con todos los clientes y columnas seleccionadas
@@ -30,6 +31,14 @@ defmodule PrettycoreWeb.ClientesExcelController do
     # Generar nombre de archivo con timestamp
     timestamp = DateTime.utc_now() |> DateTime.to_unix()
     filename = "clientes_#{timestamp}.xlsx"
+
+    # Trackear descarga de Excel
+    user_id = get_session(conn, :user_id)
+    ClientIntelligence.track_event("*", user_id, "exported", %{
+      sysudn: sysudn,
+      ruta: "#{ruta_desde}–#{ruta_hasta}",
+      filename: filename
+    })
 
     # Enviar el archivo como descarga con headers correctos para Excel
     conn

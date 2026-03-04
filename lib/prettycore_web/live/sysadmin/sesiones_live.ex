@@ -195,12 +195,86 @@ defmodule PrettycoreWeb.SysAdmin.SesionesLive do
           <% end %>
         </div>
 
-        <!-- Tabla -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <!-- Vista móvil: cards expandibles -->
+        <div class="sm:hidden bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <%= if @visible_sessions == [] do %>
-            <div class="py-16 text-center text-gray-400 text-sm">
-              No hay sesiones para mostrar.
-            </div>
+            <div class="py-16 text-center text-gray-400 text-sm">No hay sesiones para mostrar.</div>
+          <% else %>
+            <%= for session <- @visible_sessions do %>
+              <% status = session_status(session, @now) %>
+              <% {label, badge_class} = status_badge(status) %>
+              <details class="border-b border-gray-100 last:border-0 group">
+                <summary class="flex items-center gap-3 px-4 py-3 cursor-pointer list-none select-none">
+                  <!-- Avatar -->
+                  <div class="w-9 h-9 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    <%= session.username |> String.first() |> String.upcase() %>
+                  </div>
+                  <!-- Nombre + email -->
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-900 text-sm truncate"><%= session.username %></p>
+                    <p class="text-xs text-gray-400 truncate"><%= session.email %></p>
+                  </div>
+                  <!-- Estado + chevron -->
+                  <div class="flex items-center gap-2 flex-shrink-0">
+                    <span class={"inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold #{badge_class}"}>
+                      <span class={"w-1.5 h-1.5 rounded-full " <> case status do
+                        :active   -> "bg-emerald-500"
+                        :inactive -> "bg-amber-500"
+                        :closed   -> "bg-gray-400"
+                      end}></span>
+                      <%= label %>
+                    </span>
+                    <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </div>
+                </summary>
+                <!-- Detalles expandidos -->
+                <div class="px-4 pb-4 pt-1 grid grid-cols-2 gap-x-4 gap-y-2 text-xs bg-gray-50">
+                  <div>
+                    <p class="text-gray-400 uppercase font-semibold tracking-wide text-[10px]">IP</p>
+                    <code class="text-gray-700 font-mono"><%= session.ip_address || "—" %></code>
+                  </div>
+                  <div>
+                    <p class="text-gray-400 uppercase font-semibold tracking-wide text-[10px]">Dispositivo</p>
+                    <p class="text-gray-700"><%= device_icon(session.device_type) %> <%= session.device_type || "—" %></p>
+                    <p class="text-gray-400"><%= session.os %></p>
+                  </div>
+                  <div>
+                    <p class="text-gray-400 uppercase font-semibold tracking-wide text-[10px]">Navegador</p>
+                    <p class="text-gray-700"><%= session.browser || "—" %></p>
+                  </div>
+                  <div>
+                    <p class="text-gray-400 uppercase font-semibold tracking-wide text-[10px]">Inicio</p>
+                    <p class="text-gray-700"><%= format_datetime(session.inserted_at) %></p>
+                  </div>
+                  <div class="col-span-2 flex items-center justify-between">
+                    <div>
+                      <p class="text-gray-400 uppercase font-semibold tracking-wide text-[10px]">Última actividad</p>
+                      <p class="text-gray-700"><%= relative_time(session.last_seen_at) %></p>
+                    </div>
+                    <%= if is_nil(session.logged_out_at) do %>
+                      <button
+                        type="button"
+                        phx-click="force_close"
+                        phx-value-id={session.id}
+                        data-confirm={"¿Cerrar la sesión de #{session.username}?"}
+                        class="px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 rounded-lg bg-white hover:bg-red-50"
+                      >
+                        Cerrar sesión
+                      </button>
+                    <% end %>
+                  </div>
+                </div>
+              </details>
+            <% end %>
+          <% end %>
+        </div>
+
+        <!-- Vista desktop: tabla completa -->
+        <div class="hidden sm:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <%= if @visible_sessions == [] do %>
+            <div class="py-16 text-center text-gray-400 text-sm">No hay sesiones para mostrar.</div>
           <% else %>
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
@@ -221,7 +295,6 @@ defmodule PrettycoreWeb.SysAdmin.SesionesLive do
                     <% status = session_status(session, @now) %>
                     <% {label, badge_class} = status_badge(status) %>
                     <tr class="hover:bg-gray-50 transition-colors">
-                      <!-- Usuario -->
                       <td class="px-5 py-4">
                         <div class="flex items-center gap-3">
                           <div class="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center text-xs font-bold flex-shrink-0">
@@ -233,32 +306,20 @@ defmodule PrettycoreWeb.SysAdmin.SesionesLive do
                           </div>
                         </div>
                       </td>
-                      <!-- IP -->
                       <td class="px-5 py-4">
                         <code class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-mono">
                           <%= session.ip_address || "—" %>
                         </code>
                       </td>
-                      <!-- Dispositivo -->
                       <td class="px-5 py-4">
                         <span class="text-base"><%= device_icon(session.device_type) %></span>
                         <span class="text-gray-700 ml-1"><%= session.device_type || "—" %></span>
                         <br/>
                         <span class="text-xs text-gray-400"><%= session.os %></span>
                       </td>
-                      <!-- Navegador -->
-                      <td class="px-5 py-4 text-gray-700">
-                        <%= session.browser || "—" %>
-                      </td>
-                      <!-- Inicio -->
-                      <td class="px-5 py-4 text-gray-600 text-xs whitespace-nowrap">
-                        <%= format_datetime(session.inserted_at) %>
-                      </td>
-                      <!-- Última actividad -->
-                      <td class="px-5 py-4 text-gray-600 text-xs whitespace-nowrap">
-                        <%= relative_time(session.last_seen_at) %>
-                      </td>
-                      <!-- Estado -->
+                      <td class="px-5 py-4 text-gray-700"><%= session.browser || "—" %></td>
+                      <td class="px-5 py-4 text-gray-600 text-xs whitespace-nowrap"><%= format_datetime(session.inserted_at) %></td>
+                      <td class="px-5 py-4 text-gray-600 text-xs whitespace-nowrap"><%= relative_time(session.last_seen_at) %></td>
                       <td class="px-5 py-4">
                         <span class={"inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold #{badge_class}"}>
                           <span class={"w-1.5 h-1.5 rounded-full " <> case status do
@@ -269,7 +330,6 @@ defmodule PrettycoreWeb.SysAdmin.SesionesLive do
                           <%= label %>
                         </span>
                       </td>
-                      <!-- Acción -->
                       <td class="px-5 py-4 text-right">
                         <%= if is_nil(session.logged_out_at) do %>
                           <button

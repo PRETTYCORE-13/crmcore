@@ -4,6 +4,7 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
   alias Prettycore.Clientes.Api, as: ClientesApi
   alias Prettycore.Clientes
   alias Prettycore.Catalogos
+  alias Prettycore.ClientIntelligence
 
   # Esquema embedded para Dirección
   defmodule DireccionForm do
@@ -595,6 +596,10 @@ defmodule PrettycoreWeb.ClienteFormNewLive do
           case ClientesApi.crear_cliente(cliente_data, frog_token) do
             {:ok, _response} ->
               Prettycore.Clientes.invalidar_cache()
+              client_code = to_string(cliente_data[:ctecli_codigo_k] || cliente_data["ctecli_codigo_k"] || "NUEVO")
+              ClientIntelligence.track_event(client_code, socket.assigns[:current_user_id], "created", %{
+                nombre: to_string(cliente_data[:ctecli_razonsocial] || cliente_data["ctecli_razonsocial"] || "")
+              })
 
               {:noreply,
                socket

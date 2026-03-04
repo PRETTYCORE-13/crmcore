@@ -4,6 +4,7 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
   alias Prettycore.Clientes.Api, as: ClientesApi
   alias Prettycore.Clientes
   alias Prettycore.Catalogos
+  alias Prettycore.ClientIntelligence
 
   # Esquema embedded para Dirección
   defmodule DireccionForm do
@@ -813,6 +814,11 @@ defmodule PrettycoreWeb.ClienteFormEditLive do
       case ClientesApi.editar_cliente(cliente_data, frog_token) do
         {:ok, _response} ->
           Prettycore.Clientes.invalidar_cache()
+          ClientIntelligence.track_event(
+            cliente_data.ctecli_codigo_k,
+            socket.assigns[:current_user_id],
+            "edited"
+          )
 
           {:noreply,
            socket

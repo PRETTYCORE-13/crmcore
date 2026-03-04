@@ -43,6 +43,9 @@ defmodule PrettycoreWeb.Inicio do
       "clientes" ->
         {:noreply, push_navigate(socket, to: ~p"/admin/clientes")}
 
+      "analisis" ->
+        {:noreply, push_navigate(socket, to: ~p"/admin/analisis")}
+
   #    "config" ->
   #      {:noreply, push_navigate(socket, to: ~p"/admin/configuracion")}
 
