@@ -8,18 +8,18 @@ defmodule Prettycore.SysAdmin do
   alias Prettycore.SysAdmin.Config
 
   @singleton_id 1
-  @default_instancia "https://s2.ecore.ninja:1522/SP/EN_RESTHELPER"
-  @default_token "IFcRzSfaBG6ycnpWzThyfEdKHglK14tlZylvRhOhlQ1fDHobmveKk6JowcU/BhCquBlqQv7zkrLIUYvFZmQZqHdqNiLptzCBf5wT826XpY4="
+  @default_instancia "http://crm.ecore.ninja:1404"
+  @default_token "IFcRzSfaBG6ycnpWzThyfEdKHglK14tlZylvRhOhlQ1fDHobmveKk6JowcU/BhCquBlqQv7zkrLIUYvFZmQZqBdzEK2bT+DPv/SFGM0RX8M="
 
   def get_config do
     case PsqlRepo.get(Config, @singleton_id) do
       nil ->
         %Config{
           id: @singleton_id,
-          usuario: "",
+          usuario: "Admin",
           instancia: @default_instancia,
           token: @default_token,
-          url: "",
+          url: "http://crm.ecore.ninja:1404",
           foto: ""
         }
       config -> config

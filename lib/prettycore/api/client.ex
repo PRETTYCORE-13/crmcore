@@ -58,7 +58,7 @@ defmodule Prettycore.Api.Client do
     url = case Prettycore.SysAdmin.get_config() do
       %{url: url} when is_binary(url) and url != "" ->
         String.trim_trailing(url, "/") <> "/SP/EN_RESTHELPER"
-      _ -> "https://s2.ecore.ninja:1522/SP/EN_RESTHELPER"
+      _ -> "http://crm.ecore.ninja:1404/SP/EN_RESTHELPER"
     end
     :persistent_term.put(:cache_api_base_url, {url, System.monotonic_time(:millisecond)})
     url
