@@ -191,6 +191,8 @@ defmodule Prettycore.Api.Client do
 
   # --- Clientes ---
 
+  def get_productos(token \\ nil), do: get_all("PRO_PRODUCTO", token)
+
   def get_clientes(token \\ nil), do: get_all("CTE_CLIENTE", token)
   def get_cliente(codigo, token \\ nil), do: get_by_id("CTE_CLIENTE", "CTECLI_CODIGO_K", codigo, token)
   def get_direcciones_cliente(cliente_codigo, token \\ nil) do

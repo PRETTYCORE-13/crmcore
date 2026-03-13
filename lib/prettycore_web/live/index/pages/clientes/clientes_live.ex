@@ -519,6 +519,12 @@ end
       "clientes" ->
         {:noreply, socket}  # ya estás aquí
 
+      "tienda" ->
+        {:noreply, push_navigate(socket, to: ~p"/admin/tienda")}
+
+      "usuarios" ->
+        {:noreply, push_navigate(socket, to: ~p"/admin/usuarios")}
+
       "analisis" ->
         {:noreply, push_navigate(socket, to: ~p"/admin/analisis")}
 

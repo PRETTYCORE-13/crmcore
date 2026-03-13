@@ -14,9 +14,6 @@ defmodule PrettycoreWeb.Programacion do
      |> assign(:current_path, "/admin/programacion")}
   end
 
-  # -----------------------------------------------------
-  # NAV CENTRALIZADA (MODELO 2)
-  # -----------------------------------------------------
   @impl true
   def handle_event("change_page", %{"id" => id}, socket) do
     email = socket.assigns.current_user_email

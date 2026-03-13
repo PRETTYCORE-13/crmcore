@@ -51,7 +51,10 @@
       "Bash(xargs grep -l \"LoginLive\")",
       "Bash(xargs grep -l \"frog_token\\\\|get_frog_credentials\")",
       "Bash(echo \"EXIT: $?\")",
-      "Bash(echo \"EXIT:$?\")"
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(mix ecto.migrations)",
+      "Bash(find d:/prettycore/lib -name *repo* -o -name *psql*)",
+      "Bash(mix run -e \":*)"
     ],
     "deny": [],
     "ask": []

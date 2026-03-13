@@ -1,0 +1,24 @@
+defmodule Prettycore.Productos.Producto do
+  use Ecto.Schema
+  import Ecto.Changeset
+
+  @primary_key {:codigo, :string, autogenerate: false}
+
+  schema "productos" do
+    field :descripcion, :string
+    field :desc_corta, :string
+    field :marca, :string
+    field :iva, :float, default: 0.0
+    field :pzas_min_vta, :integer, default: 1
+    field :activo, :boolean, default: true
+    field :raw, :map
+
+    timestamps(type: :utc_datetime)
+  end
+
+  def changeset(producto, attrs) do
+    producto
+    |> cast(attrs, [:codigo, :descripcion, :desc_corta, :marca, :iva, :pzas_min_vta, :activo, :raw])
+    |> validate_required([:codigo])
+  end
+end

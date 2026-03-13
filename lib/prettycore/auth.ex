@@ -40,6 +40,12 @@ defmodule Prettycore.Auth do
     |> PsqlRepo.insert()
   end
 
+  def create_user_admin(attrs) do
+    %AuthUser{}
+    |> AuthUser.admin_changeset(attrs)
+    |> PsqlRepo.insert()
+  end
+
   @doc """
   Obtiene un usuario por username.
   """
@@ -68,6 +74,19 @@ defmodule Prettycore.Auth do
     user
     |> AuthUser.update_changeset(attrs)
     |> PsqlRepo.update()
+  end
+
+  def delete_user(%AuthUser{} = user) do
+    PsqlRepo.delete(user)
+  end
+
+  def toggle_permission(%AuthUser{} = user, permission) do
+    current = user.permissions || ["inicio"]
+    updated =
+      if permission in current,
+        do: List.delete(current, permission),
+        else: [permission | current]
+    update_user(user, %{permissions: updated})
   end
 
   @doc """

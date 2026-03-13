@@ -6,7 +6,9 @@ defmodule PrettycoreWeb.MenuLayout do
     %{id: "inicio", label: "Inicio"},
   #  %{id: "programacion", label: "Programación"},
   #  %{id: "workorder", label: "Orden T"},
-    %{id: "clientes", label: "Clientes"}
+    %{id: "clientes", label: "Clientes"},
+    %{id: "tienda", label: "Tienda"},
+    %{id: "usuarios", label: "Usuarios", admin_only: true}
   ]
 
   # Props y slot
@@ -17,10 +19,12 @@ defmodule PrettycoreWeb.MenuLayout do
   attr :current_user_email, :string, default: nil
   attr :current_user_name, :string, default: nil
   attr :company_logo, :string, default: nil
+  attr :user_role, :string, default: nil
+  attr :user_permissions, :list, default: nil
   slot :inner_block, required: true
 
   def sidebar(assigns) do
-    assigns = assign(assigns, :menu_items, @menu)
+    assigns = assign(assigns, :menu_items, filter_menu(@menu, assigns.user_permissions, assigns.user_role))
 
     ~H"""
     <div class="pc-platform">
@@ -212,6 +216,21 @@ defmodule PrettycoreWeb.MenuLayout do
           <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
           <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
         </svg>
+      <% "tienda" -> %>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <path d="M16 10a4 4 0 0 1-8 0" />
+        </svg>
+      <% "usuarios" -> %>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          <line x1="19" y1="8" x2="23" y2="8" />
+          <line x1="21" y1="6" x2="21" y2="10" />
+        </svg>
       <% "logout" -> %>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
@@ -224,6 +243,15 @@ defmodule PrettycoreWeb.MenuLayout do
         </svg>
     <% end %>
     """
+  end
+
+  ## FILTRO DE MENÚ
+  defp filter_menu(menu, _perms, role) when role in ["admin", "sysadmin"], do: menu
+  defp filter_menu(menu, nil, _role), do: Enum.reject(menu, &Map.get(&1, :admin_only, false))
+  defp filter_menu(menu, perms, _role) do
+    menu
+    |> Enum.reject(fn item -> Map.get(item, :admin_only, false) and item.id not in perms end)
+    |> Enum.filter(&(&1.id in perms))
   end
 
   ## HELPERS

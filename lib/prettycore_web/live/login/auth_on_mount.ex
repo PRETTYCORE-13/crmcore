@@ -2,6 +2,8 @@ defmodule PrettycoreWeb.AuthOnMount do
   import Phoenix.LiveView, only: [redirect: 2]
   import Phoenix.Component, only: [assign: 3]
 
+  alias Prettycore.Auth
+
   def on_mount(:ensure_authenticated, params, session, socket) do
     user_id = session["user_id"]
     email_from_session = session["user_email"]
@@ -25,13 +27,20 @@ defmodule PrettycoreWeb.AuthOnMount do
         # Obtener nombre de usuario de la sesión
         user_name = session["user_name"]
 
+        # Cargar permisos del usuario desde DB
+        user = Auth.get_user(user_id)
+        user_role = (user && user.role) || "user"
+        user_permissions = (user && user.permissions) || ["inicio"]
+
         {:cont,
          socket
          |> assign(:current_user_id, user_id)
          |> assign(:current_user_email, email_from_session)
          |> assign(:current_user_name, user_name)
          |> assign(:company_logo, company_logo)
-         |> assign(:frog_token, frog_token)}
+         |> assign(:frog_token, frog_token)
+         |> assign(:user_role, user_role)
+         |> assign(:user_permissions, user_permissions)}
     end
   end
 
