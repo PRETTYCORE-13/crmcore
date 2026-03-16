@@ -54,7 +54,8 @@
       "Bash(echo \"EXIT:$?\")",
       "Bash(mix ecto.migrations)",
       "Bash(find d:/prettycore/lib -name *repo* -o -name *psql*)",
-      "Bash(mix run -e \":*)"
+      "Bash(mix run -e \":*)",
+      "Bash(git remote:*)"
     ],
     "deny": [],
     "ask": []
