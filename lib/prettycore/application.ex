@@ -18,7 +18,11 @@ defmodule Prettycore.Application do
       # PostgreSQL para autenticación
       Prettycore.PsqlRepo,
       # Seed one-time de tablas geográficas (estados/municipios/localidades)
-      Prettycore.Map.Seeder
+      Prettycore.Map.Seeder,
+      # Motor de cron jobs
+      Prettycore.Scheduler.QuantumScheduler,
+      # Carga tareas habilitadas desde BD al arrancar
+      Prettycore.Scheduler.DynamicScheduler
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

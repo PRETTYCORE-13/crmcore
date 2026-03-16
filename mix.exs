@@ -74,6 +74,9 @@ defmodule Prettycore.MixProject do
       # Password hashing seguro (puro Elixir, no requiere compilador C)
       {:pbkdf2_elixir, "~> 2.0"},
 
+      # Scheduler / Extractor de datos
+      {:quantum, "~> 3.0"},
+
       # Test
       {:lazy_html, ">= 0.1.0", only: :test}
     ]
